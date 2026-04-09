@@ -313,23 +313,16 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
         </div>
       </div>
     </div>
-    <!-- Row 3: 料別 | 厚度 -->
-    <div style="display:grid;grid-template-columns:1fr auto;gap:0;">
-      <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
+    <!-- Row 3: 料別 only -->
+    <div style="border-bottom:none;">
+      <div class="info-cell" style="border-bottom:none;border-right:none;">
         <div class="info-lbl">料別</div>
-        <select id="infoMaterial" class="info-field" style="width:100%;">
+        <select id="infoMaterial" class="info-field" style="width:100%;max-width:260px;">
           <option>再生3/8"</option><option>再生3/4"</option>
           <option>新料3/8"</option><option selected>新料3/4"</option>
           <option>改三3/4"</option><option>改三1"</option>
           <option value="__custom__">＋ 新增料別…</option>
         </select>
-      </div>
-      <div class="info-cell" style="border-bottom:none;min-width:100px;">
-        <div class="info-lbl">厚度</div>
-        <div style="display:flex;align-items:center;gap:5px;">
-          <input id="infoThick" type="number" class="info-field" value="5" min="1" max="30" style="width:52px;text-align:center;" />
-          <span style="font-size:12px;font-weight:700;color:var(--t2);">cm</span>
-        </div>
       </div>
     </div>
   </div>
@@ -605,7 +598,7 @@ function renderCostSec(sec){
 function makeCostRow(r){
   const d=document.createElement('div');d.className='cost-row';d.id='crow-'+r.id;
   const sub=r.fixed?r.price:r.qty*r.price;
-  const isNum=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理');
+  const isNum=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.name==='油車');
   const qH=r.fixed?`<span class="q-val">${r.qty}</span>`:isNum?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`:`<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
   d.innerHTML=`<div><div class="item-name">${r.name}</div><div class="item-note">${r.unit}${r.fixed?' · 固定':''}</div></div><div class="qty-wrap">${qH}</div><div class="price-cell"><div class="price-disp">${r.price>0?'$'+r.price.toLocaleString('zh-TW'):'—'}</div><div class="price-lbl">單價</div></div><div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div><button class="del-btn" onclick="delCostRow(${r.id})">✕</button>`;
   return d;
@@ -669,7 +662,6 @@ function getInfoSnapshot(){
     工區:document.querySelector('#page-cost .info-val:not(.accent)')?.textContent.trim()||'',
     日夜:dayNight,
     料別:document.getElementById('infoMaterial')?.value||'',
-    厚度:(document.getElementById('infoThick')?.value||'5')+'cm',
   };
 }
 function editInfo(el){
@@ -784,6 +776,7 @@ function renderRecords(){
         <div style="display:flex;align-items:center;gap:6px;">
           <div class="rec-total">${fmt(rec.grand)}</div>
           <button class="rec-btn" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();printRecord(${rec.id})" title="列印">🖨️</button>
+          <button class="rec-btn del" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();deleteRecord(${rec.id})" title="刪除">🗑️</button>
         </div>
         <div class="rec-tog" id="rectog-${rec.id}">▾</div>
       </div>
@@ -819,7 +812,6 @@ function openRecEdit(id){
   setDayNight(rec.日夜||'日');
   const matSel=document.getElementById('infoMaterial');
   if(matSel&&rec.料別){let found=false;for(let o of matSel.options){if(o.value===rec.料別){matSel.value=rec.料別;found=true;break;}}if(!found){const opt=document.createElement('option');opt.value=rec.料別;opt.textContent=rec.料別;matSel.insertBefore(opt,matSel.querySelector('[value="__custom__"]'));matSel.value=rec.料別;}}
-  const thkEl=document.getElementById('infoThick');if(thkEl)thkEl.value=(rec.厚度||'5cm').replace('cm','');
   costRows=deepCopy(rec.rows);uid=Date.now();SECS.forEach(sec=>costRows[sec].forEach(r=>{r.id=uid++;}));
   renderCostAll();
   const benEl=document.getElementById('spcost-便當');if(benEl)benEl.value=rec.sp?.便當?.cost||0;
@@ -974,64 +966,70 @@ function showToast(msg,type=''){
 // ══════════ PRINT ══════════
 function printRecord(id) {
   const rec = records.find(r=>r.id===id); if(!rec) return;
-  const meta = [rec.日期, rec.星期, rec.日夜?rec.日夜+'班':'', rec.料別, rec.厚度].filter(Boolean).join('　');
+  const meta = [rec.日期, rec.星期, rec.日夜?rec.日夜+'班':'', rec.料別].filter(Boolean).join('　');
 
   let html = `
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
       *{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Sans TC',sans-serif;}
-      body{padding:16px;font-size:13px;color:#1a2035;}
-      h1{font-size:18px;font-weight:900;text-align:center;margin-bottom:4px;}
-      .meta{text-align:center;font-size:11px;color:#666;margin-bottom:12px;}
-      .info-row{display:flex;gap:16px;margin-bottom:12px;flex-wrap:wrap;}
-      .info-item{font-size:12px;} .info-item span{font-weight:700;}
-      table{width:100%;border-collapse:collapse;margin-bottom:10px;}
-      th{background:#f0f2f7;font-size:11px;font-weight:700;color:#666;padding:5px 8px;text-align:left;border:1px solid #dde2ee;}
-      td{padding:6px 8px;border:1px solid #dde2ee;font-size:12px;vertical-align:middle;}
-      .sec-title{background:#f5f7fb;font-weight:900;font-size:13px;padding:6px 8px;border:1px solid #dde2ee;}
+      body{padding:20px;font-size:13px;color:#1a2035;}
+      h1{font-size:22px;font-weight:900;text-align:center;margin-bottom:6px;}
+      .meta{text-align:center;font-size:13px;color:#4a5578;margin-bottom:16px;font-weight:500;}
+      table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+      th{background:#f0f2f7;font-size:13px;font-weight:700;color:#4a5578;padding:7px 10px;text-align:left;border:1px solid #dde2ee;}
+      th.r{text-align:right;}
+      td{padding:7px 10px;border:1px solid #dde2ee;font-size:13px;vertical-align:middle;}
+      .sec-title{background:#f0f2f7;font-weight:900;font-size:14px;padding:7px 10px;border:1px solid #dde2ee;color:#1a2035;}
       .num{font-family:monospace;text-align:right;}
-      .chk{text-align:center;color:#059669;font-weight:700;}
-      .total-row{font-weight:700;}
-      .grand-row{background:#fff8ee;font-weight:900;font-size:14px;}
-      @media print{body{padding:8px;}button{display:none;}}
+      .chk{text-align:center;color:#059669;font-weight:900;font-size:14px;}
+      .total-row td{font-weight:700;font-size:13px;}
+      .grand-row td{background:#fff8ee;font-weight:900;font-size:15px;color:#e07b00;}
+      @media print{body{padding:10px;}button{display:none;} @page{margin:10mm;}}
     </style>
     <h1>${rec.派案||'施工'} · ${rec.工區||''} 機具成本表</h1>
-    <div class="meta">${meta} · 儲存：${rec.savedAt}</div>
+    <div class="meta">${meta}</div>
     <table>
-      <thead><tr><th style="width:20px"></th><th>項目</th><th style="width:50px">單位</th><th style="width:50px;text-align:right">數量</th><th style="width:80px;text-align:right">單價</th><th style="width:80px;text-align:right">小計</th></tr></thead>
+      <thead><tr>
+        <th style="width:26px"></th>
+        <th style="min-width:140px;">項目</th>
+        <th style="width:54px">單位</th>
+        <th style="width:60px" class="r">數量</th>
+        <th style="width:90px" class="r">單價</th>
+        <th style="width:90px" class="r">小計</th>
+      </tr></thead>
       <tbody>`;
 
   const SECS_PRINT = ['前置','刨除','鋪設','其餘'];
   SECS_PRINT.forEach(sec=>{
     const items = rec.rows[sec]||[];
-    const secExtra = sec==='其餘' ? 1 : 0;
-    if(!items.length && !secExtra) return;
+    if(!items.length && sec!=='其餘') return;
     html+=`<tr><td colspan="6" class="sec-title">${sec}</td></tr>`;
-    items.forEach(row=>{
+    items.forEach((row,idx)=>{
       html+=`<tr>
-        <td class="chk">${rec.recChecked?.[sec+(items.indexOf(row))]?'✓':''}</td>
+        <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
         <td>${row.name}</td>
         <td>${row.unit}</td>
-        <td class="num">${row.qty}</td>
+        <td class="num">${row.qty.toLocaleString('zh-TW')}</td>
         <td class="num">${row.fixed?'固定':'$'+row.price.toLocaleString('zh-TW')}</td>
         <td class="num">$${row.sub.toLocaleString('zh-TW')}</td>
       </tr>`;
     });
     if(sec==='其餘'){
-      if(rec.sp?.便當?.cost) html+=`<tr><td class="chk">${rec.spChecked?.便當?'✓':''}</td><td>便當 ${rec.sp.便當.note||''}</td><td></td><td></td><td></td><td class="num">$${rec.sp.便當.cost.toLocaleString('zh-TW')}</td></tr>`;
+      if(rec.sp?.便當?.cost) html+=`<tr><td class="chk">${rec.spChecked?.便當?'✓':''}</td><td>便當${rec.sp.便當.note?' '+rec.sp.便當.note:''}</td><td></td><td></td><td></td><td class="num">$${rec.sp.便當.cost.toLocaleString('zh-TW')}</td></tr>`;
       ['標線','錄影'].forEach(k=>{ html+=`<tr><td class="chk">${rec.spChecked?.[k]?'✓':''}</td><td>${k}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`; });
-      html+=`<tr><td class="chk">${rec.spChecked?.里長?'✓':''}</td><td>里長 ${rec.sp?.里長?.note||''}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`;
+      html+=`<tr><td class="chk">${rec.spChecked?.里長?'✓':''}</td><td>里長${rec.sp?.里長?.note?' '+rec.sp.里長.note:''}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`;
     }
   });
 
   html+=`</tbody></table>
     <table>
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:6px 8px;border:1px solid #dde2ee">機具小計</td><td class="num" style="border:1px solid #dde2ee">$${Math.round(rec.mach).toLocaleString('zh-TW')}</td></tr>
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:6px 8px;border:1px solid #dde2ee">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee">$${Math.round(rec.machTax).toLocaleString('zh-TW')}</td></tr>
-      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px;border:1px solid #dde2ee;color:#e07b00;">💰 總計</td><td class="num" style="border:1px solid #dde2ee;color:#e07b00;font-family:monospace;">$${Math.round(rec.grand).toLocaleString('zh-TW')}</td></tr>
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(rec.mach).toLocaleString('zh-TW')}</td></tr>
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(rec.machTax).toLocaleString('zh-TW')}</td></tr>
+      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(rec.grand).toLocaleString('zh-TW')}</td></tr>
     </table>`;
 
-  const win = window.open('', '_blank', 'width=600,height=800');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>${html}<br><button onclick="window.print()" style="padding:10px 24px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
+  const win = window.open('', '_blank', 'width=640,height=860');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>${html}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
   win.document.close();
 }
 
