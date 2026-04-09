@@ -99,7 +99,7 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .info-field::-webkit-outer-spin-button,.info-field::-webkit-inner-spin-button{-webkit-appearance:none;}
 .info-field:focus{border-color:var(--blue);}
 select.info-field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238491b0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;cursor:pointer;}
-.dn-btn{border:1.5px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;border-radius:8px;padding:5px 18px;cursor:pointer;transition:all .15s;}
+.dn-btn{border:1.5px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;border-radius:8px;padding:4px 16px;cursor:pointer;transition:all .15s;min-width:44px;text-align:center;}
 .dn-btn.active{background:rgba(224,123,0,.1);border-color:var(--accent);color:var(--accent);}
 
 /* COST ROW — name|qty|price|sub|del */
@@ -283,41 +283,50 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 
   <!-- 工程資訊 -->
   <div class="info-card">
-    <div class="info-grid">
-      <div class="info-cell"><div class="info-lbl">派案</div><div class="info-val accent" onclick="editInfo(this)">第八派案</div></div>
-      <div class="info-cell">
+    <!-- Row 1: 派案 | 日期+星期 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
+      <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
+        <div class="info-lbl">派案</div>
+        <div class="info-val accent" onclick="editInfo(this)">第八派案</div>
+      </div>
+      <div class="info-cell" style="border-bottom:none;">
         <div class="info-lbl">日期</div>
         <div style="display:flex;align-items:center;gap:6px;">
           <input id="infoDate" type="text" class="info-field" value="114/3/15" placeholder="114/3/15" oninput="onDateInput()" style="flex:1;min-width:0;" />
-          <span id="infoWeekday" style="font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;"></span>
+          <span id="infoWeekday" style="font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;min-width:28px;text-align:right;"></span>
         </div>
       </div>
-      <div class="info-cell"><div class="info-lbl">工區</div><div class="info-val" onclick="editInfo(this)">民族路</div></div>
-      <div class="info-cell">
+    </div>
+    <!-- Row 2: 工區 | 日夜 (同高，日夜改成inline tag) -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
+      <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
+        <div class="info-lbl">工區</div>
+        <div class="info-val" onclick="editInfo(this)">民族路</div>
+      </div>
+      <div class="info-cell" style="border-bottom:none;display:flex;flex-direction:column;justify-content:center;">
         <div class="info-lbl">日／夜</div>
-        <div style="display:flex;gap:6px;margin-top:3px;">
+        <div style="display:flex;gap:6px;margin-top:4px;">
           <button class="dn-btn active" id="btn-日" onclick="setDayNight('日')">日</button>
           <button class="dn-btn" id="btn-夜" onclick="setDayNight('夜')">夜</button>
         </div>
       </div>
-      <div class="info-cell full">
-        <div style="display:flex;align-items:flex-end;gap:10px;flex-wrap:wrap;">
-          <div style="flex:1;min-width:100px;">
-            <div class="info-lbl">料別</div>
-            <select id="infoMaterial" class="info-field" style="width:100%;">
-              <option>再生3/8"</option><option>再生3/4"</option>
-              <option>新料3/8"</option><option selected>新料3/4"</option>
-              <option>改三3/4"</option><option>改三1"</option>
-              <option value="__custom__">＋ 新增料別…</option>
-            </select>
-          </div>
-          <div>
-            <div class="info-lbl">厚度</div>
-            <div style="display:flex;align-items:center;gap:4px;">
-              <input id="infoThick" type="number" class="info-field" value="5" min="1" max="30" style="width:52px;text-align:center;" />
-              <span style="font-size:12px;font-weight:700;color:var(--t2);">cm</span>
-            </div>
-          </div>
+    </div>
+    <!-- Row 3: 料別 | 厚度 -->
+    <div style="display:grid;grid-template-columns:1fr auto;gap:0;">
+      <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
+        <div class="info-lbl">料別</div>
+        <select id="infoMaterial" class="info-field" style="width:100%;">
+          <option>再生3/8"</option><option>再生3/4"</option>
+          <option>新料3/8"</option><option selected>新料3/4"</option>
+          <option>改三3/4"</option><option>改三1"</option>
+          <option value="__custom__">＋ 新增料別…</option>
+        </select>
+      </div>
+      <div class="info-cell" style="border-bottom:none;min-width:100px;">
+        <div class="info-lbl">厚度</div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <input id="infoThick" type="number" class="info-field" value="5" min="1" max="30" style="width:52px;text-align:center;" />
+          <span style="font-size:12px;font-weight:700;color:var(--t2);">cm</span>
         </div>
       </div>
     </div>
