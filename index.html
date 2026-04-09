@@ -94,8 +94,9 @@ body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-seri
 .info-cell:nth-last-child(1):not(.full){border-bottom:none;}
 .info-cell:nth-last-child(2):not(.full){border-bottom:none;}
 .info-lbl{font-size:11px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
-.info-val{font-size:14px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1.5px dashed var(--border2);display:inline-block;padding-bottom:1px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;}
+.info-val{font-size:14px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1.5px dashed var(--border2);display:inline-block;padding-bottom:2px;max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom;min-height:22px;min-width:60px;}
 .info-val.accent{color:var(--accent);}
+.info-val:empty::before{content:attr(data-ph);color:var(--t3);font-weight:400;font-size:13px;}
 .info-inp{font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;color:var(--text);background:var(--s2);border:1.5px solid var(--blue);border-radius:6px;width:100%;padding:4px 7px;outline:none;}
 .info-field{font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:6px 9px;outline:none;transition:border-color .18s;-moz-appearance:textfield;width:100%;}
 .info-field::-webkit-outer-spin-button,.info-field::-webkit-inner-spin-button{-webkit-appearance:none;}
@@ -289,7 +290,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
       <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
         <div class="info-lbl">派案</div>
-        <div class="info-val accent" onclick="editInfo(this)"></div>
+        <div class="info-val accent" data-ph="點此輸入派案" onclick="editInfo(this)"></div>
       </div>
       <div class="info-cell" style="border-bottom:none;">
         <div class="info-lbl">日期</div>
@@ -303,7 +304,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     <div style="display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);">
       <div class="info-cell" style="border-bottom:none;border-right:1px solid var(--border);">
         <div class="info-lbl">工區</div>
-        <div class="info-val" onclick="editInfo(this)"></div>
+        <div class="info-val" data-ph="點此輸入工區" onclick="editInfo(this)"></div>
       </div>
       <div class="info-cell" style="border-bottom:none;display:flex;flex-direction:column;justify-content:center;">
         <div class="info-lbl">日／夜</div>
