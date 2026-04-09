@@ -1,0 +1,1485 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>施工機具成本表</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
+:root {
+  --bg:#0f1117; --surface:#1a1d27; --s2:#22263a; --s3:#2a2f45;
+  --border:#2e3350; --accent:#f59e0b; --blue:#3b82f6; --green:#10b981;
+  --red:#ef4444; --text:#e8eaf0; --t2:#8b92b0; --t3:#5a6080; --hbg:#0d1021;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;overflow-x:hidden;}
+
+/* PAGE */
+.page{display:none;min-height:100vh;padding-bottom:68px;}
+.page.active{display:block;}
+
+/* TABBAR */
+.tabbar{position:fixed;bottom:0;left:0;right:0;z-index:300;background:var(--hbg);border-top:1px solid var(--border);display:flex;height:58px;}
+.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:transparent;color:var(--t3);font-family:'Noto Sans TC',sans-serif;transition:color .2s;padding-bottom:2px;}
+.tab.active{color:var(--accent);}
+.tab-icon{font-size:20px;line-height:1;}
+.tab-label{font-size:10px;font-weight:700;letter-spacing:.5px;}
+.tab-ind{position:absolute;top:0;height:2px;background:var(--accent);transition:left .25s cubic-bezier(.4,0,.2,1),width .25s cubic-bezier(.4,0,.2,1);}
+
+/* HEADER */
+.hdr{background:var(--hbg);border-bottom:1px solid var(--border);padding:13px 16px;position:sticky;top:0;z-index:100;display:flex;align-items:center;justify-content:space-between;}
+.hdr-l .sub{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:2px;}
+.hdr-l .main{font-size:18px;font-weight:900;}
+.mc{color:var(--accent);} .md{color:var(--blue);}
+
+/* SECTION */
+.section{margin:11px;border-radius:12px;overflow:hidden;border:1px solid var(--border);}
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;user-select:none;position:relative;}
+.sec-hdr::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:0 2px 2px 0;}
+.sec-前置{background:rgba(99,102,241,.10);} .sec-前置 .sec-hdr::before{background:#6366f1;}
+.sec-刨除{background:rgba(249,115,22,.08);} .sec-刨除 .sec-hdr::before{background:#f97316;}
+.sec-鋪設{background:rgba(16,185,129,.08);} .sec-鋪設 .sec-hdr::before{background:#10b981;}
+.sec-其餘{background:rgba(167,139,250,.08);} .sec-其餘 .sec-hdr::before{background:#a78bfa;}
+.sec-title{font-size:14px;font-weight:900;display:flex;align-items:center;gap:8px;}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+.bdg-前置{background:rgba(99,102,241,.25);color:#a5b4fc;}
+.bdg-刨除{background:rgba(249,115,22,.25);color:#fdba74;}
+.bdg-鋪設{background:rgba(16,185,129,.25);color:#6ee7b7;}
+.bdg-其餘{background:rgba(167,139,250,.25);color:#c4b5fd;}
+.sec-r{display:flex;align-items:center;gap:6px;}
+.sec-sub{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);}
+.sec-cnt{font-size:11px;color:var(--t3);font-weight:700;}
+.sec-tog{font-size:13px;color:var(--t3);transition:transform .2s;}
+.sec-tog.open{transform:rotate(180deg);}
+.sec-body{overflow:hidden;transition:max-height .3s ease;}
+
+/* COL HEADERS */
+.col-hdrs{display:grid;padding:5px 10px 5px 8px;background:var(--hbg);border-top:1px solid var(--border);gap:4px;align-items:center;}
+.col-h{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
+.col-h.c{text-align:center;} .col-h.r{text-align:right;}
+
+/* INFO CARD */
+.info-card{margin:11px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;}
+.info-cell{padding:9px 12px;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.info-cell:nth-child(2n){border-right:none;}
+.info-cell:nth-last-child(-n+1){border-bottom:none;}
+.info-cell[style*="span 2"]{grid-column:span 2;border-right:none;border-bottom:none;}
+.info-lbl{font-size:10px;color:var(--t3);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:2px;}
+.info-val{font-size:13px;font-weight:700;color:var(--text);cursor:pointer;border-bottom:1px dashed var(--t3);display:inline-block;padding-bottom:1px;}
+.info-val.accent{color:var(--accent);}
+.info-inp{font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--blue);border-radius:6px;width:100%;padding:3px 6px;outline:none;}
+/* shared style for new inline inputs & selects */
+.info-field-inp{font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 7px;outline:none;transition:border-color .2s;-moz-appearance:textfield;}
+.info-field-inp::-webkit-outer-spin-button,.info-field-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.info-field-inp:focus{border-color:var(--blue);}
+select.info-field-inp{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a6080'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center;padding-right:22px;}
+/* day/night toggle */
+.dn-btn{border:1px solid var(--border);background:var(--s2);color:var(--t3);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;border-radius:8px;padding:4px 14px;cursor:pointer;transition:all .15s;}
+.dn-btn.active{background:rgba(245,158,11,.15);border-color:var(--accent);color:var(--accent);}
+.dn-btn:active{opacity:.7;}
+
+/* COST ROW — check | name | qty | price | subtotal | del */
+/* grid: 28px 1fr 72px 68px 76px 28px */
+.cost-col-hdrs{grid-template-columns:28px 1fr 72px 68px 76px 28px;}
+.cost-row{display:grid;grid-template-columns:28px 1fr 72px 68px 76px 28px;align-items:center;padding:8px 10px 8px 8px;background:var(--surface);border-top:1px solid var(--border);gap:4px;}
+.cost-row.checked-row{background:rgba(16,185,129,.05);}
+
+/* CHECKBOX */
+.row-chk{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all .15s;}
+.row-chk.on{background:var(--green);border-color:var(--green);color:#fff;font-size:13px;}
+.row-chk:active{opacity:.7;}
+
+.item-name{font-size:13px;font-weight:700;color:var(--text);}
+.item-note{font-size:10px;color:var(--t3);margin-top:1px;}
+.item-name.checked-txt{color:var(--t2);}
+
+/* QTY */
+.qty-wrap{display:flex;align-items:center;justify-content:center;gap:3px;}
+.q-btn{width:22px;height:22px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--t2);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none;}
+.q-btn:active{background:var(--s3);}
+.q-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);min-width:20px;text-align:center;}
+/* numeric qty input (瀝青) */
+.q-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;width:66px;text-align:center;padding:4px 2px;outline:none;-moz-appearance:textfield;}
+.q-inp::-webkit-outer-spin-button,.q-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.q-inp:focus{border-color:var(--blue);}
+
+/* PRICE */
+.price-cell{display:flex;flex-direction:column;align-items:center;}
+.price-disp{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);text-align:center;}
+.price-lbl{font-size:9px;color:var(--t3);margin-top:1px;}
+
+/* SUBTOTAL */
+.sub-cell{text-align:right;}
+.sub-val{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blue);}
+
+/* DEL */
+.del-btn{width:24px;height:24px;border-radius:6px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.2);color:#f87171;font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.del-btn:active{background:rgba(239,68,68,.28);}
+
+/* ADD ROW (picker trigger) */
+.add-row{display:flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface);border-top:1px solid var(--border);cursor:pointer;}
+.add-row:active{background:var(--s2);}
+.add-icon{width:26px;height:26px;border-radius:50%;background:rgba(59,130,246,.12);border:1px dashed var(--blue);color:var(--blue);font-size:17px;display:flex;align-items:center;justify-content:center;}
+.add-lbl{font-size:12px;font-weight:700;color:var(--blue);}
+
+/* SPECIAL ROWS (便當/里長) */
+/* grid: 28px 1fr auto */
+.special-row{display:grid;grid-template-columns:28px 1fr auto;align-items:center;padding:8px 10px 8px 8px;background:var(--surface);border-top:1px solid var(--border);gap:8px;}
+.special-row.checked-row{background:rgba(16,185,129,.05);}
+.sp-name{font-size:13px;font-weight:700;}
+.sp-sub{display:flex;align-items:center;gap:6px;}
+.sp-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blue);background:transparent;border:none;border-bottom:1px dashed var(--border);outline:none;width:90px;text-align:right;padding:2px 0;-moz-appearance:textfield;}
+.sp-inp::-webkit-outer-spin-button,.sp-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.sp-inp:focus{border-bottom-color:var(--blue);}
+.sp-note-inp{font-family:'Noto Sans TC',sans-serif;font-size:11px;font-weight:400;color:var(--t3);background:transparent;border:none;border-bottom:1px dashed var(--border);outline:none;width:100%;padding:1px 0;margin-top:2px;}
+.sp-note-inp:focus{border-bottom-color:var(--blue);}
+
+/* TOTALS */
+.totals-card{margin:11px;background:var(--surface);border:1px solid var(--accent);border-radius:12px;overflow:hidden;}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);}
+.total-row:last-child{border-bottom:none;}
+.total-lbl{font-size:13px;font-weight:700;color:var(--t2);}
+.total-amt{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);}
+.grand-row{background:rgba(245,158,11,.08);}
+.grand-row .total-lbl{font-size:15px;font-weight:900;color:var(--text);}
+.grand-row .total-amt{font-size:20px;}
+
+/* COST ACTION BAR */
+.cost-bar{display:flex;gap:8px;padding:0 11px 11px;}
+.cb-btn{flex:1;padding:10px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.cb-btn.export{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.3);color:#34d399;}
+.cb-btn.save-rec{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.3);color:#c4b5fd;}
+.cb-btn.warn{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#f87171;}
+.cb-btn:active{opacity:.7;}
+
+/* SPECIAL ROWS */
+.special-row{display:flex;align-items:center;padding:10px 14px 10px 8px;background:var(--surface);border-top:1px solid var(--border);gap:6px;}
+.special-row.checked-row{background:rgba(16,185,129,.05);}
+.sp-name{font-size:13px;font-weight:700;white-space:nowrap;}
+.sp-sub{display:flex;align-items:center;gap:2px;flex-shrink:0;}
+.sp-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blue);background:transparent;border:none;border-bottom:1px dashed var(--border);outline:none;width:80px;text-align:right;padding:2px 0;-moz-appearance:textfield;}
+.sp-inp::-webkit-outer-spin-button,.sp-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.sp-inp:focus{border-bottom-color:var(--blue);}
+.sp-note-inp{font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);background:transparent;border:none;border-bottom:1px dashed var(--border);outline:none;padding:2px 4px;min-width:0;}
+.sp-note-inp:focus{border-bottom-color:var(--blue);}
+
+/* RECORDS PAGE */
+.rec-card{margin:10px 11px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.rec-hdr{display:flex;align-items:center;padding:12px 14px;cursor:pointer;user-select:none;gap:10px;}
+.rec-hdr:active{background:var(--s2);}
+.rec-info{flex:1;min-width:0;}
+.rec-title{font-size:14px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.rec-meta{font-size:11px;color:var(--t3);margin-top:2px;}
+.rec-total{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:#a78bfa;white-space:nowrap;}
+.rec-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;}
+.rec-tog.open{transform:rotate(180deg);}
+.rec-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
+.rec-body.open{max-height:3000px;}
+.rec-sec-hdr{padding:8px 14px 4px;border-top:1px solid var(--border);font-size:10px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;}
+.rec-item{display:flex;justify-content:space-between;align-items:center;padding:5px 14px;border-bottom:1px solid rgba(46,51,80,.4);}
+.rec-item:last-child{border-bottom:none;}
+.rec-item-l{font-size:12px;font-weight:700;color:var(--t2);}
+.rec-item-r{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);}
+.rec-foot{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:rgba(167,139,250,.05);}
+.rec-grand{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:#a78bfa;}
+.rec-btns{display:flex;gap:6px;}
+.rec-btn{font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;border:1px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
+.rec-btn.del{background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.2);color:#f87171;}
+.rec-btn.exp{background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25);color:#34d399;}
+.rec-btn:active{opacity:.7;}
+
+/* PAGE 2 — 單價管理 */
+.notice{margin:11px;padding:10px 14px;border-radius:10px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.25);font-size:12px;color:#93c5fd;line-height:1.6;display:flex;gap:10px;align-items:flex-start;}
+.notice-icon{font-size:16px;flex-shrink:0;}
+.db-col-hdrs{grid-template-columns:1fr 56px 88px 28px;}
+.db-row{display:grid;grid-template-columns:1fr 56px 88px 28px;align-items:center;padding:9px 10px 9px 14px;background:var(--surface);border-top:1px solid var(--border);gap:4px;transition:background .15s;}
+.db-row.changed{background:rgba(245,158,11,.06);}
+.db-name{font-size:13px;font-weight:700;}
+.unit-tag{font-size:11px;font-weight:700;color:var(--t3);text-align:center;background:var(--s2);border-radius:6px;padding:3px 4px;}
+.price-field{display:flex;align-items:center;background:var(--s2);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;}
+.price-field:focus-within{border-color:var(--blue);}
+.pf-pre{font-size:12px;color:var(--t3);padding:0 5px;font-weight:700;}
+.pf-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);background:transparent;border:none;outline:none;width:100%;padding:7px 6px 7px 0;-moz-appearance:textfield;}
+.pf-inp::-webkit-outer-spin-button,.pf-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.fixed-tag{font-size:10px;font-weight:700;color:#6ee7b7;background:rgba(16,185,129,.15);border-radius:6px;padding:4px 6px;text-align:center;}
+.add-form{border-top:1px solid var(--border);background:var(--surface);padding:8px 10px;}
+.add-fields{display:grid;grid-template-columns:1fr 54px 80px auto;gap:5px;align-items:center;}
+.af-inp{background:var(--s2);border:1px solid var(--border);border-radius:8px;padding:7px 8px;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;outline:none;width:100%;}
+.af-inp:focus{border-color:var(--blue);}
+.af-inp::placeholder{color:var(--t3);font-weight:400;font-size:12px;}
+.af-btn{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.35);border-radius:8px;padding:7px 10px;color:var(--blue);font-size:13px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;white-space:nowrap;}
+.af-btn:active{background:rgba(59,130,246,.25);}
+.db-bar{display:flex;gap:8px;padding:0 11px 11px;}
+.db-btn{flex:1;padding:11px;border-radius:10px;border:1px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;}
+.db-btn.save{background:rgba(16,185,129,.15);border-color:rgba(16,185,129,.35);color:#34d399;}
+.db-btn.reset{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#f87171;}
+.db-btn:active{opacity:.7;}
+.dirty-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);display:inline-block;margin-right:4px;animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* PICKER */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;}
+.overlay.show{opacity:1;pointer-events:all;}
+.picker{width:100%;background:var(--surface);border-radius:20px 20px 0 0;border-top:1px solid var(--border);max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease;}
+.overlay.show .picker{transform:translateY(0);}
+.pk-hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;}
+.pk-title{font-size:15px;font-weight:900;}
+.pk-close{width:28px;height:28px;border-radius:50%;background:var(--s2);border:1px solid var(--border);color:var(--t2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.pk-list{overflow-y:auto;flex:1;}
+.pk-item{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;}
+.pk-item:active{background:var(--s2);}
+.pk-item-l{display:flex;align-items:center;gap:12px;}
+.p-chk{width:22px;height:22px;border-radius:50%;border:2px solid var(--border);background:var(--s2);display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s;flex-shrink:0;}
+.p-chk.on{background:var(--blue);border-color:var(--blue);color:#fff;}
+.p-name{font-size:14px;font-weight:700;}
+.p-meta{font-size:11px;color:var(--t3);margin-top:1px;}
+.p-price{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);}
+
+/* TOAST */
+.toast{position:fixed;bottom:72px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--s2);color:var(--text);padding:9px 18px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid var(--border);opacity:0;transition:all .25s;pointer-events:none;white-space:nowrap;z-index:600;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.ok{border-color:rgba(16,185,129,.4);color:#34d399;}
+</style>
+</head>
+<body>
+
+<!-- ══════════ PAGE 1: 成本表 ══════════ -->
+<div class="page active" id="page-cost">
+  <div class="hdr">
+    <div class="hdr-l"><div class="sub">道路施工成本試算</div><div class="main mc">機具成本表</div></div>
+    <div id="dbStatusBadge" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#34d399;">✓ 預設單價</div>
+  </div>
+
+  <!-- 工程資訊 -->
+  <div class="info-card">
+    <div class="info-grid">
+      <div class="info-cell"><div class="info-lbl">派案</div><div class="info-val accent" onclick="editInfo(this)">第八派案</div></div>
+      <!-- 日期 + 自動星期 -->
+      <div class="info-cell" style="display:flex;flex-direction:column;gap:2px;">
+        <div class="info-lbl">日期</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <input id="infoDate" type="text" class="info-field-inp" value="114/3/15" placeholder="114/3/15" oninput="onDateInput()" style="flex:1;min-width:0;" />
+          <span id="infoWeekday" style="font-size:11px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;"></span>
+        </div>
+      </div>
+      <div class="info-cell"><div class="info-lbl">工區</div><div class="info-val" onclick="editInfo(this)">民族路</div></div>
+      <!-- 日/夜 toggle -->
+      <div class="info-cell">
+        <div class="info-lbl">日／夜</div>
+        <div style="display:flex;gap:5px;margin-top:3px;">
+          <button class="dn-btn active" id="btn-日" onclick="setDayNight('日')">日</button>
+          <button class="dn-btn" id="btn-夜" onclick="setDayNight('夜')">夜</button>
+        </div>
+      </div>
+      <!-- 料別 dropdown -->
+      <div class="info-cell" style="grid-column:span 2;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div>
+            <div class="info-lbl">料別</div>
+            <select id="infoMaterial" class="info-field-inp" style="min-width:110px;">
+              <option>再生3/8"</option>
+              <option>再生3/4"</option>
+              <option>新料3/8"</option>
+              <option selected>新料3/4"</option>
+              <option>改三3/4"</option>
+              <option>改三1"</option>
+            </select>
+          </div>
+          <div style="flex:1;">
+            <div class="info-lbl">自訂料別</div>
+            <div style="display:flex;gap:4px;">
+              <input id="infoMaterialCustom" type="text" class="info-field-inp" placeholder="輸入後按＋" style="flex:1;min-width:0;" />
+              <button onclick="addMaterial()" style="background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);border-radius:6px;color:var(--blue);font-size:15px;padding:0 8px;cursor:pointer;">＋</button>
+            </div>
+          </div>
+          <div>
+            <div class="info-lbl">厚度</div>
+            <div style="display:flex;align-items:center;gap:3px;">
+              <input id="infoThick" type="number" class="info-field-inp" value="5" min="1" max="30" style="width:48px;text-align:center;" />
+              <span style="font-size:12px;font-weight:700;color:var(--t2);">cm</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 前置 -->
+  <div class="section sec-前置">
+    <div class="sec-hdr" onclick="toggleSec('cost','前置')">
+      <div class="sec-title">前置<span class="badge bdg-前置">準備</span></div>
+      <div class="sec-r"><span class="sec-sub" id="csub-前置">$0</span><span class="sec-tog open" id="ctog-前置">▾</span></div>
+    </div>
+    <div class="sec-body" id="cbody-前置">
+      <div class="col-hdrs cost-col-hdrs">
+        <div class="col-h"></div><div class="col-h">機具／人員</div>
+        <div class="col-h c">數量</div><div class="col-h c">單價</div>
+        <div class="col-h r">小計</div><div class="col-h"></div>
+      </div>
+      <div id="crows-前置"></div>
+      <div class="add-row" onclick="openPicker('前置')"><div class="add-icon">＋</div><div class="add-lbl">新增前置機具</div></div>
+    </div>
+  </div>
+
+  <!-- 刨除 -->
+  <div class="section sec-刨除">
+    <div class="sec-hdr" onclick="toggleSec('cost','刨除')">
+      <div class="sec-title">刨除<span class="badge bdg-刨除">機具</span></div>
+      <div class="sec-r"><span class="sec-sub" id="csub-刨除">$0</span><span class="sec-tog open" id="ctog-刨除">▾</span></div>
+    </div>
+    <div class="sec-body" id="cbody-刨除">
+      <div class="col-hdrs cost-col-hdrs">
+        <div class="col-h"></div><div class="col-h">機具</div>
+        <div class="col-h c">數量</div><div class="col-h c">單價</div>
+        <div class="col-h r">小計</div><div class="col-h"></div>
+      </div>
+      <div id="crows-刨除"></div>
+      <div class="add-row" onclick="openPicker('刨除')"><div class="add-icon">＋</div><div class="add-lbl">新增刨除機具</div></div>
+    </div>
+  </div>
+
+  <!-- 鋪設 -->
+  <div class="section sec-鋪設">
+    <div class="sec-hdr" onclick="toggleSec('cost','鋪設')">
+      <div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span></div>
+      <div class="sec-r"><span class="sec-sub" id="csub-鋪設">$0</span><span class="sec-tog open" id="ctog-鋪設">▾</span></div>
+    </div>
+    <div class="sec-body" id="cbody-鋪設">
+      <div class="col-hdrs cost-col-hdrs">
+        <div class="col-h"></div><div class="col-h">機具／人員</div>
+        <div class="col-h c">數量</div><div class="col-h c">單價</div>
+        <div class="col-h r">小計</div><div class="col-h"></div>
+      </div>
+      <div id="crows-鋪設"></div>
+      <div class="add-row" onclick="openPicker('鋪設')"><div class="add-icon">＋</div><div class="add-lbl">新增鋪設機具</div></div>
+    </div>
+  </div>
+
+  <!-- 其餘 -->
+  <div class="section sec-其餘">
+    <div class="sec-hdr" onclick="toggleSec('cost','其餘')">
+      <div class="sec-title">其餘<span class="badge bdg-其餘">雜項</span></div>
+      <div class="sec-r"><span class="sec-sub" id="csub-其餘">$0</span><span class="sec-tog open" id="ctog-其餘">▾</span></div>
+    </div>
+    <div class="sec-body" id="cbody-其餘">
+      <div class="col-hdrs cost-col-hdrs">
+        <div class="col-h"></div><div class="col-h">項目</div>
+        <div class="col-h c">數量</div><div class="col-h c">單價</div>
+        <div class="col-h r">小計</div><div class="col-h"></div>
+      </div>
+      <div id="crows-其餘"></div>
+
+      <!-- 便當 — 人份在右方，金額在最右 -->
+      <div class="special-row" id="sprow-便當">
+        <div class="row-chk" id="spchk-便當" onclick="toggleSpChk('便當')"></div>
+        <div class="sp-name">便當</div>
+        <input class="sp-note-inp" id="spnote-便當" value="41+3+司機人份" placeholder="幾人份" style="flex:1;margin:0 6px;" />
+        <div class="sp-sub">
+          <span style="font-size:11px;color:var(--t3);margin-right:2px;">$</span>
+          <input class="sp-inp" id="spcost-便當" type="number" value="6000" oninput="recalc()" onclick="this.select()" />
+        </div>
+      </div>
+
+      <!-- 錄影 -->
+      <div class="special-row" id="sprow-錄影">
+        <div class="row-chk" id="spchk-錄影" onclick="toggleSpChk('錄影')"></div>
+        <div class="sp-name">錄影</div>
+      </div>
+
+      <!-- 標線 -->
+      <div class="special-row" id="sprow-標線">
+        <div class="row-chk" id="spchk-標線" onclick="toggleSpChk('標線')"></div>
+        <div class="sp-name">標線</div>
+      </div>
+
+      <!-- 里長 — 備註在右方，無金額 -->
+      <div class="special-row" id="sprow-里長">
+        <div class="row-chk" id="spchk-里長" onclick="toggleSpChk('里長')"></div>
+        <div class="sp-name">里長</div>
+        <input class="sp-note-inp" id="spnote-里長" value="" placeholder="備註說明" style="flex:1;margin-left:8px;text-align:right;" />
+      </div>
+
+      <div class="add-row" onclick="openPicker('其餘')"><div class="add-icon">＋</div><div class="add-lbl">新增雜項</div></div>
+    </div>
+  </div>
+
+  <!-- 合計 -->
+  <div class="totals-card">
+    <div class="total-row"><div class="total-lbl">機具小計</div><span class="total-amt" id="tot-mach">$0</span></div>
+    <div class="total-row"><div class="total-lbl">機具含稅 (+5%)</div><span class="total-amt" id="tot-mach-tax">$0</span></div>
+    <div class="total-row grand-row"><div class="total-lbl">💰 總計</div><span class="total-amt" id="tot-grand">$0</span></div>
+  </div>
+
+  <div class="cost-bar">
+    <button class="cb-btn warn" onclick="resetCost()">↺ 重設</button>
+    <button class="cb-btn save-rec" onclick="saveRecord()">🗂️ 儲存本筆</button>
+    <button class="cb-btn export" onclick="exportExcel()">📊 匯出</button>
+  </div>
+</div><!-- /page-cost -->
+
+
+<!-- ══════════ PAGE 2: 單價管理 ══════════ -->
+<div class="page" id="page-db">
+  <div class="hdr">
+    <div class="hdr-l"><div class="sub">機具資料庫</div><div class="main md">單價管理</div></div>
+    <div id="dirtyBadge" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#34d399;">✓ 已儲存</div>
+  </div>
+  <div class="notice"><div class="notice-icon">💡</div><div>在此設定各機具標準單價。儲存後切換到成本表，會自動套用最新單價，填表只需輸入數量。</div></div>
+
+  <!-- 前置 DB -->
+  <div class="section sec-前置">
+    <div class="sec-hdr" onclick="toggleSec('db','前置')">
+      <div class="sec-title">前置<span class="badge bdg-前置">準備</span></div>
+      <div class="sec-r"><span class="sec-cnt" id="dcnt-前置"></span><span class="sec-tog open" id="dtog-前置">▾</span></div>
+    </div>
+    <div class="sec-body" id="dbody-前置">
+      <div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div>
+      <div id="dlist-前置"></div>
+      <div class="add-form"><div class="add-fields">
+        <input class="af-inp" id="dan-前置" placeholder="名稱" /><input class="af-inp" id="dau-前置" placeholder="單位" /><input class="af-inp" id="dap-前置" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('前置')">＋</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- 刨除 DB -->
+  <div class="section sec-刨除">
+    <div class="sec-hdr" onclick="toggleSec('db','刨除')">
+      <div class="sec-title">刨除<span class="badge bdg-刨除">機具</span></div>
+      <div class="sec-r"><span class="sec-cnt" id="dcnt-刨除"></span><span class="sec-tog open" id="dtog-刨除">▾</span></div>
+    </div>
+    <div class="sec-body" id="dbody-刨除">
+      <div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div>
+      <div id="dlist-刨除"></div>
+      <div class="add-form"><div class="add-fields">
+        <input class="af-inp" id="dan-刨除" placeholder="名稱" /><input class="af-inp" id="dau-刨除" placeholder="單位" /><input class="af-inp" id="dap-刨除" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('刨除')">＋</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- 鋪設 DB -->
+  <div class="section sec-鋪設">
+    <div class="sec-hdr" onclick="toggleSec('db','鋪設')">
+      <div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span></div>
+      <div class="sec-r"><span class="sec-cnt" id="dcnt-鋪設"></span><span class="sec-tog open" id="dtog-鋪設">▾</span></div>
+    </div>
+    <div class="sec-body" id="dbody-鋪設">
+      <div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div>
+      <div id="dlist-鋪設"></div>
+      <div class="add-form"><div class="add-fields">
+        <input class="af-inp" id="dan-鋪設" placeholder="名稱" /><input class="af-inp" id="dau-鋪設" placeholder="單位" /><input class="af-inp" id="dap-鋪設" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('鋪設')">＋</button>
+      </div></div>
+    </div>
+  </div>
+
+  <!-- 其餘 DB -->
+  <div class="section sec-其餘">
+    <div class="sec-hdr" onclick="toggleSec('db','其餘')">
+      <div class="sec-title">其餘<span class="badge bdg-其餘">雜項</span></div>
+      <div class="sec-r"><span class="sec-cnt" id="dcnt-其餘"></span><span class="sec-tog open" id="dtog-其餘">▾</span></div>
+    </div>
+    <div class="sec-body" id="dbody-其餘">
+      <div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div>
+      <div id="dlist-其餘"></div>
+      <div class="add-form"><div class="add-fields">
+        <input class="af-inp" id="dan-其餘" placeholder="名稱" /><input class="af-inp" id="dau-其餘" placeholder="單位" /><input class="af-inp" id="dap-其餘" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('其餘')">＋</button>
+      </div></div>
+    </div>
+  </div>
+
+  <div class="db-bar">
+    <button class="db-btn reset" onclick="dbReset()">↺ 重設預設</button>
+    <button class="db-btn save" onclick="dbSave()">💾 儲存並套用</button>
+  </div>
+</div><!-- /page-db -->
+
+
+<!-- ══════════ PAGE 3: 歷史紀錄 ══════════ -->
+<div class="page" id="page-rec">
+  <div class="hdr">
+    <div class="hdr-l"><div class="sub">成本資料庫</div><div class="main" style="color:#a78bfa">歷史紀錄</div></div>
+    <div id="recCount" style="font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(167,139,250,.12);border:1px solid rgba(167,139,250,.3);color:#c4b5fd;">0 筆</div>
+  </div>
+
+  <div id="recEmpty" style="margin:40px 20px;text-align:center;color:var(--t3);">
+    <div style="font-size:40px;margin-bottom:12px;">🗂️</div>
+    <div style="font-size:14px;font-weight:700;">尚無紀錄</div>
+    <div style="font-size:12px;margin-top:6px;">在成本表點「儲存本筆」即可新增紀錄</div>
+  </div>
+
+  <div id="recList"></div>
+
+  <div style="display:flex;gap:8px;padding:0 11px 11px;" id="recActions" style="display:none">
+    <button class="cb-btn warn" onclick="clearAllRec()" style="flex:1;padding:10px;border-radius:10px;border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.08);color:#f87171;font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;cursor:pointer;">🗑️ 清除所有紀錄</button>
+  </div>
+</div><!-- /page-rec -->
+<div class="tabbar" id="tabbar">
+  <div class="tab-ind" id="tabInd"></div>
+  <button class="tab" id="tab-rec" onclick="switchTab('rec')">
+    <span class="tab-icon">🗂️</span><span class="tab-label">歷史紀錄</span>
+  </button>
+  <button class="tab active" id="tab-cost" onclick="switchTab('cost')">
+    <span class="tab-icon">📋</span><span class="tab-label">成本表</span>
+  </button>
+  <button class="tab" id="tab-db" onclick="switchTab('db')">
+    <span class="tab-icon">🗃️</span><span class="tab-label">單價管理</span>
+  </button>
+</div>
+
+<!-- PICKER -->
+<div class="overlay" id="overlay" onclick="overlayBg(event)">
+  <div class="picker">
+    <div class="pk-hdr">
+      <span class="pk-title" id="pkTitle">選擇機具</span>
+      <button class="pk-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="pk-list" id="pkList"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ExcelJS CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+
+<script>
+const SECS = ['前置','刨除','鋪設','其餘'];
+const STORAGE_KEY = 'machinery_price_db_v2';
+
+// ══ DEFAULTS ══
+const DEFAULTS = {
+  前置:[
+    {name:'堆高機',   unit:'台',price:9000, fixed:false},
+    {name:'義交',     unit:'人',price:4000, fixed:false},
+    {name:'交通錐',   unit:'套',price:2000, fixed:false},
+    {name:'警示燈',   unit:'組',price:1500, fixed:false},
+    {name:'工地圍籬', unit:'m', price:500,  fixed:false},
+    {name:'清潔工',   unit:'人',price:3500, fixed:false},
+  ],
+  刨除:[
+    {name:'刨除機(小)',unit:'台',price:43000,fixed:false},
+    {name:'刨除機(大)',unit:'台',price:65000,fixed:false},
+    {name:'鏟裝機',   unit:'台',price:8000, fixed:false},
+    {name:'清掃機',   unit:'台',price:12600,fixed:false},
+    {name:'40.70怪手', unit:'台',price:14500,fixed:false},
+    {name:'50噸怪手',  unit:'台',price:18000,fixed:false},
+    {name:'傾卸車',   unit:'台',price:5500, fixed:false},
+    {name:'水車',     unit:'台',price:6000, fixed:false},
+  ],
+  鋪設:[
+    {name:'鋪裝機(大)',unit:'台',price:35000,fixed:false},
+    {name:'鋪裝機(小)',unit:'台',price:22000,fixed:false},
+    {name:'工人',     unit:'人',price:28400,fixed:true},
+    {name:'熱鏟',     unit:'台',price:9500, fixed:false},
+    {name:'二輪',     unit:'台',price:9000, fixed:false},
+    {name:'三輪',     unit:'台',price:14500,fixed:false},
+    {name:'膠輪',     unit:'台',price:14500,fixed:false},
+    {name:'油車',     unit:'m²',price:30400,fixed:true},
+    {name:'預拌車',   unit:'台',price:4500, fixed:false},
+  ],
+  其餘:[
+    {name:'瀝青混凝土',unit:'T', price:2100, fixed:false},
+    {name:'AC細料',   unit:'T', price:2400, fixed:false},
+    {name:'底層料',   unit:'T', price:1800, fixed:false},
+    {name:'路基處理', unit:'m²',price:350,  fixed:false},
+  ],
+};
+
+// ══ PRICE DB (Page 2) ══
+let priceDB = {};
+let dbDirty = false;
+
+function loadPriceDB() {
+  try {
+    const s = localStorage.getItem(STORAGE_KEY);
+    priceDB = s ? JSON.parse(s) : deepCopy(DEFAULTS);
+    SECS.forEach(sec=>{ if(!priceDB[sec]) priceDB[sec]=deepCopy(DEFAULTS[sec]); });
+  } catch(e) { priceDB = deepCopy(DEFAULTS); }
+}
+
+function dbSave() {
+  SECS.forEach(sec => {
+    priceDB[sec].forEach(item => {
+      const el = document.getElementById('dpi-'+sec+'-'+item.name);
+      if(el) item.price = parseFloat(el.value)||0;
+    });
+  });
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(priceDB));
+    setDbDirty(false);
+    loadCostDB(); renderCostAll(); updateDbStatusBadge();
+    showToast('✅ 已儲存，成本表已套用新單價','ok');
+  } catch(e) { showToast('⚠️ 儲存失敗'); }
+}
+
+function dbReset() {
+  if(!confirm('確定重設為預設單價？')) return;
+  priceDB = deepCopy(DEFAULTS);
+  renderDbAll(); setDbDirty(true);
+  showToast('已重設，請點儲存套用');
+}
+
+function setDbDirty(v) {
+  dbDirty = v;
+  const b = document.getElementById('dirtyBadge');
+  if(v){
+    b.innerHTML='<span class="dirty-dot"></span>未儲存';
+    b.style.cssText='font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);color:var(--accent);';
+  } else {
+    b.textContent='✓ 已儲存';
+    b.style.cssText='font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#34d399;';
+  }
+}
+
+function updateDbStatusBadge() {
+  const b = document.getElementById('dbStatusBadge');
+  const has = !!localStorage.getItem(STORAGE_KEY);
+  b.textContent = has ? '✓ 自訂單價' : '✓ 預設單價';
+  b.style.cssText = has
+    ? 'font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.3);color:#93c5fd;'
+    : 'font-size:11px;font-weight:700;padding:5px 10px;border-radius:20px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#34d399;';
+}
+
+function renderDbAll() { SECS.forEach(renderDbSec); }
+function renderDbSec(sec) {
+  const list = document.getElementById('dlist-'+sec);
+  list.innerHTML = '';
+  priceDB[sec].forEach(item => list.appendChild(makeDbRow(sec,item)));
+  document.getElementById('dcnt-'+sec).textContent = priceDB[sec].length+' 項';
+  expandSec('db',sec);
+}
+function makeDbRow(sec,item) {
+  const d = document.createElement('div');
+  d.className='db-row'; d.id='dbrow-'+sec+'-'+item.name;
+  d.innerHTML=`
+    <div class="db-name">${item.name}</div>
+    <div class="unit-tag">${item.unit}</div>
+    ${item.fixed
+      ? `<div class="fixed-tag">固定費用</div>`
+      : `<div class="price-field"><span class="pf-pre">$</span>
+         <input class="pf-inp" id="dpi-${sec}-${item.name}" type="number" value="${item.price}"
+           oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()"/></div>`}
+    <button class="del-btn" onclick="dbDelItem('${sec}','${item.name}')">✕</button>`;
+  return d;
+}
+function dbMarkChanged(inp,sec,name) {
+  document.getElementById('dbrow-'+sec+'-'+name)?.classList.add('changed');
+  const item=priceDB[sec].find(i=>i.name===name);
+  if(item) item.price=parseFloat(inp.value)||0;
+  setDbDirty(true);
+}
+function dbAddItem(sec) {
+  const nEl=document.getElementById('dan-'+sec), uEl=document.getElementById('dau-'+sec), pEl=document.getElementById('dap-'+sec);
+  const name=nEl.value.trim(), unit=uEl.value.trim()||'台', price=parseFloat(pEl.value)||0;
+  if(!name){showToast('⚠️ 請輸入名稱');nEl.focus();return;}
+  if(priceDB[sec].find(i=>i.name===name)){showToast('⚠️ 名稱已存在');return;}
+  priceDB[sec].push({name,unit,price,fixed:false});
+  nEl.value=''; uEl.value=''; pEl.value='';
+  renderDbSec(sec); setDbDirty(true); showToast('✅ 已新增 '+name);
+}
+function dbDelItem(sec,name) {
+  const idx=priceDB[sec].findIndex(i=>i.name===name);
+  if(idx!==-1){ priceDB[sec].splice(idx,1); document.getElementById('dbrow-'+sec+'-'+name)?.remove(); document.getElementById('dcnt-'+sec).textContent=priceDB[sec].length+' 項'; setDbDirty(true); }
+}
+
+// ══ COST TABLE (Page 1) ══
+let costDB={}, costRows={前置:[],刨除:[],鋪設:[],其餘:[]}, uid=1, curSec=null;
+
+function loadCostDB() { costDB=deepCopy(priceDB); }
+
+function loadCostDefaults() {
+  costRows={前置:[],刨除:[],鋪設:[],其餘:[]}; uid=1;
+  addCR('前置','堆高機','台',2);  addCR('前置','義交','人',15);
+  addCR('刨除','刨除機(小)','台',2); addCR('刨除','鏟裝機','台',3);
+  addCR('刨除','清掃機','台',2);  addCR('刨除','40.70怪手','台',2);
+  addCR('鋪設','鋪裝機(大)','台',1); addCR('鋪設','工人','人',7);
+  addCR('鋪設','熱鏟','台',1); addCR('鋪設','二輪','台',1);
+  addCR('鋪設','三輪','台',1); addCR('鋪設','膠輪','台',1);
+  addCR('鋪設','油車','m²',2800);
+  addCR('其餘','瀝青混凝土','T',331);
+}
+
+function addCR(sec,name,unit,qty) {
+  const dbItem=(costDB[sec]||[]).find(i=>i.name===name);
+  const price=dbItem?dbItem.price:0, fixed=dbItem?(dbItem.fixed||false):false;
+  costRows[sec].push({id:uid++,name,unit,price,qty,fixed,checked:false});
+}
+
+function renderCostAll() { SECS.forEach(renderCostSec); recalc(); }
+function renderCostSec(sec) {
+  const el=document.getElementById('crows-'+sec);
+  el.innerHTML='';
+  costRows[sec].forEach(r=>el.appendChild(makeCostRow(r)));
+  expandSec('cost',sec);
+}
+
+function makeCostRow(r) {
+  const d=document.createElement('div');
+  d.className='cost-row'+(r.checked?' checked-row':'');
+  d.id='crow-'+r.id;
+  const sub=r.fixed?r.price:r.qty*r.price;
+  // 瀝青 uses text input for qty
+  const isAsphalt = (r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理');
+  const qtyHtml = r.fixed
+    ? `<span class="q-val">${r.qty}</span>`
+    : isAsphalt
+      ? `<input class="q-inp" type="number" value="${r.qty}" min="0"
+           oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
+      : `<button class="q-btn" onclick="chQty(${r.id},-1)">−</button>
+         <span class="q-val" id="qv-${r.id}">${r.qty}</span>
+         <button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
+  d.innerHTML=`
+    <div class="row-chk${r.checked?' on':''}" id="rchk-${r.id}" onclick="toggleRowChk(${r.id})">${r.checked?'✓':''}</div>
+    <div>
+      <div class="item-name${r.checked?' checked-txt':''}" id="rname-${r.id}">${r.name}</div>
+      <div class="item-note">${r.unit}${r.fixed?' · 固定':''}</div>
+    </div>
+    <div class="qty-wrap">${qtyHtml}</div>
+    <div class="price-cell">
+      <div class="price-disp">${r.price>0?'$'+r.price.toLocaleString('zh-TW'):'—'}</div>
+      <div class="price-lbl">單價</div>
+    </div>
+    <div class="sub-cell">
+      <div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div>
+    </div>
+    <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>`;
+  return d;
+}
+
+function chQty(id,d) {
+  const r=findCR(id); if(!r) return;
+  r.qty=Math.max(0,r.qty+d);
+  document.getElementById('qv-'+id).textContent=r.qty;
+  document.getElementById('sv-'+id).textContent=fmt(r.qty*r.price);
+  recalc();
+}
+function setQtyDirect(id,v) {
+  const r=findCR(id); if(!r) return;
+  r.qty=parseFloat(v)||0;
+  document.getElementById('sv-'+id).textContent=fmt(r.qty*r.price);
+  recalc();
+}
+function delCostRow(id) {
+  for(const sec in costRows){
+    const i=costRows[sec].findIndex(r=>r.id===id);
+    if(i!==-1){ costRows[sec].splice(i,1); document.getElementById('crow-'+id)?.remove(); recalc(); return; }
+  }
+}
+function findCR(id){ for(const sec in costRows){ const r=costRows[sec].find(r=>r.id===id); if(r) return r; } }
+
+function toggleRowChk(id) {
+  const r=findCR(id); if(!r) return;
+  r.checked=!r.checked;
+  const chk=document.getElementById('rchk-'+id);
+  const row=document.getElementById('crow-'+id);
+  const nm=document.getElementById('rname-'+id);
+  chk.classList.toggle('on',r.checked); chk.textContent=r.checked?'✓':'';
+  row.classList.toggle('checked-row',r.checked);
+  nm.classList.toggle('checked-txt',r.checked);
+}
+
+// Special rows (便當/里長) checkbox
+const spChecked={便當:false,錄影:false,標線:false,里長:false};
+function toggleSpChk(name) {
+  spChecked[name]=!spChecked[name];
+  const chk=document.getElementById('spchk-'+name);
+  const row=document.getElementById('sprow-'+name);
+  chk.classList.toggle('on',spChecked[name]); chk.textContent=spChecked[name]?'✓':'';
+  row.classList.toggle('checked-row',spChecked[name]);
+}
+
+function recalc() {
+  let mach=0;
+  ['前置','刨除','鋪設'].forEach(sec=>{
+    const s=costRows[sec].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+    document.getElementById('csub-'+sec).textContent=fmt(s);
+    mach+=s;
+  });
+  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
+  document.getElementById('csub-其餘').textContent=fmt(other+benDang);
+  mach+=benDang;
+  document.getElementById('tot-mach').textContent=fmt(mach);
+  document.getElementById('tot-mach-tax').textContent=fmt(mach*1.05);
+  document.getElementById('tot-grand').textContent=fmt(mach*1.05+other);
+}
+
+function resetCost() {
+  loadCostDefaults(); renderCostAll();
+  document.getElementById('spcost-便當').value=6000;
+  document.getElementById('spnote-便當').value='41+3+司機人份';
+  document.getElementById('spnote-里長').value='';
+  Object.keys(spChecked).forEach(k=>{
+    spChecked[k]=false;
+    const chk=document.getElementById('spchk-'+k);
+    if(chk){chk.classList.remove('on');chk.textContent='';}
+    document.getElementById('sprow-'+k)?.classList.remove('checked-row');
+  });
+  showToast('已重設');
+}
+
+// ══ RECORDS ══
+const REC_KEY = 'cost_records_v1';
+let records = [];
+
+function loadRecords() {
+  try { records = JSON.parse(localStorage.getItem(REC_KEY)||'[]'); } catch(e){records=[];}
+}
+
+function saveRecord() {
+  hideEditBanner(); // exit edit mode if active
+  const info = getInfoSnapshot();
+
+  const snapshot = {};
+  SECS.forEach(sec=>{
+    snapshot[sec]=costRows[sec].map(r=>({
+      name:r.name, unit:r.unit, qty:r.qty, price:r.price, fixed:r.fixed, checked:r.checked,
+      sub: r.fixed?r.price:r.qty*r.price
+    }));
+  });
+
+  const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
+  const benNote=document.getElementById('spnote-便當')?.value||'';
+  const liNote=document.getElementById('spnote-里長')?.value||'';
+  const spSnap={
+    便當:{cost:benDang, note:benNote, checked:spChecked['便當']},
+    錄影:{checked:spChecked['錄影']},
+    標線:{checked:spChecked['標線']},
+    里長:{note:liNote, checked:spChecked['里長']},
+  };
+
+  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
+  const grand=mach*1.05+other;
+
+  const rec={
+    id: Date.now(),
+    ...info,
+    rows: snapshot,
+    sp: spSnap,
+    mach, machTax:mach*1.05, grand,
+    savedAt: new Date().toLocaleString('zh-TW',{hour12:false})
+  };
+
+  records.unshift(rec);
+  try {
+    localStorage.setItem(REC_KEY, JSON.stringify(records));
+    renderRecords();
+    showToast('✅ 已儲存本筆紀錄','ok');
+  } catch(e){ showToast('⚠️ 儲存失敗'); }
+}
+
+function deleteRecord(id) {
+  records=records.filter(r=>r.id!==id);
+  localStorage.setItem(REC_KEY,JSON.stringify(records));
+  renderRecords();
+  showToast('已刪除');
+}
+
+function clearAllRec() {
+  if(!confirm('確定清除所有歷史紀錄？')) return;
+  records=[]; localStorage.removeItem(REC_KEY);
+  renderRecords(); showToast('已清除');
+}
+
+async function exportRecordExcel(id) {
+  const rec=records.find(r=>r.id===id); if(!rec) return;
+  if(typeof ExcelJS==='undefined'){showToast('⚠️ ExcelJS 載入中');return;}
+  // reuse exportExcel logic but from snapshot
+  showToast('正在產生 Excel…');
+  const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet('機具成本表');
+  ws.columns=[{width:4},{width:22},{width:8},{width:10},{width:14},{width:16}];
+  const hdrFill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1021'}};
+  const rowFill0={type:'pattern',pattern:'solid',fgColor:{argb:'FF1A1D27'}};
+  const rowFill1={type:'pattern',pattern:'solid',fgColor:{argb:'FF1E2230'}};
+  const bdr=()=>({top:{style:'thin',color:{argb:'FF2E3350'}},bottom:{style:'thin',color:{argb:'FF2E3350'}},left:{style:'thin',color:{argb:'FF2E3350'}},right:{style:'thin',color:{argb:'FF2E3350'}}});
+  const aln=(h,v='middle')=>({horizontal:h,vertical:v});
+  const secColors={前置:'FF6366F1',刨除:'FFF97316',鋪設:'FF10B981',其餘:'FFA78BFA'};
+  const secBG={前置:'FF1A1C36',刨除:'FF1E1609',鋪設:'FF091A14',其餘:'FF16101F'};
+  let r=1;
+
+  ws.mergeCells(r,1,r,6);
+  const tc=ws.getCell(r,1); tc.value=`${rec.派案}　施工機具成本表`;
+  tc.font={name:'Noto Sans TC',bold:true,color:{argb:'FFF59E0B'},size:16};
+  tc.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1021'}}; tc.alignment=aln('center');
+  ws.getRow(r).height=32; r++;
+
+  [['派案',rec.派案,'工區',rec.工區],['日期',rec.日期,'料別',rec.料別],['作業',rec.作業,'厚度',rec.厚度]].forEach(([l1,v1,l2,v2])=>{
+    [1,2,3,4].forEach(i=>ws.mergeCells(r,i,r,i)); ws.mergeCells(r,5,r,6);
+    const cells=[[1,l1,'FF5A6080',hdrFill,'center'],[2,v1,'FFE8EAF0',rowFill0,'left'],[3,l2,'FF5A6080',hdrFill,'center'],[4,v2,'FFE8EAF0',rowFill0,'left']];
+    cells.forEach(([col,val,clr,fill,h])=>{ const c=ws.getCell(r,col); c.value=val; c.font={name:'Noto Sans TC',bold:true,color:{argb:clr},size:col%2===1?10:11}; c.fill=fill; c.alignment=aln(h); });
+    ws.getRow(r).height=20; r++;
+  });
+  r++;
+
+  SECS.forEach(sec=>{
+    const sub=(rec.rows[sec]||[]).reduce((t,row)=>t+row.sub,0)+(sec==='其餘'?(rec.sp.便當?.cost||0):0);
+    ws.mergeCells(r,1,r,5);
+    const sh=ws.getCell(r,1); sh.value='  '+sec; sh.font={name:'Noto Sans TC',bold:true,color:{argb:secColors[sec]},size:12};
+    sh.fill={type:'pattern',pattern:'solid',fgColor:{argb:secBG[sec]}}; sh.alignment=aln('left');
+    const sv=ws.getCell(r,6); sv.value=sub; sv.numFmt='"$"#,##0'; sv.font={name:'Courier New',bold:true,color:{argb:'FFF59E0B'},size:11};
+    sv.fill={type:'pattern',pattern:'solid',fgColor:{argb:secBG[sec]}}; sv.alignment=aln('right');
+    ws.getRow(r).height=22; r++;
+
+    const hr=ws.getRow(r);
+    ['已聯絡','機具項目','單位','數量','單價','小計'].forEach((h,i)=>{ const c=hr.getCell(i+1); c.value=h; c.font={name:'Noto Sans TC',bold:true,color:{argb:'FF5A6080'},size:9}; c.fill=hdrFill; c.alignment=aln('center'); c.border=bdr(); });
+    hr.height=18; r++;
+
+    (rec.rows[sec]||[]).forEach((row,idx)=>{
+      const fill={type:'pattern',pattern:'solid',fgColor:{argb:idx%2===0?'FF1A1D27':'FF1E2230'}};
+      const wr=ws.getRow(r);
+      const cells2=[[1,row.checked?'✓':'',row.checked?'FF10B981':'FF2E3350','center'],[2,row.name,row.checked?'FF8B92B0':'FFE8EAF0','left'],[3,row.unit,'FF8B92B0','center'],[4,row.qty,'FFE8EAF0','center'],[5,row.price||0,'FF3B82F6','right'],[6,row.sub,'FF3B82F6','right']];
+      cells2.forEach(([col,val,clr,h])=>{ const c=wr.getCell(col); c.value=val; if(col>=5||col===4) c.numFmt=col>=5?'"$"#,##0':'#,##0'; c.font={name:col>=4?'Courier New':'Noto Sans TC',bold:true,color:{argb:clr},size:11}; c.fill=fill; c.alignment=aln(h); c.border=bdr(); });
+      wr.height=20; r++;
+    });
+
+    if(sec==='其餘'){
+      const spList=[{name:'便當',note:rec.sp.便當?.note,cost:rec.sp.便當?.cost,checked:rec.sp.便當?.checked},{name:'錄影',checked:rec.sp.錄影?.checked},{name:'標線',checked:rec.sp.標線?.checked},{name:'里長',note:rec.sp.里長?.note,checked:rec.sp.里長?.checked}];
+      spList.forEach((sp,idx)=>{
+        const fill={type:'pattern',pattern:'solid',fgColor:{argb:idx%2===0?'FF1A1D27':'FF1E2230'}};
+        const wr=ws.getRow(r);
+        ws.mergeCells(r,2,r,3);
+        wr.getCell(1).value=sp.checked?'✓':''; wr.getCell(1).font={name:'Arial',bold:true,color:{argb:sp.checked?'FF10B981':'FF2E3350'},size:11}; wr.getCell(1).fill=fill; wr.getCell(1).alignment=aln('center'); wr.getCell(1).border=bdr();
+        wr.getCell(2).value=sp.name+(sp.note?' ('+sp.note+')':''); wr.getCell(2).font={name:'Noto Sans TC',bold:true,color:{argb:sp.checked?'FF8B92B0':'FFE8EAF0'}}; wr.getCell(2).fill=fill; wr.getCell(2).alignment=aln('left');
+        wr.getCell(4).value='—'; wr.getCell(4).fill=fill; wr.getCell(4).alignment=aln('center'); wr.getCell(4).border=bdr();
+        wr.getCell(5).value='—'; wr.getCell(5).fill=fill; wr.getCell(5).alignment=aln('center'); wr.getCell(5).border=bdr();
+        wr.getCell(6).value=sp.cost||'—'; if(sp.cost) wr.getCell(6).numFmt='"$"#,##0'; wr.getCell(6).font={name:'Courier New',bold:true,color:{argb:sp.cost?'FF3B82F6':'FF5A6080'}}; wr.getCell(6).fill=fill; wr.getCell(6).alignment=aln('right'); wr.getCell(6).border=bdr();
+        wr.height=20; r++;
+      });
+    }
+    r++;
+  });
+
+  [[`機具小計`,rec.mach,'FF1A1D27'],[`機具含稅(+5%)`,rec.machTax,'FF1A1D27'],['💰 總計',rec.grand,'FF221A08']].forEach((t,ti)=>{
+    ws.mergeCells(r,1,r,4); ws.mergeCells(r,5,r,6);
+    const wr=ws.getRow(r);
+    wr.getCell(1).value=t[0]; wr.getCell(1).font={name:'Noto Sans TC',bold:ti===2,color:{argb:'FF8B92B0'},size:ti===2?13:11}; wr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:t[2]}}; wr.getCell(1).alignment=aln('right'); wr.getCell(1).border=bdr();
+    wr.getCell(5).value=t[1]; wr.getCell(5).numFmt='"$"#,##0'; wr.getCell(5).font={name:'Courier New',bold:true,color:{argb:'FFF59E0B'},size:ti===2?13:11}; wr.getCell(5).fill={type:'pattern',pattern:'solid',fgColor:{argb:t[2]}}; wr.getCell(5).alignment=aln('right'); wr.getCell(5).border=bdr();
+    wr.height=ti===2?26:20; r++;
+  });
+
+  const fname=`施工機具成本表_${rec.工區||''}_${rec.日期||''}.xlsx`.replace(/[\\/:\*\?"<>\|]/g,'_');
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob); const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
+  URL.revokeObjectURL(url); showToast('✅ 已匯出','ok');
+}
+
+function renderRecords() {
+  const list=document.getElementById('recList');
+  const empty=document.getElementById('recEmpty');
+  const actions=document.getElementById('recActions');
+  document.getElementById('recCount').textContent=records.length+' 筆';
+  if(!records.length){ list.innerHTML=''; empty.style.display='block'; actions.style.display='none'; return; }
+  empty.style.display='none'; actions.style.display='flex';
+  list.innerHTML='';
+  records.forEach(rec=>{
+    const card=document.createElement('div');
+    card.className='rec-card';
+    let rowsHtml='';
+    SECS.forEach(sec=>{
+      const items=rec.rows[sec]||[];
+      if(!items.length && sec!=='其餘') return;
+      rowsHtml+=`<div class="rec-sec-hdr">${sec}</div>`;
+      items.forEach(row=>{
+        rowsHtml+=`<div class="rec-item">
+          <div><div class="rec-item-l">${row.checked?'<span style="color:var(--green)">✓ </span>':''}<span style="color:${row.checked?'var(--t3)':'var(--t2)'}">${row.name}</span></div>
+          <div style="font-size:10px;color:var(--t3)">${row.unit} × ${row.qty}</div></div>
+          <div class="rec-item-r">${fmt(row.sub)}</div>
+        </div>`;
+      });
+      if(sec==='其餘'){
+        if(rec.sp?.便當?.cost){ rowsHtml+=`<div class="rec-item"><div class="rec-item-l">${rec.sp.便當.checked?'<span style="color:var(--green)">✓ </span>':''}便當${rec.sp.便當.note?' ('+rec.sp.便當.note+')':''}</div><div class="rec-item-r">${fmt(rec.sp.便當.cost)}</div></div>`; }
+        ['錄影','標線','里長'].forEach(k=>{ if(rec.sp?.[k]?.checked||rec.sp?.[k]?.note){ rowsHtml+=`<div class="rec-item"><div class="rec-item-l">${rec.sp[k].checked?'<span style="color:var(--green)">✓ </span>':''}<span style="color:var(--t3)">${k}${rec.sp[k].note?' ('+rec.sp[k].note+')':''}</span></div><div class="rec-item-r" style="color:var(--t3)">—</div></div>`; }});
+      }
+    });
+
+    const meta = [rec.日期, rec.星期, rec.日夜?rec.日夜+'班':'', rec.料別, rec.厚度].filter(Boolean).join(' · ');
+    const updatedNote = rec.updatedAt ? `<span style="color:rgba(167,139,250,.6)"> · 更新 ${rec.updatedAt}</span>` : '';
+
+    card.innerHTML=`
+      <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
+        <div class="rec-info">
+          <div class="rec-title">${rec.派案||''} · ${rec.工區||''}</div>
+          <div class="rec-meta">${meta} · 存 ${rec.savedAt}${updatedNote}</div>
+        </div>
+        <div class="rec-total">${fmt(rec.grand)}</div>
+        <div class="rec-tog" id="rectog-${rec.id}">▾</div>
+      </div>
+      <div class="rec-body" id="recbody-${rec.id}">
+        ${rowsHtml}
+        <div class="rec-foot">
+          <div>
+            <div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div>
+            <div class="rec-grand">${fmt(rec.grand)}</div>
+          </div>
+          <div class="rec-btns">
+            <button class="rec-btn" onclick="openRecEdit(${rec.id})" style="background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.3);color:#c4b5fd;">✏️ 編輯</button>
+            <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊 Excel</button>
+            <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    list.appendChild(card);
+  });
+}
+
+function toggleRecCard(id) {
+  const body=document.getElementById('recbody-'+id);
+  const tog=document.getElementById('rectog-'+id);
+  body.classList.toggle('open'); tog.classList.toggle('open');
+}
+
+// ══ PICKER (no custom add — from DB only) ══
+function openPicker(sec) {
+  curSec=sec;
+  document.getElementById('pkTitle').textContent='新增 '+sec+' 機具';
+  const list=document.getElementById('pkList');
+  list.innerHTML='';
+  const active=new Set(costRows[sec].map(r=>r.name));
+  (costDB[sec]||[]).forEach(item=>{
+    const on=active.has(item.name);
+    const d=document.createElement('div');
+    d.className='pk-item';
+    d.innerHTML=`
+      <div class="pk-item-l">
+        <div class="p-chk${on?' on':''}">${on?'✓':''}</div>
+        <div><div class="p-name">${item.name}</div>
+        <div class="p-meta">${item.unit}${item.fixed?' · 固定':' · $'+item.price.toLocaleString('zh-TW')}</div></div>
+      </div>
+      <div class="p-price">${item.price>0?'$'+item.price.toLocaleString('zh-TW'):'固定'}</div>`;
+    d.addEventListener('click',()=>pkToggle(sec,item,d.querySelector('.p-chk')));
+    list.appendChild(d);
+  });
+  if(!(costDB[sec]||[]).length){
+    list.innerHTML='<div style="padding:20px;text-align:center;color:var(--t3);font-size:13px;">請先在「單價管理」頁面新增機具</div>';
+  }
+  document.getElementById('overlay').classList.add('show');
+}
+function pkToggle(sec,item,chk) {
+  const idx=costRows[sec].findIndex(r=>r.name===item.name);
+  if(idx===-1){
+    costRows[sec].push({id:uid++,name:item.name,unit:item.unit,price:item.price,qty:1,fixed:item.fixed||false,checked:false});
+    renderCostSec(sec); chk.classList.add('on'); chk.textContent='✓';
+    showToast('✅ 已加入 '+item.name);
+  } else {
+    const rid=costRows[sec][idx].id;
+    costRows[sec].splice(idx,1);
+    document.getElementById('crow-'+rid)?.remove();
+    chk.classList.remove('on'); chk.textContent='';
+    showToast('已移除 '+item.name);
+  }
+  expandSec('cost',sec); recalc();
+}
+function closePicker(){document.getElementById('overlay').classList.remove('show');}
+function overlayBg(e){if(e.target===document.getElementById('overlay'))closePicker();}
+
+// ══ INFO EDIT ══
+function editInfo(el) {
+  if(el.querySelector('input')) return;
+  const prev=el.textContent;
+  const inp=document.createElement('input');
+  inp.type='text'; inp.className='info-inp'; inp.value=prev;
+  el.textContent=''; el.appendChild(inp);
+  inp.focus(); inp.select();
+  inp.addEventListener('blur',()=>{el.textContent=inp.value.trim()||prev;});
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=prev;inp.blur();}});
+}
+
+// ══ EXCEL EXPORT ══
+async function exportExcel() {
+  if(typeof ExcelJS==='undefined'){showToast('⚠️ ExcelJS 載入中，請稍後再試');return;}
+  showToast('正在產生 Excel…');
+
+  const wb = new ExcelJS.Workbook();
+  wb.creator='施工機具成本表'; wb.created=new Date();
+  const ws = wb.addWorksheet('機具成本表');
+
+  // ── 取得工程資訊 ──
+  const info = getInfoSnapshot();
+  const {派案,日期,星期,工區,日夜,料別,厚度} = info;
+
+  // ── 樣式定義 ──
+  const titleFill  = {type:'pattern',pattern:'solid',fgColor:{argb:'FF0F1117'}};
+  const hdrFill    = {type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1021'}};
+  const secFills   = {前置:{argb:'FF1A1C36'},刨除:{argb:'FF1E1609'},鋪設:{argb:'FF091A14'},其餘:{argb:'FF16101F'}};
+  const rowFill    = {type:'pattern',pattern:'solid',fgColor:{argb:'FF1A1D27'}};
+  const altFill    = {type:'pattern',pattern:'solid',fgColor:{argb:'FF1E2230'}};
+  const totalFill  = {type:'pattern',pattern:'solid',fgColor:{argb:'FF1A1D27'}};
+  const grandFill  = {type:'pattern',pattern:'solid',fgColor:{argb:'FF221A08'}};
+
+  const txtWhite  = {argb:'FFE8EAF0'};
+  const txtAccent = {argb:'FFF59E0B'};
+  const txtBlue   = {argb:'FF3B82F6'};
+  const txtGreen  = {argb:'FF34D399'};
+  const txtGray   = {argb:'FF8B92B0'};
+  const txtDim    = {argb:'FF5A6080'};
+
+  const font = (bold,color,size=11)=>({name:'Noto Sans TC',bold,color,size});
+  const mono = (bold,color,size=11)=>({name:'Courier New',bold,color,size});
+  const align = (h,v='middle')=>({horizontal:h,vertical:v,wrapText:false});
+  const border = ()=>({top:{style:'thin',color:{argb:'FF2E3350'}},bottom:{style:'thin',color:{argb:'FF2E3350'}},left:{style:'thin',color:{argb:'FF2E3350'}},right:{style:'thin',color:{argb:'FF2E3350'}}});
+  const noBorderSide = ()=>({top:{style:'thin',color:{argb:'FF2E3350'}},bottom:{style:'thin',color:{argb:'FF2E3350'}}});
+
+  ws.columns=[
+    {key:'chk',  width:4},
+    {key:'name', width:22},
+    {key:'unit', width:8},
+    {key:'qty',  width:10},
+    {key:'price',width:14},
+    {key:'sub',  width:16},
+  ];
+
+  let r = 1;
+
+  // ── 大標題 ──
+  ws.mergeCells(r,1,r,6);
+  const titleCell=ws.getCell(r,1);
+  titleCell.value=派案+'　施工機具成本表';
+  titleCell.font={name:'Noto Sans TC',bold:true,color:{argb:'FFF59E0B'},size:16};
+  titleCell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FF0D1021'}};
+  titleCell.alignment=align('center');
+  ws.getRow(r).height=32; r++;
+
+  // ── 工程資訊 ──
+  const infoData=[['派案',派案,'工區',工區],['日期',日期+' '+星期,'料別',料別],['日/夜',日夜+'班','厚度',厚度]];
+  infoData.forEach(([l1,v1,l2,v2])=>{
+    ws.mergeCells(r,1,r,1); ws.mergeCells(r,2,r,2);
+    ws.mergeCells(r,3,r,3); ws.mergeCells(r,4,r,4);
+    ws.mergeCells(r,5,r,6);
+    const c1=ws.getCell(r,1); c1.value=l1; c1.font=font(true,{argb:'FF5A6080'},10); c1.fill=hdrFill; c1.alignment=align('center');
+    const c2=ws.getCell(r,2); c2.value=v1; c2.font=font(true,txtWhite);           c2.fill=rowFill; c2.alignment=align('left');
+    const c3=ws.getCell(r,3); c3.value=l2; c3.font=font(true,{argb:'FF5A6080'},10); c3.fill=hdrFill; c3.alignment=align('center');
+    const c4=ws.getCell(r,4); c4.value=v2; c4.font=font(true,txtWhite);           c4.fill=rowFill; c4.alignment=align('left');
+    ws.getRow(r).height=20; r++;
+  });
+  r++; // blank
+
+  // ── section helper ──
+  const secColors={前置:'FF6366F1',刨除:'FFF97316',鋪設:'FF10B981',其餘:'FFA78BFA'};
+
+  function writeSecHeader(secName, label, subtotal) {
+    // colored left bar via fill on col A, header row
+    const secFillColor = secFills[secName];
+    ws.mergeCells(r,1,r,5);
+    const hc=ws.getCell(r,1);
+    hc.value='  '+secName+'　'+label;
+    hc.font={name:'Noto Sans TC',bold:true,color:{argb:secColors[secName]},size:12};
+    hc.fill={type:'pattern',pattern:'solid',fgColor:{argb:secFillColor?secFillColor.argb||'FF1A1D27':'FF1A1D27'}};
+    hc.alignment=align('left');
+    const sc=ws.getCell(r,6);
+    sc.value=subtotal; sc.numFmt='"$"#,##0';
+    sc.font=mono(true,txtAccent,11);
+    sc.fill={type:'pattern',pattern:'solid',fgColor:{argb:secFillColor?secFillColor.argb||'FF1A1D27':'FF1A1D27'}};
+    sc.alignment=align('right');
+    ws.getRow(r).height=22; r++;
+
+    // col headers
+    const hRow=ws.getRow(r);
+    ['已聯絡','機具項目','單位','數量','單價','小計'].forEach((h,i)=>{
+      const c=hRow.getCell(i+1);
+      c.value=h; c.font=font(true,{argb:'FF5A6080'},9);
+      c.fill=hdrFill; c.alignment=align('center');
+      c.border=border();
+    });
+    hRow.height=18; r++;
+  }
+
+  function writeCostRows(secName) {
+    costRows[secName].forEach((row,idx)=>{
+      const sub=row.fixed?row.price:row.qty*row.price;
+      const fill={type:'pattern',pattern:'solid',fgColor:{argb:idx%2===0?'FF1A1D27':'FF1E2230'}};
+      const wr=ws.getRow(r);
+      const checked=row.checked;
+
+      // chk
+      const c1=wr.getCell(1); c1.value=checked?'✓':''; c1.font={name:'Arial',bold:true,color:{argb:checked?'FF10B981':'FF2E3350'},size:11}; c1.fill=fill; c1.alignment=align('center'); c1.border=border();
+      // name
+      const c2=wr.getCell(2); c2.value=row.name; c2.font=font(true,checked?{argb:'FF8B92B0'}:txtWhite); c2.fill=fill; c2.alignment=align('left'); c2.border=border();
+      // unit
+      const c3=wr.getCell(3); c3.value=row.unit; c3.font=font(false,txtGray,10); c3.fill=fill; c3.alignment=align('center'); c3.border=border();
+      // qty
+      const c4=wr.getCell(4); c4.value=row.qty; c4.font=mono(true,txtWhite); c4.fill=fill; c4.alignment=align('center'); c4.border=border();
+      // price
+      const c5=wr.getCell(5); c5.value=row.price||0; c5.numFmt=row.fixed?'"固定 $"#,##0':'"$"#,##0'; c5.font=mono(true,txtBlue,10); c5.fill=fill; c5.alignment=align('right'); c5.border=border();
+      // sub
+      const c6=wr.getCell(6); c6.value=sub; c6.numFmt='"$"#,##0'; c6.font=mono(true,txtBlue); c6.fill=fill; c6.alignment=align('right'); c6.border=border();
+
+      wr.height=20; r++;
+    });
+  }
+
+  // ── 前置 ──
+  const sub前置=costRows['前置'].reduce((t,row)=>t+(row.fixed?row.price:row.qty*row.price),0);
+  writeSecHeader('前置','準備',sub前置); writeCostRows('前置'); r++;
+
+  // ── 刨除 ──
+  const sub刨除=costRows['刨除'].reduce((t,row)=>t+(row.fixed?row.price:row.qty*row.price),0);
+  writeSecHeader('刨除','機具',sub刨除); writeCostRows('刨除'); r++;
+
+  // ── 鋪設 ──
+  const sub鋪設=costRows['鋪設'].reduce((t,row)=>t+(row.fixed?row.price:row.qty*row.price),0);
+  writeSecHeader('鋪設','機具',sub鋪設); writeCostRows('鋪設'); r++;
+
+  // ── 其餘 ──
+  const sub其餘V=costRows['其餘'].reduce((t,row)=>t+(row.fixed?row.price:row.qty*row.price),0);
+  const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
+  const sub其餘=sub其餘V+benDang;
+  writeSecHeader('其餘','雜項',sub其餘); writeCostRows('其餘');
+
+  // special rows
+  const spRows=[
+    {name:'便當', note:document.getElementById('spnote-便當')?.value, cost:benDang, checked:spChecked['便當']},
+    {name:'錄影', note:'', cost:0, checked:spChecked['錄影']},
+    {name:'標線', note:'', cost:0, checked:spChecked['標線']},
+    {name:'里長', note:document.getElementById('spnote-里長')?.value, cost:0, checked:spChecked['里長']},
+  ];
+  spRows.forEach((sp,idx)=>{
+    const fill={type:'pattern',pattern:'solid',fgColor:{argb:idx%2===0?'FF1A1D27':'FF1E2230'}};
+    const wr=ws.getRow(r);
+    const c1=wr.getCell(1); c1.value=sp.checked?'✓':''; c1.font={name:'Arial',bold:true,color:{argb:sp.checked?'FF10B981':'FF2E3350'},size:11}; c1.fill=fill; c1.alignment=align('center'); c1.border=border();
+    ws.mergeCells(r,2,r,3);
+    const c2=wr.getCell(2); c2.value=sp.name+(sp.note?' ('+sp.note+')':''); c2.font=font(true,sp.checked?{argb:'FF8B92B0'}:txtWhite); c2.fill=fill; c2.alignment=align('left'); c2.border=noBorderSide();
+    const c4=wr.getCell(4); c4.value='—'; c4.font=font(false,{argb:'FF5A6080'}); c4.fill=fill; c4.alignment=align('center'); c4.border=border();
+    const c5=wr.getCell(5); c5.value='—'; c5.font=font(false,{argb:'FF5A6080'}); c5.fill=fill; c5.alignment=align('center'); c5.border=border();
+    const c6=wr.getCell(6); c6.value=sp.cost||'—'; if(sp.cost) c6.numFmt='"$"#,##0'; c6.font=mono(true,sp.cost?txtBlue:{argb:'FF5A6080'}); c6.fill=fill; c6.alignment=align('right'); c6.border=border();
+    wr.height=20; r++;
+  });
+  r++;
+
+  // ── 合計區 ──
+  const mach=sub前置+sub刨除+sub鋪設+benDang;
+  const machTax=mach*1.05;
+  const grand=machTax+sub其餘V;
+
+  const totRows=[
+    {label:'機具小計',     val:mach,    fill:'FF1A1D27', color:txtAccent},
+    {label:'機具含稅(+5%)',val:machTax, fill:'FF1A1D27', color:txtAccent},
+    {label:'💰 總計',      val:grand,   fill:'FF221A08', color:{argb:'FFF59E0B'}, bold:true, size:13},
+  ];
+  totRows.forEach(t=>{
+    ws.mergeCells(r,1,r,4);
+    const wr=ws.getRow(r);
+    const c1=wr.getCell(1); c1.value=t.label;
+    c1.font={name:'Noto Sans TC',bold:t.bold||false,color:{argb:'FF8B92B0'},size:t.size||11};
+    c1.fill={type:'pattern',pattern:'solid',fgColor:{argb:t.fill}}; c1.alignment=align('right'); c1.border=border();
+    ws.mergeCells(r,5,r,6);
+    const c5=wr.getCell(5); c5.value=t.val; c5.numFmt='"$"#,##0';
+    c5.font={name:'Courier New',bold:true,color:t.color,size:t.size||11};
+    c5.fill={type:'pattern',pattern:'solid',fgColor:{argb:t.fill}}; c5.alignment=align('right'); c5.border=border();
+    wr.height=t.bold?26:20; r++;
+  });
+
+  // ── 匯出 ──
+  const date=(document.querySelector('#page-cost .info-val:nth-child(4)')||{textContent:''}).textContent.replace(/\//g,'-')||'export';
+  const fname=`施工機具成本表_${工區||''}_${日期||''}.xlsx`.replace(/[\\/:\*\?"<>\|]/g,'_');
+  const buf=await wb.xlsx.writeBuffer();
+  const blob=new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=fname; a.click();
+  URL.revokeObjectURL(url);
+  showToast('✅ 已匯出 '+fname,'ok');
+}
+
+// ══ TAB ══
+let currentTab='cost';
+function switchTab(tab) {
+  ['cost','rec','db'].forEach(t=>{
+    document.getElementById('page-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  currentTab=tab; updateIndicator();
+  if(tab==='cost'&&!dbDirty){ loadCostDB(); renderCostAll(); }
+  if(tab==='rec'){ renderRecords(); }
+  setTimeout(()=>{
+    if(tab==='cost'||tab==='db'){
+      const px=tab==='cost'?'cbody-':'dbody-';
+      SECS.forEach(sec=>{ const b=document.getElementById(px+sec); if(b) b.style.maxHeight=b.scrollHeight+400+'px'; });
+    }
+  },50);
+}
+function updateIndicator() {
+  const bar=document.getElementById('tabbar'), ind=document.getElementById('tabInd');
+  const tabs=['rec','cost','db'], idx=tabs.indexOf(currentTab), w=bar.offsetWidth/tabs.length;
+  ind.style.width=w+'px'; ind.style.left=(idx*w)+'px';
+}
+
+// ══ SHARED ══
+function toggleSec(page,sec) {
+  const px=page==='cost'?'cbody-':'dbody-', tx=page==='cost'?'ctog-':'dtog-';
+  const body=document.getElementById(px+sec), tog=document.getElementById(tx+sec);
+  if(!body) return;
+  if(body.style.maxHeight&&body.style.maxHeight!=='0px'){body.style.maxHeight='0px';tog.classList.remove('open');}
+  else{body.style.maxHeight=body.scrollHeight+400+'px';tog.classList.add('open');}
+}
+function expandSec(page,sec) {
+  const b=document.getElementById((page==='cost'?'cbody-':'dbody-')+sec);
+  if(b&&b.style.maxHeight!=='0px') b.style.maxHeight=b.scrollHeight+400+'px';
+}
+function fmt(n){return '$'+Math.round(n).toLocaleString('zh-TW');}
+function deepCopy(o){return JSON.parse(JSON.stringify(o));}
+function showToast(msg,type='') {
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast'+(type?' '+type:''); t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+
+// ══ INFO FIELD HELPERS ══
+
+// Date → weekday (ROC calendar: subtract 1911 for western year)
+function onDateInput() {
+  const raw = document.getElementById('infoDate').value.trim();
+  const wd = document.getElementById('infoWeekday');
+  // parse ROC: 114/3/15 → 2025/3/15
+  const m = raw.match(/^(\d+)[\/\-](\d+)[\/\-](\d+)$/);
+  if (!m) { wd.textContent = ''; return; }
+  const y = parseInt(m[1]) + (parseInt(m[1]) < 200 ? 1911 : 0);
+  const mo = parseInt(m[2]) - 1, d = parseInt(m[3]);
+  const dt = new Date(y, mo, d);
+  if (isNaN(dt.getTime())) { wd.textContent = ''; return; }
+  const days = ['日','一','二','三','四','五','六'];
+  wd.textContent = '週' + days[dt.getDay()];
+}
+
+let dayNight = '日';
+function setDayNight(v) {
+  dayNight = v;
+  document.getElementById('btn-日').classList.toggle('active', v==='日');
+  document.getElementById('btn-夜').classList.toggle('active', v==='夜');
+}
+
+function addMaterial() {
+  const inp = document.getElementById('infoMaterialCustom');
+  const val = inp.value.trim(); if (!val) return;
+  const sel = document.getElementById('infoMaterial');
+  // check not duplicate
+  for (let o of sel.options) { if (o.value === val) { sel.value = val; inp.value = ''; return; } }
+  const opt = document.createElement('option');
+  opt.value = val; opt.textContent = val;
+  sel.appendChild(opt); sel.value = val; inp.value = '';
+  showToast('✅ 已新增料別：'+val);
+}
+
+// collect current info values for saving
+function getInfoSnapshot() {
+  return {
+    派案: document.querySelector('#page-cost .info-val.accent')?.textContent.trim() || '',
+    日期: document.getElementById('infoDate')?.value.trim() || '',
+    星期: document.getElementById('infoWeekday')?.textContent || '',
+    工區: document.querySelector('#page-cost .info-val:not(.accent)')?.textContent.trim() || '',
+    日夜: dayNight,
+    料別: document.getElementById('infoMaterial')?.value || '',
+    厚度: (document.getElementById('infoThick')?.value || '5') + 'cm',
+  };
+}
+
+// ══ RECORD EDIT MODAL ══
+let editingRecId = null;
+
+function openRecEdit(id) {
+  const rec = records.find(r=>r.id===id); if(!rec) return;
+  editingRecId = id;
+
+  // Load record data back into cost page
+  // Info fields
+  document.querySelector('#page-cost .info-val.accent').textContent = rec.派案||'';
+  if(document.getElementById('infoDate')) document.getElementById('infoDate').value = rec.日期||'';
+  onDateInput();
+  // find 工區 info-val
+  const infoVals = [...document.querySelectorAll('#page-cost .info-val:not(.accent)')];
+  if(infoVals[0]) infoVals[0].textContent = rec.工區||'';
+  setDayNight(rec.日夜||'日');
+  const matSel = document.getElementById('infoMaterial');
+  if(matSel) {
+    let found=false;
+    for(let o of matSel.options){ if(o.value===rec.料別){matSel.value=rec.料別;found=true;break;} }
+    if(!found && rec.料別){ const opt=document.createElement('option'); opt.value=rec.料別; opt.textContent=rec.料別; matSel.appendChild(opt); matSel.value=rec.料別; }
+  }
+  const thk = rec.厚度 ? rec.厚度.replace('cm','') : '5';
+  if(document.getElementById('infoThick')) document.getElementById('infoThick').value = thk;
+
+  // Load rows
+  costRows = deepCopy(rec.rows);
+  // give new ids to avoid collision
+  uid = Date.now();
+  SECS.forEach(sec=>costRows[sec].forEach(r=>{ r.id=uid++; }));
+  renderCostAll();
+
+  // special rows
+  if(document.getElementById('spcost-便當')) document.getElementById('spcost-便當').value = rec.sp?.便當?.cost||0;
+  if(document.getElementById('spnote-便當')) document.getElementById('spnote-便當').value = rec.sp?.便當?.note||'';
+  if(document.getElementById('spnote-里長')) document.getElementById('spnote-里長').value = rec.sp?.里長?.note||'';
+  Object.keys(spChecked).forEach(k=>{
+    spChecked[k] = rec.sp?.[k]?.checked||false;
+    const chk=document.getElementById('spchk-'+k);
+    if(chk){chk.classList.toggle('on',spChecked[k]);chk.textContent=spChecked[k]?'✓':'';}
+    document.getElementById('sprow-'+k)?.classList.toggle('checked-row',spChecked[k]);
+  });
+  recalc();
+
+  // Switch to cost tab and show edit mode banner
+  switchTab('cost');
+  showEditBanner(id);
+  showToast('已載入紀錄，可直接修改後儲存','ok');
+}
+
+function showEditBanner(id) {
+  let banner = document.getElementById('editBanner');
+  if(!banner){
+    banner = document.createElement('div');
+    banner.id = 'editBanner';
+    banner.style.cssText='position:sticky;top:50px;z-index:99;background:rgba(167,139,250,.15);border-bottom:2px solid #a78bfa;padding:8px 14px;display:flex;align-items:center;justify-content:space-between;';
+    banner.innerHTML=`<span style="font-size:12px;font-weight:700;color:#c4b5fd;">✏️ 編輯模式 — 修改完請點更新儲存</span>
+      <button onclick="updateRecord()" style="background:rgba(167,139,250,.25);border:1px solid #a78bfa;border-radius:8px;padding:5px 12px;color:#c4b5fd;font-size:12px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;">✅ 更新儲存</button>`;
+    document.getElementById('page-cost').insertBefore(banner, document.getElementById('page-cost').children[1]);
+  }
+  banner.style.display='flex';
+  editingRecId = id;
+}
+
+function hideEditBanner() {
+  const b=document.getElementById('editBanner'); if(b) b.style.display='none';
+  editingRecId=null;
+}
+
+function updateRecord() {
+  if(editingRecId===null) return;
+  const idx = records.findIndex(r=>r.id===editingRecId); if(idx===-1) return;
+
+  const info = getInfoSnapshot();
+  const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
+  const benNote=document.getElementById('spnote-便當')?.value||'';
+  const liNote=document.getElementById('spnote-里長')?.value||'';
+  const spSnap={
+    便當:{cost:benDang,note:benNote,checked:spChecked['便當']},
+    錄影:{checked:spChecked['錄影']},標線:{checked:spChecked['標線']},
+    里長:{note:liNote,checked:spChecked['里長']},
+  };
+  const snapshot={};
+  SECS.forEach(sec=>{
+    snapshot[sec]=costRows[sec].map(r=>({name:r.name,unit:r.unit,qty:r.qty,price:r.price,fixed:r.fixed,checked:r.checked,sub:r.fixed?r.price:r.qty*r.price}));
+  });
+  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
+  const grand=mach*1.05+other;
+
+  records[idx]={...records[idx],...info,rows:snapshot,sp:spSnap,mach,machTax:mach*1.05,grand,updatedAt:new Date().toLocaleString('zh-TW',{hour12:false})};
+  localStorage.setItem(REC_KEY,JSON.stringify(records));
+  hideEditBanner();
+  showToast('✅ 紀錄已更新','ok');
+}
+
+// ══ INIT ══
+loadPriceDB(); loadCostDB(); loadCostDefaults(); loadRecords();
+renderCostAll(); renderDbAll(); updateDbStatusBadge();
+document.getElementById('spcost-便當')?.addEventListener('input',recalc);
+onDateInput(); // init weekday display
+setTimeout(()=>{
+  SECS.forEach(sec=>{ ['cbody-','dbody-'].forEach(p=>{ const b=document.getElementById(p+sec); if(b) b.style.maxHeight=b.scrollHeight+400+'px'; }); });
+  updateIndicator();
+},130);
+window.addEventListener('resize',updateIndicator);
+</script>
+</body>
+</html>
