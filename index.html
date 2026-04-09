@@ -2,7 +2,9 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>html{touch-action:manipulation;}</style>
 <title>施工機具成本表</title>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
@@ -20,7 +22,7 @@
   --shadow2:0 2px 12px rgba(0,0,0,.10);
   --c前置:#4f46e5;--c刨除:#ea580c;--c鋪設:#059669;--c其餘:#7c3aed;
 }
-*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 html,body{height:100%;}
 body{background:var(--bg);color:var(--text);font-family:'Noto Sans TC',sans-serif;overflow-x:hidden;}
 .page{display:none;min-height:100vh;padding-bottom:70px;}
