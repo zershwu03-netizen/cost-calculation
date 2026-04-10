@@ -105,9 +105,11 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .dn-btn{border:1.5px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;border-radius:8px;padding:5px 18px;cursor:pointer;transition:all .15s;min-width:48px;text-align:center;}
 .dn-btn.active{background:rgba(224,123,0,.1);border-color:var(--accent);color:var(--accent);}
 
-/* COST ROW — name|qty|price|sub|del */
-.cost-col-hdrs{grid-template-columns:1fr 76px 72px 84px 28px;}
-.cost-row{display:grid;grid-template-columns:1fr 76px 72px 84px 28px;align-items:center;padding:10px 10px 10px 14px;background:var(--surface);border-top:1px solid var(--border);gap:4px;}
+
+/* COST ROW — wrap > main(name|qty|shift|price|sub|del) + ot-wrap */
+.cost-col-hdrs{grid-template-columns:1fr 76px 52px 68px 84px 28px;}
+.cost-row-wrap{background:var(--surface);border-top:1px solid var(--border);}
+.cost-row-main{display:grid;grid-template-columns:1fr 76px 52px 68px 84px 28px;align-items:center;padding:10px 10px 10px 14px;gap:4px;}
 .item-name{font-size:14px;font-weight:700;color:var(--text);}
 .item-note{font-size:11px;color:var(--t3);margin-top:1px;}
 .qty-wrap{display:flex;align-items:center;justify-content:center;gap:3px;}
@@ -117,11 +119,25 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .q-inp{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;width:68px;text-align:center;padding:4px 2px;outline:none;-moz-appearance:textfield;}
 .q-inp::-webkit-outer-spin-button,.q-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 .q-inp:focus{border-color:var(--blue);}
+/* shift toggle */
+.shift-wrap{display:flex;flex-direction:column;gap:3px;align-items:center;}
+.shift-btn{font-size:11px;font-weight:700;padding:2px 7px;border-radius:6px;border:1.5px solid var(--border);background:var(--s2);color:var(--t3);cursor:pointer;transition:all .15s;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
+.shift-btn.on-day{background:rgba(224,123,0,.12);border-color:var(--accent);color:var(--accent);}
+.shift-btn.on-night{background:rgba(37,99,235,.1);border-color:var(--blue);color:var(--blue);}
+.shift-placeholder{width:52px;}
+/* price / sub */
 .price-cell{display:flex;flex-direction:column;align-items:center;}
-.price-disp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blue);text-align:center;}
+.price-disp{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--blue);text-align:center;}
 .price-lbl{font-size:10px;color:var(--t3);margin-top:1px;}
 .sub-cell{text-align:right;}
 .sub-val{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--blue);}
+/* overtime row */
+.ot-wrap{display:flex;align-items:center;gap:6px;padding:5px 10px 8px 56px;background:rgba(245,158,11,.04);border-top:1px dashed rgba(245,158,11,.25);}
+.ot-lbl{font-size:11px;font-weight:700;color:var(--t3);}
+.ot-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);background:var(--s2);border:1px solid rgba(245,158,11,.3);border-radius:6px;width:52px;text-align:center;padding:3px 4px;outline:none;-moz-appearance:textfield;}
+.ot-inp::-webkit-outer-spin-button,.ot-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
+.ot-inp:focus{border-color:var(--accent);}
+.ot-sub{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);}
 .del-btn{width:26px;height:26px;border-radius:7px;background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.15);color:var(--red);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .del-btn:active{background:rgba(220,38,38,.2);}
 .add-row{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--s2);border-top:1px solid var(--border);cursor:pointer;}
@@ -159,8 +175,8 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 
 /* PAGE 2 — 單價管理 */
 .notice{margin:10px;padding:10px 14px;border-radius:12px;background:rgba(37,99,235,.06);border:1px solid rgba(37,99,235,.18);font-size:13px;color:#1d4ed8;line-height:1.6;display:flex;gap:10px;align-items:flex-start;}
-.db-col-hdrs{grid-template-columns:1fr 58px 94px 28px;}
-.db-row{display:grid;grid-template-columns:1fr 58px 94px 28px;align-items:center;padding:10px 10px 10px 14px;background:var(--surface);border-top:1px solid var(--border);gap:4px;transition:background .15s;}
+.db-col-hdrs{grid-template-columns:1fr 90px 90px 28px;}
+.db-row{display:grid;grid-template-columns:1fr 90px 90px 28px;align-items:center;padding:9px 10px 9px 14px;background:var(--surface);border-top:1px solid var(--border);gap:6px;transition:background .15s;}
 .db-row.changed{background:rgba(224,123,0,.05);}
 .db-name{font-size:14px;font-weight:700;color:var(--text);}
 .unit-tag{font-size:12px;font-weight:700;color:var(--t3);text-align:center;background:var(--s2);border-radius:6px;padding:3px 5px;}
@@ -171,7 +187,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .pf-inp::-webkit-outer-spin-button,.pf-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 .fixed-tag{font-size:11px;font-weight:700;color:var(--green);background:rgba(5,150,105,.1);border-radius:6px;padding:4px 6px;text-align:center;}
 .add-form{border-top:1px solid var(--border);background:var(--s2);padding:9px 10px;}
-.add-fields{display:grid;grid-template-columns:1fr 56px 84px auto;gap:5px;align-items:center;}
+.add-fields{display:grid;grid-template-columns:1fr 52px 72px 72px auto;gap:5px;align-items:center;}
 .af-inp{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:8px 9px;color:var(--text);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;outline:none;width:100%;}
 .af-inp:focus{border-color:var(--blue);}
 .af-inp::placeholder{color:var(--t3);font-weight:400;font-size:13px;}
@@ -189,12 +205,12 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 
 .rec-card{margin:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);transition:box-shadow .18s;}
 .rec-card:active{box-shadow:var(--shadow2);}
-.rec-hdr{display:flex;align-items:center;padding:13px 14px;cursor:pointer;user-select:none;gap:10px;}
+.rec-hdr{display:flex;align-items:flex-start;padding:13px 14px;cursor:pointer;user-select:none;gap:8px;}
 .rec-info{flex:1;min-width:0;}
-.rec-title{font-size:15px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.rec-meta{font-size:12px;color:var(--t3);margin-top:2px;}
-.rec-total{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--purple);white-space:nowrap;}
-.rec-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;}
+.rec-title{font-size:15px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec-meta{font-size:12px;color:var(--t3);margin-top:3px;line-height:1.5;}
+.rec-total{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--purple);white-space:nowrap;text-align:right;}
+.rec-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;margin-top:2px;}
 .rec-tog.open{transform:rotate(180deg);}
 .rec-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
 .rec-body.open{max-height:3000px;}
@@ -249,6 +265,39 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 .toast.ok{background:var(--green);}
 .toast.err{background:var(--red);}
+
+/* SEARCH BAR */
+.search-bar{display:flex;align-items:center;gap:8px;margin:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);}
+.search-icon{font-size:16px;flex-shrink:0;color:var(--t3);}
+.search-inp{flex:1;border:none;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;color:var(--text);background:transparent;}
+.search-inp::placeholder{color:var(--t3);}
+.search-clear{font-size:16px;color:var(--t3);cursor:pointer;padding:2px 4px;display:none;}
+.search-clear.show{display:block;}
+.filter-row{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.filter-row::-webkit-scrollbar{display:none;}
+.filter-chip{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--t2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.filter-chip.active{background:rgba(37,99,235,.1);border-color:var(--blue);color:var(--blue);}
+
+/* MONTHLY STATS PAGE */
+.stats-month-sel{display:flex;align-items:center;justify-content:space-between;margin:10px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);}
+.stats-arrow{font-size:20px;color:var(--t2);cursor:pointer;padding:4px 8px;border-radius:8px;border:none;background:transparent;}
+.stats-arrow:active{background:var(--s2);}
+.stats-month-lbl{font-size:17px;font-weight:900;color:var(--text);}
+.stats-cards{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 10px 10px;}
+.stats-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;box-shadow:var(--shadow);}
+.stats-card.wide{grid-column:span 2;}
+.stats-card-lbl{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;}
+.stats-card-val{font-family:'JetBrains Mono',monospace;font-size:20px;font-weight:700;color:var(--text);}
+.stats-card-val.accent{color:var(--accent);}
+.stats-card-val.blue{color:var(--blue);}
+.stats-card-sub{font-size:11px;color:var(--t3);margin-top:3px;}
+.stats-list{margin:0 10px 10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;box-shadow:var(--shadow);}
+.stats-list-hdr{padding:10px 14px;font-size:12px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;background:var(--s2);border-bottom:1px solid var(--border);}
+.stats-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--border);}
+.stats-item:last-child{border-bottom:none;}
+.stats-item-l{font-size:13px;font-weight:700;color:var(--text);}
+.stats-item-r{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--blue);}
+.stats-empty{padding:30px;text-align:center;color:var(--t3);font-size:13px;}
 </style>
 </head>
 <body>
@@ -261,6 +310,18 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div id="recCount" class="hdr-badge" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);">0 筆</div>
       <div class="sync-badge state-idle" id="syncBadge" onclick="fbSync()"><div class="sd"></div><span id="syncTxt">本地模式</span></div>
     </div>
+  </div>
+  <!-- 搜尋列 -->
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input class="search-inp" id="searchInp" placeholder="搜尋派案、工區、料別…" oninput="onSearch()" />
+    <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
+  </div>
+  <!-- 篩選 chips -->
+  <div class="filter-row" id="filterRow">
+    <div class="filter-chip active" onclick="setFilter('all',this)">全部</div>
+    <div class="filter-chip" onclick="setFilter('日',this)">日班</div>
+    <div class="filter-chip" onclick="setFilter('夜',this)">夜班</div>
   </div>
   <div id="recEmpty" style="margin:40px 20px;text-align:center;color:var(--t3);">
     <div style="font-size:44px;margin-bottom:14px;">🗂️</div>
@@ -335,7 +396,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-前置">$0</span><span class="sec-tog open" id="ctog-前置">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-前置">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-前置"></div>
       <div class="add-row" onclick="openPicker('前置')"><div class="add-icon">＋</div><div class="add-lbl">新增前置機具</div></div>
     </div>
@@ -347,7 +408,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-刨除">$0</span><span class="sec-tog open" id="ctog-刨除">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-刨除">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具</div><div class="col-h c">數量</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-刨除"></div>
       <div class="add-row" onclick="openPicker('刨除')"><div class="add-icon">＋</div><div class="add-lbl">新增刨除機具</div></div>
     </div>
@@ -359,7 +420,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-鋪設">$0</span><span class="sec-tog open" id="ctog-鋪設">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-鋪設">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-鋪設"></div>
       <div class="add-row" onclick="openPicker('鋪設')"><div class="add-icon">＋</div><div class="add-lbl">新增鋪設機具</div></div>
     </div>
@@ -371,7 +432,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-其餘">$0</span><span class="sec-tog open" id="ctog-其餘">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-其餘">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">項目</div><div class="col-h c">數量</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h">項目</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-其餘"></div>
       <div class="special-row" id="sprow-便當">
         <div class="sp-name">便當</div>
@@ -410,11 +471,26 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     </div>
   </div>
   <div class="notice"><div style="font-size:16px;flex-shrink:0;">💡</div><div>設定各機具標準單價後點「儲存並套用」，成本表會自動讀取，填表只需輸入數量。</div></div>
-  <div class="section sec-前置"><div class="sec-hdr" onclick="toggleSec('db','前置')"><div class="sec-title">前置<span class="badge bdg-前置">準備</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-前置"></span><span class="sec-tog open" id="dtog-前置">▾</span></div></div><div class="sec-body" id="dbody-前置"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div><div id="dlist-前置"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-前置" placeholder="名稱" /><input class="af-inp" id="dau-前置" placeholder="單位" /><input class="af-inp" id="dap-前置" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('前置')">＋</button></div></div></div></div>
-  <div class="section sec-刨除"><div class="sec-hdr" onclick="toggleSec('db','刨除')"><div class="sec-title">刨除<span class="badge bdg-刨除">機具</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-刨除"></span><span class="sec-tog open" id="dtog-刨除">▾</span></div></div><div class="sec-body" id="dbody-刨除"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div><div id="dlist-刨除"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-刨除" placeholder="名稱" /><input class="af-inp" id="dau-刨除" placeholder="單位" /><input class="af-inp" id="dap-刨除" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('刨除')">＋</button></div></div></div></div>
-  <div class="section sec-鋪設"><div class="sec-hdr" onclick="toggleSec('db','鋪設')"><div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-鋪設"></span><span class="sec-tog open" id="dtog-鋪設">▾</span></div></div><div class="sec-body" id="dbody-鋪設"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div><div id="dlist-鋪設"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-鋪設" placeholder="名稱" /><input class="af-inp" id="dau-鋪設" placeholder="單位" /><input class="af-inp" id="dap-鋪設" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('鋪設')">＋</button></div></div></div></div>
-  <div class="section sec-其餘"><div class="sec-hdr" onclick="toggleSec('db','其餘')"><div class="sec-title">其餘<span class="badge bdg-其餘">雜項</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-其餘"></span><span class="sec-tog open" id="dtog-其餘">▾</span></div></div><div class="sec-body" id="dbody-其餘"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">單位</div><div class="col-h r">單價</div><div class="col-h"></div></div><div id="dlist-其餘"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-其餘" placeholder="名稱" /><input class="af-inp" id="dau-其餘" placeholder="單位" /><input class="af-inp" id="dap-其餘" type="number" placeholder="單價" /><button class="af-btn" onclick="dbAddItem('其餘')">＋</button></div></div></div></div>
+  <div class="section sec-前置"><div class="sec-hdr" onclick="toggleSec('db','前置')"><div class="sec-title">前置<span class="badge bdg-前置">準備</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-前置"></span><span class="sec-tog open" id="dtog-前置">▾</span></div></div><div class="sec-body" id="dbody-前置"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">☀️ 日間</div><div class="col-h c">🌙 夜間</div><div class="col-h"></div></div><div id="dlist-前置"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-前置" placeholder="名稱" /><input class="af-inp" id="dau-前置" placeholder="單位" /><input class="af-inp" id="dap-d-前置" type="number" placeholder="日間" /><input class="af-inp" id="dap-n-前置" type="number" placeholder="夜間" /><button class="af-btn" onclick="dbAddItem('前置')">＋</button></div></div></div></div>
+  <div class="section sec-刨除"><div class="sec-hdr" onclick="toggleSec('db','刨除')"><div class="sec-title">刨除<span class="badge bdg-刨除">機具</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-刨除"></span><span class="sec-tog open" id="dtog-刨除">▾</span></div></div><div class="sec-body" id="dbody-刨除"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">☀️ 日間</div><div class="col-h c">🌙 夜間</div><div class="col-h"></div></div><div id="dlist-刨除"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-刨除" placeholder="名稱" /><input class="af-inp" id="dau-刨除" placeholder="單位" /><input class="af-inp" id="dap-d-刨除" type="number" placeholder="日間" /><input class="af-inp" id="dap-n-刨除" type="number" placeholder="夜間" /><button class="af-btn" onclick="dbAddItem('刨除')">＋</button></div></div></div></div>
+  <div class="section sec-鋪設"><div class="sec-hdr" onclick="toggleSec('db','鋪設')"><div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-鋪設"></span><span class="sec-tog open" id="dtog-鋪設">▾</span></div></div><div class="sec-body" id="dbody-鋪設"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">☀️ 日間</div><div class="col-h c">🌙 夜間</div><div class="col-h"></div></div><div id="dlist-鋪設"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-鋪設" placeholder="名稱" /><input class="af-inp" id="dau-鋪設" placeholder="單位" /><input class="af-inp" id="dap-d-鋪設" type="number" placeholder="日間" /><input class="af-inp" id="dap-n-鋪設" type="number" placeholder="夜間" /><button class="af-btn" onclick="dbAddItem('鋪設')">＋</button></div></div></div></div>
+  <div class="section sec-其餘"><div class="sec-hdr" onclick="toggleSec('db','其餘')"><div class="sec-title">其餘<span class="badge bdg-其餘">雜項</span></div><div class="sec-r"><span class="sec-cnt" id="dcnt-其餘"></span><span class="sec-tog open" id="dtog-其餘">▾</span></div></div><div class="sec-body" id="dbody-其餘"><div class="col-hdrs db-col-hdrs"><div class="col-h">名稱</div><div class="col-h c">☀️ 日間</div><div class="col-h c">🌙 夜間</div><div class="col-h"></div></div><div id="dlist-其餘"></div><div class="add-form"><div class="add-fields"><input class="af-inp" id="dan-其餘" placeholder="名稱" /><input class="af-inp" id="dau-其餘" placeholder="單位" /><input class="af-inp" id="dap-d-其餘" type="number" placeholder="日間" /><input class="af-inp" id="dap-n-其餘" type="number" placeholder="夜間" /><button class="af-btn" onclick="dbAddItem('其餘')">＋</button></div></div></div></div>
   <div class="db-bar"><button class="db-btn reset" onclick="dbReset()">↺ 重設預設</button><button class="db-btn save" onclick="dbSave()">💾 儲存並套用</button></div>
+</div>
+
+<!-- ══ PAGE 4: 月報統計 ══ -->
+<div class="page" id="page-stats">
+  <div class="hdr">
+    <div class="hdr-l"><div class="sub">工程統計</div><div class="main" style="color:var(--blue)">月報</div></div>
+    <div class="sync-badge state-idle" onclick="fbSync()" style="padding:5px 8px;"><div class="sd"></div></div>
+  </div>
+  <!-- 月份選擇 -->
+  <div class="stats-month-sel">
+    <button class="stats-arrow" onclick="changeStatsMonth(-1)">‹</button>
+    <div class="stats-month-lbl" id="statsMonthLbl"></div>
+    <button class="stats-arrow" onclick="changeStatsMonth(1)">›</button>
+  </div>
+  <div id="statsContent"></div>
 </div>
 
 <!-- TAB BAR -->
@@ -422,6 +498,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="tab-ind" id="tabInd"></div>
   <button class="tab active" id="tab-rec" onclick="switchTab('rec')"><span class="tab-icon">🗂️</span><span class="tab-label">歷史紀錄</span></button>
   <button class="tab" id="tab-cost" onclick="switchTab('cost')"><span class="tab-icon">📋</span><span class="tab-label">成本表</span></button>
+  <button class="tab" id="tab-stats" onclick="switchTab('stats')"><span class="tab-icon">📊</span><span class="tab-label">月報統計</span></button>
   <button class="tab" id="tab-db" onclick="switchTab('db')"><span class="tab-icon">🗃️</span><span class="tab-label">單價管理</span></button>
 </div>
 
@@ -447,20 +524,12 @@ const FB_CONFIG = {
 };
 const FB_COLLECTION = "cost_records";
 
-let db_fb = null;
-let fbReady = false;
-let doneTimer = null;
+let db_fb = null, fbReady = false, doneTimer = null, fbUnsubscribe = null;
 
-// 4 states: idle | ok (雲端連線) | syncing (同步中) | done (✓已同步) | err (本地模式)
 function setSyncBadge(state, label) {
-  // update all sync badges on all pages
-  const badges = document.querySelectorAll('.sync-badge');
-  badges.forEach(b => {
+  document.querySelectorAll('.sync-badge').forEach(b => {
     b.className = 'sync-badge state-' + state;
-    if(b.id === 'syncBadge') {
-      const txt = b.querySelector('#syncTxt');
-      if(txt) txt.textContent = label;
-    }
+    if(b.id === 'syncBadge') { const t=b.querySelector('#syncTxt'); if(t) t.textContent=label; }
   });
 }
 
@@ -470,45 +539,54 @@ function initFirebase() {
     db_fb = firebase.firestore();
     fbReady = true;
     setSyncBadge('ok', '雲端連線');
-    fbSync();
-  } catch(e) {
-    setSyncBadge('err', '本地模式');
-  }
+    startRealtimeListener();
+  } catch(e) { setSyncBadge('err', '本地模式'); }
 }
 
+// ── 即時監聽：Firestore 有變動就自動更新 ──
+function startRealtimeListener() {
+  if(!fbReady) return;
+  if(fbUnsubscribe) fbUnsubscribe();
+  setSyncBadge('syncing', '連線中…');
+  fbUnsubscribe = db_fb.collection(FB_COLLECTION).orderBy('id','desc')
+    .onSnapshot(snap => {
+      const fbRecs = snap.docs.map(d => d.data());
+      const fbIds = new Set(fbRecs.map(r => r.id));
+      const localOnly = records.filter(r => !fbIds.has(r.id));
+      localOnly.forEach(r => db_fb.collection(FB_COLLECTION).doc(String(r.id)).set(r));
+      records = [...fbRecs, ...localOnly].sort((a,b) => b.id - a.id);
+      localStorage.setItem(REC_KEY, JSON.stringify(records));
+      renderRecords();
+      if(currentTab==='stats') renderStats();
+      setSyncBadge('done', '✓ 已同步');
+      clearTimeout(doneTimer);
+      doneTimer = setTimeout(() => setSyncBadge('ok','雲端連線'), 3000);
+    }, () => setSyncBadge('err', '本地模式'));
+}
+
+// ── 手動觸發（點 badge） ──
 async function fbSync() {
   if(!fbReady) { setSyncBadge('err', '本地模式'); return; }
+  if(fbUnsubscribe) { startRealtimeListener(); return; } // restart listener
   setSyncBadge('syncing', '同步中…');
   try {
     const snap = await db_fb.collection(FB_COLLECTION).orderBy('id','desc').get();
     const fbRecs = snap.docs.map(d => d.data());
     const fbIds = new Set(fbRecs.map(r=>r.id));
     const localOnly = records.filter(r=>!fbIds.has(r.id));
-    for(const r of localOnly) {
-      await db_fb.collection(FB_COLLECTION).doc(String(r.id)).set(r);
-    }
+    for(const r of localOnly) await db_fb.collection(FB_COLLECTION).doc(String(r.id)).set(r);
     records = [...fbRecs, ...localOnly].sort((a,b)=>b.id-a.id);
     localStorage.setItem(REC_KEY, JSON.stringify(records));
     renderRecords();
     setSyncBadge('done', '✓ 已同步');
     clearTimeout(doneTimer);
     doneTimer = setTimeout(()=>setSyncBadge('ok','雲端連線'), 3000);
-  } catch(e) {
-    setSyncBadge('err', '本地模式');
-  }
+  } catch(e) { setSyncBadge('err', '本地模式'); }
 }
 
 async function fbSaveRecord(rec) {
   if(!fbReady) return;
-  setSyncBadge('syncing', '同步中…');
-  try {
-    await db_fb.collection(FB_COLLECTION).doc(String(rec.id)).set(rec);
-    setSyncBadge('done', '✓ 已同步');
-    clearTimeout(doneTimer);
-    doneTimer = setTimeout(()=>setSyncBadge('ok','雲端連線'), 3000);
-  } catch(e) {
-    setSyncBadge('err', '本地模式');
-  }
+  try { await db_fb.collection(FB_COLLECTION).doc(String(rec.id)).set(rec); } catch(e){}
 }
 
 async function fbDeleteRecord(id) {
@@ -516,16 +594,163 @@ async function fbDeleteRecord(id) {
   try { await db_fb.collection(FB_COLLECTION).doc(String(id)).delete(); } catch(e){}
 }
 
-// ══════════ PRICE DB ══════════
+// ══════════ SEARCH & FILTER ══════════
+let searchQuery = '';
+let filterMode = 'all'; // 'all' | '日' | '夜'
+
+function onSearch() {
+  const inp = document.getElementById('searchInp');
+  searchQuery = inp.value.trim();
+  document.getElementById('searchClear').classList.toggle('show', searchQuery.length > 0);
+  renderRecords();
+}
+function clearSearch() {
+  document.getElementById('searchInp').value = '';
+  searchQuery = '';
+  document.getElementById('searchClear').classList.remove('show');
+  renderRecords();
+}
+function setFilter(mode, chipEl) {
+  filterMode = mode;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  chipEl.classList.add('active');
+  renderRecords();
+}
+function filteredRecords() {
+  return records.filter(r => {
+    if(filterMode !== 'all' && r.日夜 !== filterMode) return false;
+    if(searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const hay = [(r.派案||''),(r.工區||''),(r.料別||''),(r.日期||'')].join(' ').toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+}
+
+// ══════════ AUTO-INCREMENT 派案 ══════════
+function autoIncrementCase(caseStr) {
+  if(!caseStr) return '';
+  // 支援「第N派案」或「第N次」格式
+  return caseStr.replace(/第(\d+)(派案|次|回|工)/g, (m, n, suffix) => `第${parseInt(n)+1}${suffix}`);
+}
+
+// ══════════ MONTHLY STATS ══════════
+let statsYear = new Date().getFullYear();
+let statsMonth = new Date().getMonth() + 1; // 1-12 西元月
+
+// 民國日期 → 西元 Date
+function rocToDate(roc) {
+  if(!roc) return null;
+  const m = roc.match(/^(\d+)[\/\-](\d+)[\/\-](\d+)$/);
+  if(!m) return null;
+  const y = parseInt(m[1]) + (parseInt(m[1]) < 200 ? 1911 : 0);
+  return new Date(y, parseInt(m[2])-1, parseInt(m[3]));
+}
+
+function changeStatsMonth(delta) {
+  statsMonth += delta;
+  if(statsMonth > 12) { statsMonth = 1; statsYear++; }
+  if(statsMonth < 1)  { statsMonth = 12; statsYear--; }
+  renderStats();
+}
+
+function renderStats() {
+  const lbl = document.getElementById('statsMonthLbl');
+  const rocYear = statsYear - 1911;
+  lbl.textContent = `民國 ${rocYear} 年 ${statsMonth} 月`;
+
+  // 篩選當月紀錄
+  const monthRecs = records.filter(r => {
+    const d = rocToDate(r.日期);
+    return d && d.getFullYear() === statsYear && d.getMonth()+1 === statsMonth;
+  });
+
+  const el = document.getElementById('statsContent');
+  if(!monthRecs.length) {
+    el.innerHTML = `<div class="stats-empty">本月尚無施工紀錄</div>`;
+    return;
+  }
+
+  const totalGrand = monthRecs.reduce((s,r) => s + (r.grand||0), 0);
+  const totalMach  = monthRecs.reduce((s,r) => s + (r.mach||0), 0);
+  const avgGrand   = totalGrand / monthRecs.length;
+  const dayCount   = monthRecs.filter(r=>r.日夜==='日').length;
+  const nightCount = monthRecs.filter(r=>r.日夜==='夜').length;
+
+  // 工區統計
+  const areaMap = {};
+  monthRecs.forEach(r => {
+    const a = r.工區||'未知'; 
+    if(!areaMap[a]) areaMap[a]={count:0,total:0};
+    areaMap[a].count++; areaMap[a].total+=(r.grand||0);
+  });
+  const areaSorted = Object.entries(areaMap).sort((a,b)=>b[1].total-a[1].total);
+
+  // 料別統計
+  const matMap = {};
+  monthRecs.forEach(r => { const m=r.料別||'未知'; matMap[m]=(matMap[m]||0)+1; });
+  const matSorted = Object.entries(matMap).sort((a,b)=>b[1]-a[1]);
+
+  el.innerHTML = `
+    <div class="stats-cards">
+      <div class="stats-card"><div class="stats-card-lbl">工程筆數</div><div class="stats-card-val">${monthRecs.length} 筆</div><div class="stats-card-sub">日班 ${dayCount} · 夜班 ${nightCount}</div></div>
+      <div class="stats-card"><div class="stats-card-lbl">平均每筆</div><div class="stats-card-val blue">$${Math.round(avgGrand).toLocaleString('zh-TW')}</div></div>
+      <div class="stats-card wide"><div class="stats-card-lbl">月總金額</div><div class="stats-card-val accent">$${Math.round(totalGrand).toLocaleString('zh-TW')}</div><div class="stats-card-sub">機具費 $${Math.round(totalMach).toLocaleString('zh-TW')}</div></div>
+    </div>
+    <div class="stats-list">
+      <div class="stats-list-hdr">工區明細</div>
+      ${areaSorted.map(([area,v])=>`<div class="stats-item"><div><div class="stats-item-l">${area}</div><div style="font-size:11px;color:var(--t3)">${v.count} 筆</div></div><div class="stats-item-r">$${Math.round(v.total).toLocaleString('zh-TW')}</div></div>`).join('')}
+    </div>
+    <div class="stats-list">
+      <div class="stats-list-hdr">料別使用</div>
+      ${matSorted.map(([mat,cnt])=>`<div class="stats-item"><div class="stats-item-l">${mat}</div><div class="stats-item-r">${cnt} 次</div></div>`).join('')}
+    </div>
+    <div class="stats-list">
+      <div class="stats-list-hdr">本月施工紀錄</div>
+      ${monthRecs.map(r=>`<div class="stats-item"><div><div class="stats-item-l">${r.派案||''} · ${r.工區||''}</div><div style="font-size:11px;color:var(--t3)">${r.日期||''} ${r.星期||''} ${r.日夜||''}班</div></div><div class="stats-item-r">$${Math.round(r.grand||0).toLocaleString('zh-TW')}</div></div>`).join('')}
+    </div>`;
+}
 const SECS = ['前置','刨除','鋪設','其餘'];
 const STORAGE_KEY = 'machinery_price_db_v2';
 const REC_KEY = 'cost_records_v1';
 
 const DEFAULTS = {
-  前置:[{name:'堆高機',unit:'台',price:9000,fixed:false},{name:'義交',unit:'人',price:4000,fixed:false},{name:'交通錐',unit:'套',price:2000,fixed:false},{name:'警示燈',unit:'組',price:1500,fixed:false},{name:'工地圍籬',unit:'m',price:500,fixed:false},{name:'清潔工',unit:'人',price:3500,fixed:false}],
-  刨除:[{name:'刨除機(小)',unit:'台',price:43000,fixed:false},{name:'刨除機(大)',unit:'台',price:65000,fixed:false},{name:'鏟裝機',unit:'台',price:8000,fixed:false},{name:'清掃機',unit:'台',price:12600,fixed:false},{name:'40.70怪手',unit:'台',price:14500,fixed:false},{name:'50噸怪手',unit:'台',price:18000,fixed:false},{name:'傾卸車',unit:'台',price:5500,fixed:false},{name:'水車',unit:'台',price:6000,fixed:false}],
-  鋪設:[{name:'鋪裝機(大)',unit:'台',price:35000,fixed:false},{name:'鋪裝機(小)',unit:'台',price:22000,fixed:false},{name:'工人',unit:'人',price:28400,fixed:true},{name:'熱鏟',unit:'台',price:9500,fixed:false},{name:'二輪',unit:'台',price:9000,fixed:false},{name:'三輪',unit:'台',price:14500,fixed:false},{name:'膠輪',unit:'台',price:14500,fixed:false},{name:'油車',unit:'m²',price:30400,fixed:true},{name:'預拌車',unit:'台',price:4500,fixed:false}],
-  其餘:[{name:'瀝青混凝土',unit:'T',price:2100,fixed:false},{name:'AC細料',unit:'T',price:2400,fixed:false},{name:'底層料',unit:'T',price:1800,fixed:false},{name:'路基處理',unit:'m²',price:350,fixed:false}]
+  前置:[
+    {name:'堆高機',   unit:'台',priceDay:9000, priceNight:11000,fixed:false},
+    {name:'義交',     unit:'人',priceDay:4000, priceNight:5000, fixed:false},
+    {name:'交通錐',   unit:'套',priceDay:2000, priceNight:2000, fixed:false},
+    {name:'警示燈',   unit:'組',priceDay:1500, priceNight:1500, fixed:false},
+    {name:'工地圍籬', unit:'m', priceDay:500,  priceNight:500,  fixed:false},
+    {name:'清潔工',   unit:'人',priceDay:3500, priceNight:4500, fixed:false},
+  ],
+  刨除:[
+    {name:'刨除機(小)',unit:'台',priceDay:43000,priceNight:55000,fixed:false},
+    {name:'刨除機(大)',unit:'台',priceDay:65000,priceNight:80000,fixed:false},
+    {name:'鏟裝機',   unit:'台',priceDay:8000, priceNight:10000,fixed:false},
+    {name:'清掃機',   unit:'台',priceDay:12600,priceNight:15000,fixed:false},
+    {name:'40.70怪手', unit:'台',priceDay:14500,priceNight:18000,fixed:false},
+    {name:'50噸怪手',  unit:'台',priceDay:18000,priceNight:22000,fixed:false},
+    {name:'傾卸車',   unit:'台',priceDay:5500, priceNight:7000, fixed:false},
+    {name:'水車',     unit:'台',priceDay:6000, priceNight:7500, fixed:false},
+  ],
+  鋪設:[
+    {name:'鋪裝機(大)',unit:'台',priceDay:35000,priceNight:44000,fixed:false},
+    {name:'鋪裝機(小)',unit:'台',priceDay:22000,priceNight:28000,fixed:false},
+    {name:'工人',     unit:'人',priceDay:28400,priceNight:35000,fixed:false},
+    {name:'熱鏟',     unit:'台',priceDay:9500, priceNight:12000,fixed:false},
+    {name:'二輪',     unit:'台',priceDay:9000, priceNight:11000,fixed:false},
+    {name:'三輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false},
+    {name:'膠輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false},
+    {name:'油車',     unit:'m²',priceDay:30400,priceNight:38000,fixed:false},
+    {name:'預拌車',   unit:'台',priceDay:4500, priceNight:5500, fixed:false},
+  ],
+  其餘:[
+    {name:'瀝青混凝土',unit:'T', priceDay:2100, priceNight:2100, fixed:false,noShift:true},
+    {name:'AC細料',   unit:'T', priceDay:2400, priceNight:2400, fixed:false,noShift:true},
+    {name:'底層料',   unit:'T', priceDay:1800, priceNight:1800, fixed:false,noShift:true},
+    {name:'路基處理', unit:'m²',priceDay:350,  priceNight:350,  fixed:false,noShift:true},
+  ],
 };
 
 let priceDB={}, dbDirty=false;
@@ -535,7 +760,14 @@ function loadPriceDB() {
   catch(e){priceDB=deepCopy(DEFAULTS);}
 }
 function dbSave() {
-  SECS.forEach(sec=>priceDB[sec].forEach(item=>{const el=document.getElementById('dpi-'+sec+'-'+item.name);if(el)item.price=parseFloat(el.value)||0;}));
+  SECS.forEach(sec=>priceDB[sec].forEach(item=>{
+    const dEl=document.getElementById('dpi-d-'+sec+'-'+item.name);
+    const nEl=document.getElementById('dpi-n-'+sec+'-'+item.name);
+    if(dEl) item.priceDay=parseFloat(dEl.value)||0;
+    if(nEl) item.priceNight=parseFloat(nEl.value)||0;
+    // backward compat: keep price = priceDay
+    item.price = item.priceDay;
+  }));
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
   catch(e){showToast('⚠️ 儲存失敗','err');}
 }
@@ -562,16 +794,39 @@ function renderDbSec(sec){
 }
 function makeDbRow(sec,item){
   const d=document.createElement('div');d.className='db-row';d.id='dbrow-'+sec+'-'+item.name;
-  d.innerHTML=`<div class="db-name">${item.name}</div><div class="unit-tag">${item.unit}</div>${item.fixed?`<div class="fixed-tag">固定</div>`:`<div class="price-field"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-${sec}-${item.name}" type="number" value="${item.price}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()"/></div>`}<button class="del-btn" onclick="dbDelItem('${sec}','${item.name}')">✕</button>`;
+  // migrate old single price
+  if(item.priceDay===undefined) item.priceDay=item.price||0;
+  if(item.priceNight===undefined) item.priceNight=item.price||0;
+  d.innerHTML=`
+    <div class="db-name">${item.name}<div class="unit-tag" style="display:inline-block;margin-left:4px;">${item.unit}</div></div>
+    ${item.fixed
+      ? `<div class="fixed-tag" style="grid-column:span 2;">固定費用</div>`
+      : `<div class="price-field"><span class="pf-pre">☀️</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="日間"/></div>
+         <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="夜間"/></div>`
+    }
+    <button class="del-btn" onclick="dbDelItem('${sec}','${item.name}')">✕</button>`;
   return d;
 }
-function dbMarkChanged(inp,sec,name){document.getElementById('dbrow-'+sec+'-'+name)?.classList.add('changed');const item=priceDB[sec].find(i=>i.name===name);if(item)item.price=parseFloat(inp.value)||0;setDbDirty(true);}
+function dbMarkChanged(inp,sec,name){
+  document.getElementById('dbrow-'+sec+'-'+name)?.classList.add('changed');
+  const item=priceDB[sec].find(i=>i.name===name);
+  if(!item) return;
+  const dEl=document.getElementById('dpi-d-'+sec+'-'+name);
+  const nEl=document.getElementById('dpi-n-'+sec+'-'+name);
+  if(dEl) item.priceDay=parseFloat(dEl.value)||0;
+  if(nEl) item.priceNight=parseFloat(nEl.value)||0;
+  item.price=item.priceDay;
+  setDbDirty(true);
+}
 function dbAddItem(sec){
-  const nEl=document.getElementById('dan-'+sec),uEl=document.getElementById('dau-'+sec),pEl=document.getElementById('dap-'+sec);
-  const name=nEl.value.trim(),unit=uEl.value.trim()||'台',price=parseFloat(pEl.value)||0;
+  const nEl=document.getElementById('dan-'+sec),uEl=document.getElementById('dau-'+sec);
+  const dEl=document.getElementById('dap-d-'+sec),nPEl=document.getElementById('dap-n-'+sec);
+  const name=nEl.value.trim(),unit=uEl.value.trim()||'台';
+  const priceDay=parseFloat(dEl?.value)||0,priceNight=parseFloat(nPEl?.value)||priceDay;
   if(!name){showToast('⚠️ 請輸入名稱');nEl.focus();return;}
   if(priceDB[sec].find(i=>i.name===name)){showToast('⚠️ 名稱已存在');return;}
-  priceDB[sec].push({name,unit,price,fixed:false});nEl.value='';uEl.value='';pEl.value='';
+  priceDB[sec].push({name,unit,priceDay,priceNight,price:priceDay,fixed:false});
+  nEl.value='';uEl.value='';if(dEl)dEl.value='';if(nPEl)nPEl.value='';
   renderDbSec(sec);setDbDirty(true);showToast('✅ 已新增 '+name);
 }
 function dbDelItem(sec,name){const idx=priceDB[sec].findIndex(i=>i.name===name);if(idx!==-1){priceDB[sec].splice(idx,1);document.getElementById('dbrow-'+sec+'-'+name)?.remove();document.getElementById('dcnt-'+sec).textContent=priceDB[sec].length+' 項';setDbDirty(true);}}
@@ -588,30 +843,133 @@ function loadCostDefaults(){
 }
 function addCR(sec,name,unit,qty){
   const dbItem=(costDB[sec]||[]).find(i=>i.name===name);
-  const price=dbItem?dbItem.price:0,fixed=dbItem?(dbItem.fixed||false):false;
-  costRows[sec].push({id:uid++,name,unit,price,qty,fixed});
+  const priceDay=dbItem?(dbItem.priceDay||dbItem.price||0):0;
+  const priceNight=dbItem?(dbItem.priceNight||dbItem.price||0):0;
+  const fixed=dbItem?(dbItem.fixed||false):false;
+  const noShift=dbItem?(dbItem.noShift||false):false;
+  costRows[sec].push({id:uid++,name,unit,priceDay,priceNight,qty,fixed,noShift,shift:'日',overtime:0});
 }
+
+// compute subtotal for a cost row
+function calcRowSub(r){
+  // noShift items (瀝青混凝土 etc): use priceDay regardless
+  const price = r.noShift ? (r.priceDay||0) : (r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
+  if(r.fixed) return price; // fixed = no qty multiply (legacy, should be none now)
+  const normal = r.qty * price;
+  const ot = (!r.noShift && r.overtime>0) ? r.qty * (price/8) * r.overtime : 0;
+  return normal + ot;
+}
+
 function renderCostAll(){SECS.forEach(renderCostSec);recalc();}
 function renderCostSec(sec){
   const el=document.getElementById('crows-'+sec);el.innerHTML='';
   costRows[sec].forEach(r=>el.appendChild(makeCostRow(r)));expandSec('cost',sec);
 }
+
 function makeCostRow(r){
-  const d=document.createElement('div');d.className='cost-row';d.id='crow-'+r.id;
-  const sub=r.fixed?r.price:r.qty*r.price;
-  const isNum=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.name==='油車');
-  const qH=r.fixed?`<span class="q-val">${r.qty}</span>`:isNum?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`:`<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
-  d.innerHTML=`<div><div class="item-name">${r.name}</div><div class="item-note">${r.unit}${r.fixed?' · 固定':''}</div></div><div class="qty-wrap">${qH}</div><div class="price-cell"><div class="price-disp">${r.price>0?'$'+r.price.toLocaleString('zh-TW'):'—'}</div><div class="price-lbl">單價</div></div><div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div><button class="del-btn" onclick="delCostRow(${r.id})">✕</button>`;
+  const d=document.createElement('div');
+  d.className='cost-row-wrap';d.id='crow-'+r.id;
+  // migrate old rows
+  if(r.priceDay===undefined) r.priceDay=r.price||0;
+  if(r.priceNight===undefined) r.priceNight=r.price||0;
+  if(r.shift===undefined) r.shift='日';
+  if(r.overtime===undefined) r.overtime=0;
+  if(r.noShift===undefined) r.noShift=false;
+
+  const price = r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
+  const sub = calcRowSub(r);
+
+  // qty input type: 數字輸入框 for 瀝青/油車 類, +/- 按鈕 for 其他
+  const isNumInput=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.name==='油車');
+  const qH = isNumInput
+    ? `<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
+    : `<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
+
+  // shift toggle: hidden for noShift items
+  const shiftHtml = r.noShift
+    ? `<div class="shift-placeholder"></div>`
+    : `<div class="shift-wrap">
+        <button class="shift-btn${r.shift==='日'?' on-day':''}" onclick="setShift(${r.id},'日')">日</button>
+        <button class="shift-btn${r.shift==='夜'?' on-night':''}" onclick="setShift(${r.id},'夜')">夜</button>
+       </div>`;
+
+  // overtime row: hidden for noShift items
+  const otSection = r.noShift ? '' : `
+    <div class="ot-wrap">
+      <span class="ot-lbl">加班</span>
+      <input class="ot-inp" type="number" value="${r.overtime}" min="0" step="0.5"
+        id="ot-${r.id}" oninput="setOvertime(${r.id},this.value)" onclick="this.select()" />
+      <span class="ot-lbl">h</span>
+      <span class="ot-sub" id="ots-${r.id}">${r.overtime>0?'+'+fmt(r.qty*(price/8)*r.overtime):''}</span>
+    </div>`;
+
+  d.innerHTML=`
+    <div class="cost-row-main">
+      <div>
+        <div class="item-name">${r.name}</div>
+        <div class="item-note">${r.unit}${r.fixed?' · 固定':''}</div>
+      </div>
+      <div class="qty-wrap">${qH}</div>
+      ${shiftHtml}
+      <div class="price-cell">
+        <div class="price-disp" id="pd-${r.id}">${price>0?'$'+price.toLocaleString('zh-TW'):'—'}</div>
+        <div class="price-lbl">單價</div>
+      </div>
+      <div class="sub-cell">
+        <div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div>
+      </div>
+      <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
+    </div>
+    ${otSection}`;
   return d;
 }
-function chQty(id,d){const r=findCR(id);if(!r)return;r.qty=Math.max(0,r.qty+d);document.getElementById('qv-'+id).textContent=r.qty;document.getElementById('sv-'+id).textContent=fmt(r.qty*r.price);recalc();}
-function setQtyDirect(id,v){const r=findCR(id);if(!r)return;r.qty=parseFloat(v)||0;document.getElementById('sv-'+id).textContent=fmt(r.qty*r.price);recalc();}
+function chQty(id,d){
+  const r=findCR(id);if(!r)return;
+  r.qty=Math.max(0,r.qty+d);
+  document.getElementById('qv-'+id).textContent=r.qty;
+  updateRowDisplay(r);recalc();
+}
+function setQtyDirect(id,v){
+  const r=findCR(id);if(!r)return;
+  r.qty=parseFloat(v)||0;
+  updateRowDisplay(r);recalc();
+}
+function setShift(id,shift){
+  const r=findCR(id);if(!r)return;
+  r.shift=shift;
+  // update shift buttons
+  const wrap=document.getElementById('crow-'+id)?.querySelector('.shift-wrap');
+  if(wrap){
+    wrap.querySelectorAll('.shift-btn').forEach(b=>{
+      b.className='shift-btn'+(b.textContent==='日'&&shift==='日'?' on-day':b.textContent==='夜'&&shift==='夜'?' on-night':'');
+    });
+  }
+  updateRowDisplay(r);recalc();
+}
+function setOvertime(id,v){
+  const r=findCR(id);if(!r)return;
+  r.overtime=parseFloat(v)||0;
+  updateRowDisplay(r);recalc();
+}
+function updateRowDisplay(r){
+  const price=r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0);
+  const sub=calcRowSub(r);
+  const pdEl=document.getElementById('pd-'+r.id);
+  const svEl=document.getElementById('sv-'+r.id);
+  const otEl=document.getElementById('ots-'+r.id);
+  if(pdEl) pdEl.textContent=price>0?'$'+price.toLocaleString('zh-TW'):'—';
+  if(svEl) svEl.textContent=fmt(sub);
+  if(otEl){
+    const otAmt=r.overtime>0?r.qty*(price/8)*r.overtime:0;
+    otEl.textContent=otAmt>0?'+'+fmt(otAmt):'';
+  }
+}
 function delCostRow(id){for(const sec in costRows){const i=costRows[sec].findIndex(r=>r.id===id);if(i!==-1){costRows[sec].splice(i,1);document.getElementById('crow-'+id)?.remove();recalc();return;}}}
 function findCR(id){for(const sec in costRows){const r=costRows[sec].find(r=>r.id===id);if(r)return r;}}
 function recalc(){
   let mach=0;
-  ['前置','刨除','鋪設'].forEach(sec=>{const s=costRows[sec].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);document.getElementById('csub-'+sec).textContent=fmt(s);mach+=s;});
-  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  ['前置','刨除','鋪設'].forEach(sec=>{const s=costRows[sec].reduce((t,r)=>t+calcRowSub(r),0);document.getElementById('csub-'+sec).textContent=fmt(s);mach+=s;});
+  const other=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
   document.getElementById('csub-其餘').textContent=fmt(other+benDang);mach+=benDang;
   document.getElementById('tot-mach').textContent=fmt(mach);
@@ -686,7 +1044,12 @@ function loadRecords(){try{records=JSON.parse(localStorage.getItem(REC_KEY)||'[]
 
 function getSnapshot(){
   const snapshot={};
-  SECS.forEach(sec=>{snapshot[sec]=costRows[sec].map(r=>({name:r.name,unit:r.unit,qty:r.qty,price:r.price,fixed:r.fixed,sub:r.fixed?r.price:r.qty*r.price}));});
+  SECS.forEach(sec=>{snapshot[sec]=costRows[sec].map(r=>({
+    name:r.name,unit:r.unit,qty:r.qty,
+    priceDay:r.priceDay||0,priceNight:r.priceNight||0,
+    shift:r.shift||'日',overtime:r.overtime||0,
+    fixed:r.fixed,noShift:r.noShift||false,sub:calcRowSub(r)
+  }));});
   return snapshot;
 }
 
@@ -713,6 +1076,12 @@ function saveRecord(){
     localStorage.setItem(REC_KEY,JSON.stringify(records));
     fbSaveRecord(rec);
     renderRecords();showToast('✅ 已儲存','ok');
+    // 自動遞增派案號
+    const caseEl=document.querySelector('#page-cost .info-val.accent');
+    if(caseEl && caseEl.textContent) {
+      const next = autoIncrementCase(caseEl.textContent);
+      if(next !== caseEl.textContent) caseEl.textContent = next;
+    }
   }catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 
@@ -745,10 +1114,12 @@ function toggleRecItemChk(recId, key) {
 function renderRecords(){
   const list=document.getElementById('recList'),empty=document.getElementById('recEmpty'),actions=document.getElementById('recActions');
   document.getElementById('recCount').textContent=records.length+' 筆';
+  const shown = filteredRecords();
   if(!records.length){list.innerHTML='';empty.style.display='block';actions.style.display='none';return;}
   empty.style.display='none';actions.style.display='flex';
+  if(!shown.length){list.innerHTML='<div style="padding:30px;text-align:center;color:var(--t3);font-size:13px;">無符合的紀錄</div>';return;}
   list.innerHTML='';
-  records.forEach(rec=>{
+  shown.forEach(rec=>{
     if(!rec.recChecked) rec.recChecked={};
     if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
     const card=document.createElement('div');card.className='rec-card';
@@ -760,9 +1131,13 @@ function renderRecords(){
       rowsHtml+=`<div class="rec-sec-hdr">${sec}</div>`;
       items.forEach((row,idx)=>{
         const key=sec+idx;const isOn=!!rec.recChecked[key];
+        const price=row.shift==='夜'?(row.priceNight||row.priceDay||0):(row.priceDay||0);
+        const otAmt=row.overtime>0?row.qty*(price/8)*row.overtime:0;
+        const shiftTag=row.fixed?'':`<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${row.shift==='夜'?'rgba(37,99,235,.1)':'rgba(224,123,0,.1)'};color:${row.shift==='夜'?'var(--blue)':'var(--accent)'};">${row.shift}班</span>`;
+        const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h加班</span>`:'';
         rowsHtml+=`<div class="rec-item">
           <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
-          <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span><span class="ri-detail">${row.unit} × ${row.qty}</span></div>
+          <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}</span></div>
           <div class="ri-cost">${fmt(row.sub)}</div>
         </div>`;
       });
@@ -780,15 +1155,20 @@ function renderRecords(){
         rowsHtml+=`<div class="rec-item"><div class="ri-chk${lon?' on':''}" id="ri-chk-${rec.id}-${lk}" onclick="toggleRecItemChk(${rec.id},'${lk}')">${lon?'✓':''}</div><div class="ri-main"><span class="ri-name${lon?' checked':''}">里長</span><span class="ri-detail">${rec.sp?.里長?.note||''}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;
       }
     });
-    const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別,rec.厚度].filter(Boolean).join(' · ');
-    const upd=rec.updatedAt?` · 更新 ${rec.updatedAt}`:'';
+    const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' · ');
+    const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.5);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
     card.innerHTML=`
       <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
-        <div class="rec-info"><div class="rec-title">${rec.派案||''} · ${rec.工區||''}</div><div class="rec-meta">${meta} · 存 ${rec.savedAt}${upd}</div></div>
-        <div style="display:flex;align-items:center;gap:6px;">
+        <div class="rec-info">
+          <div class="rec-title">${[rec.派案,rec.工區].filter(Boolean).join(' · ')||'（未填）'}</div>
+          <div class="rec-meta">${meta}${upd}</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
           <div class="rec-total">${fmt(rec.grand)}</div>
-          <button class="rec-btn" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();printRecord(${rec.id})" title="列印">🖨️</button>
-          <button class="rec-btn del" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();deleteRecord(${rec.id})" title="刪除">🗑️</button>
+          <div style="display:flex;gap:5px;">
+            <button class="rec-btn" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();printRecord(${rec.id})" title="列印">🖨️</button>
+            <button class="rec-btn del" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();deleteRecord(${rec.id})" title="刪除">🗑️</button>
+          </div>
         </div>
         <div class="rec-tog" id="rectog-${rec.id}">▾</div>
       </div>
@@ -824,7 +1204,15 @@ function openRecEdit(id){
   setDayNight(rec.日夜||'日');
   const matSel=document.getElementById('infoMaterial');
   if(matSel&&rec.料別){let found=false;for(let o of matSel.options){if(o.value===rec.料別){matSel.value=rec.料別;found=true;break;}}if(!found){const opt=document.createElement('option');opt.value=rec.料別;opt.textContent=rec.料別;matSel.insertBefore(opt,matSel.querySelector('[value="__custom__"]'));matSel.value=rec.料別;}}
-  costRows=deepCopy(rec.rows);uid=Date.now();SECS.forEach(sec=>costRows[sec].forEach(r=>{r.id=uid++;}));
+  costRows=deepCopy(rec.rows);uid=Date.now();
+  SECS.forEach(sec=>costRows[sec].forEach(r=>{
+    r.id=uid++;
+    if(r.priceDay===undefined) r.priceDay=r.price||0;
+    if(r.priceNight===undefined) r.priceNight=r.price||0;
+    if(r.shift===undefined) r.shift='日';
+    if(r.overtime===undefined) r.overtime=0;
+    if(r.noShift===undefined) r.noShift=false;
+  }));
   renderCostAll();
   const benEl=document.getElementById('spcost-便當');if(benEl)benEl.value=rec.sp?.便當?.cost||0;
   const benNoteEl=document.getElementById('spnote-便當');if(benNoteEl)benNoteEl.value=rec.sp?.便當?.note||'';
@@ -869,8 +1257,16 @@ function openPicker(sec){
 }
 function pkToggle(sec,item,chk){
   const idx=costRows[sec].findIndex(r=>r.name===item.name);
-  if(idx===-1){costRows[sec].push({id:uid++,name:item.name,unit:item.unit,price:item.price,qty:1,fixed:item.fixed||false});renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);}
-  else{const rid=costRows[sec][idx].id;costRows[sec].splice(idx,1);document.getElementById('crow-'+rid)?.remove();chk.classList.remove('on');chk.textContent='';showToast('已移除 '+item.name);}
+  if(idx===-1){
+    const priceDay=item.priceDay||item.price||0;
+    const priceNight=item.priceNight||item.price||0;
+    const noShift=item.noShift||false;
+    costRows[sec].push({id:uid++,name:item.name,unit:item.unit,priceDay,priceNight,qty:1,fixed:item.fixed||false,noShift,shift:'日',overtime:0});
+    renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);
+  } else {
+    const rid=costRows[sec][idx].id;costRows[sec].splice(idx,1);document.getElementById('crow-'+rid)?.remove();
+    chk.classList.remove('on');chk.textContent='';showToast('已移除 '+item.name);
+  }
   expandSec('cost',sec);recalc();
 }
 function closePicker(){document.getElementById('overlay').classList.remove('show');}
@@ -950,15 +1346,19 @@ async function buildExcel(rec){
 // ══════════ TAB & LAYOUT ══════════
 let currentTab='rec';
 function switchTab(tab){
-  ['rec','cost','db'].forEach(t=>{document.getElementById('page-'+t).classList.toggle('active',t===tab);document.getElementById('tab-'+t).classList.toggle('active',t===tab);});
+  ['rec','cost','stats','db'].forEach(t=>{
+    document.getElementById('page-'+t)?.classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t)?.classList.toggle('active',t===tab);
+  });
   currentTab=tab;updateIndicator();
   if(tab==='cost'&&!dbDirty){loadCostDB();renderCostAll();}
   if(tab==='rec'){renderRecords();}
+  if(tab==='stats'){renderStats();}
   setTimeout(()=>{if(tab==='cost'||tab==='db'){const px=tab==='cost'?'cbody-':'dbody-';SECS.forEach(sec=>{const b=document.getElementById(px+sec);if(b)b.style.maxHeight=b.scrollHeight+400+'px';});}},50);
 }
 function updateIndicator(){
   const bar=document.getElementById('tabbar'),ind=document.getElementById('tabInd');
-  const tabs=['rec','cost','db'],idx=tabs.indexOf(currentTab),w=bar.offsetWidth/tabs.length;
+  const tabs=['rec','cost','stats','db'],idx=tabs.indexOf(currentTab),w=bar.offsetWidth/tabs.length;
   ind.style.width=w+'px';ind.style.left=(idx*w)+'px';
 }
 function toggleSec(page,sec){
@@ -1049,6 +1449,7 @@ function printRecord(id) {
 loadPriceDB();loadCostDB();loadCostDefaults();loadRecords();
 renderCostAll();renderDbAll();renderRecords();updateDbStatusBadge();
 initMaterialSelect();onDateInput();
+renderStats(); // init stats month label
 document.getElementById('spcost-便當')?.addEventListener('input',recalc);
 setTimeout(()=>{
   SECS.forEach(sec=>{['cbody-','dbody-'].forEach(p=>{const b=document.getElementById(p+sec);if(b)b.style.maxHeight=b.scrollHeight+400+'px';});});
