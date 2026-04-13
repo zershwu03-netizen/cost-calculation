@@ -950,9 +950,9 @@ function calcRowSub(r){
     sub=normal+ot;
   }
 
-  // 板車費
-  const truckFee=(r.truckTrips||0)*4000+(r.truckCross||0)*2000;
-  return sub+truckFee;
+  // 板車費：直接金額加總
+  const truckTotal=(r.truckTrips||0)+(r.truckCross||0);
+  return sub+truckTotal;
 }
 
 function renderCostAll(){SECS.forEach(renderCostSec);recalc();}
@@ -1011,17 +1011,23 @@ function makeCostRow(r){
       <span class="ot-sub" id="ots-${r.id}">${r.overtime>0?'+'+fmt(r.qty*(price/8)*r.overtime):''}</span>
     </div>`;
 
-  // ── 板車列 ──
+  // ── 板車列：直接填金額 ──
   const truckSection=r.hasTruck?`
     <div class="ot-wrap" style="gap:8px;">
-      <span class="ot-lbl">板車</span>
-      <input class="ot-inp" type="number" value="${r.truckTrips}" min="0" step="1" id="tt-${r.id}" oninput="setTruckTrips(${r.id},this.value)" onclick="this.select()" style="width:42px;" />
-      <span class="ot-lbl">趟</span>
-      <span class="ot-lbl" style="margin-left:8px;">跨縣市</span>
-      <input class="ot-inp" type="number" value="${r.truckCross}" min="0" step="1" id="tc-${r.id}" oninput="setTruckCross(${r.id},this.value)" onclick="this.select()" style="width:42px;" />
-      <span class="ot-lbl">次</span>
-      <span class="ot-sub" id="tks-${r.id}">${(r.truckTrips||0)>0||(r.truckCross||0)>0?'+'+fmt((r.truckTrips||0)*4000+(r.truckCross||0)*2000):''}</span>
-    </div>`:'' ;
+      <span class="ot-lbl">板車移動</span>
+      <div class="price-field" style="flex:1;max-width:120px;">
+        <span class="pf-pre">$</span>
+        <input class="pf-inp ot-inp" type="number" value="${r.truckTrips||0}" min="0" step="1000"
+          id="tt-${r.id}" oninput="setTruckTrips(${r.id},this.value)" onclick="this.select()" style="padding:4px 4px 4px 0;" />
+      </div>
+      <span class="ot-lbl" style="margin-left:6px;">跨縣市</span>
+      <div class="price-field" style="flex:1;max-width:120px;">
+        <span class="pf-pre">$</span>
+        <input class="pf-inp ot-inp" type="number" value="${r.truckCross||0}" min="0" step="1000"
+          id="tc-${r.id}" oninput="setTruckCross(${r.id},this.value)" onclick="this.select()" style="padding:4px 4px 4px 0;" />
+      </div>
+      <span class="ot-sub" id="tks-${r.id}">${((r.truckTrips||0)+(r.truckCross||0))>0?'+'+fmt((r.truckTrips||0)+(r.truckCross||0)):''}</span>
+    </div>`:'';
 
   // ── 鋪設工詳情列 ──
   const workerSection=r.type==='worker'?`
@@ -1084,8 +1090,8 @@ function setOvertime(id,v){
   r.overtime=parseFloat(v)||0;
   updateRowDisplay(r);recalc();
 }
-function setTruckTrips(id,v){const r=findCR(id);if(!r)return;r.truckTrips=parseInt(v)||0;updateRowDisplay(r);recalc();}
-function setTruckCross(id,v){const r=findCR(id);if(!r)return;r.truckCross=parseInt(v)||0;updateRowDisplay(r);recalc();}
+function setTruckTrips(id,v){const r=findCR(id);if(!r)return;r.truckTrips=parseFloat(v)||0;updateRowDisplay(r);recalc();}
+function setTruckCross(id,v){const r=findCR(id);if(!r)return;r.truckCross=parseFloat(v)||0;updateRowDisplay(r);recalc();}
 function updateRowDisplay(r){
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
@@ -1097,7 +1103,7 @@ function updateRowDisplay(r){
   if(otEl){ const ot=r.overtime>0?r.qty*(price/8)*r.overtime:0; otEl.textContent=ot>0?'+'+fmt(ot):''; }
   // truck sub display
   const tkEl=document.getElementById('tks-'+r.id);
-  if(tkEl){ const tf=(r.truckTrips||0)*4000+(r.truckCross||0)*2000; tkEl.textContent=tf>0?'+'+fmt(tf):''; }
+  if(tkEl){ const tf=(r.truckTrips||0)+(r.truckCross||0); tkEl.textContent=tf>0?'+'+fmt(tf):''; }
 }
 function delCostRow(id){for(const sec in costRows){const i=costRows[sec].findIndex(r=>r.id===id);if(i!==-1){costRows[sec].splice(i,1);document.getElementById('crow-'+id)?.remove();recalc();return;}}}
 function findCR(id){for(const sec in costRows){const r=costRows[sec].find(r=>r.id===id);if(r)return r;}}
