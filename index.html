@@ -908,11 +908,36 @@ function loadPriceDB() {
   const oldOil=鋪設?.find(i=>i.name==='油車');
   if(oldOil){ oldOil.name='油車(冷油)'; oldOil.type='oilcar'; if(!oldOil.priceEmulsion) oldOil.priceEmulsion=25; }
 
-  // 瀝青混凝土 type migration
+  // 瀝青混凝土 type + grades migration
   const ac=priceDB['其餘']?.find(i=>i.name==='瀝青混凝土');
   if(ac){
     if(!ac.type) ac.type='asphalt';
-    if(!ac.grades) ac.grades={'再生':{price:ac.priceDay||2100},'新料':{price:2400},'改三再生':{price:2600},'改三新料':{price:2800}};
+    if(!ac.grades) ac.grades={};
+    // 確保所有料別都存在
+    const acDef=DEFAULTS['其餘'].find(i=>i.name==='瀝青混凝土');
+    Object.entries(acDef?.grades||{}).forEach(([k,v])=>{
+      if(!ac.grades[k]) ac.grades[k]=deepCopy(v);
+    });
+  }
+
+  // 冷拌瀝青混凝土 grades migration
+  const cm=priceDB['其餘']?.find(i=>i.name==='冷拌瀝青混凝土');
+  if(cm){
+    if(!cm.grades) cm.grades={};
+    const cmDef=DEFAULTS['其餘'].find(i=>i.name==='冷拌瀝青混凝土');
+    Object.entries(cmDef?.grades||{}).forEach(([k,v])=>{
+      if(!cm.grades[k]) cm.grades[k]=deepCopy(v);
+    });
+  }
+
+  // 水泥 grades migration
+  const ce=priceDB['其餘']?.find(i=>i.name==='水泥');
+  if(ce){
+    if(!ce.grades) ce.grades={};
+    const ceDef=DEFAULTS['其餘'].find(i=>i.name==='水泥');
+    Object.entries(ceDef?.grades||{}).forEach(([k,v])=>{
+      if(!ce.grades[k]) ce.grades[k]=deepCopy(v);
+    });
   }
 
   // 確保 oilcar 有正確 type
