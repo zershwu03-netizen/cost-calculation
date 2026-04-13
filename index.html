@@ -1016,8 +1016,9 @@ function addCR(sec,name,unit,qty){
     shift:noShift?'日':dayNight,overtime:0,
     truckTrips:truckTripDefault,truckCross:truckCrossDefault,
     markingMode:'none', markingM2:0, note:'',
-    // asphalt specific
-    asphaltGrade:'再生', asphaltFreight:0
+    // asphalt specific - pre-fill freight from last saved value
+    asphaltGrade:'再生',
+    asphaltFreight:(dbItem?.grades?.['再生']?.freightDefault)||0
   });
 }
 
@@ -1073,6 +1074,7 @@ function makeCostRow(r){
   if(r.overtime===undefined) r.overtime=0;
   if(r.noShift===undefined) r.noShift=false;
   if(r.type===undefined) r.type='';
+  if(!r.type && r.name==='瀝青混凝土') r.type='asphalt';
   if(r.truckFee===undefined) r.truckFee=0;
   if(r.priceEmulsion===undefined) r.priceEmulsion=0;
   if(r.truckTrips===undefined) r.truckTrips=0;
@@ -1090,7 +1092,7 @@ function makeCostRow(r){
   const sub=calcRowSub(r);
 
   // ── qty 顯示 ──
-  const isNumInput=(r.type==='asphalt'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
+  const isNumInput=(r.type==='asphalt'||r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
   const qH= r.type==='marking' ? '' // 標線不顯示數量欄
     : isNumInput
     ?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
@@ -1259,10 +1261,31 @@ function setMarkingM2(id,v){
 function setNote(id,v){const r=findCR(id);if(r)r.note=v;}
 function setAsphaltGrade(id,v){
   const r=findCR(id);if(!r)return;r.asphaltGrade=v;
+  // restore saved freight for this grade
+  const dbItem=costDB['其餘']?.find(i=>i.name===r.name);
+  if(dbItem?.grades?.[v]?.freightDefault) r.asphaltFreight=dbItem.grades[v].freightDefault;
+  // update input display
+  const afEl=document.getElementById('af-'+id);
+  if(afEl) afEl.value=r.asphaltFreight||0;
   updateAsphaltDisplay(r);recalc();
 }
 function setAsphaltFreight(id,v){
   const r=findCR(id);if(!r)return;r.asphaltFreight=parseFloat(v)||0;
+  // persist as default for this grade in costDB
+  const dbItem=costDB['其餘']?.find(i=>i.name===r.name);
+  if(dbItem){
+    if(!dbItem.grades) dbItem.grades={};
+    if(!dbItem.grades[r.asphaltGrade]) dbItem.grades[r.asphaltGrade]={price:0};
+    dbItem.grades[r.asphaltGrade].freightDefault=r.asphaltFreight;
+    // also save to priceDB
+    const pdbItem=priceDB['其餘']?.find(i=>i.name===r.name);
+    if(pdbItem){
+      if(!pdbItem.grades) pdbItem.grades={};
+      if(!pdbItem.grades[r.asphaltGrade]) pdbItem.grades[r.asphaltGrade]={price:0};
+      pdbItem.grades[r.asphaltGrade].freightDefault=r.asphaltFreight;
+      try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));}catch(e){}
+    }
+  }
   updateAsphaltDisplay(r);recalc();
 }
 function updateAsphaltDisplay(r){
@@ -1638,6 +1661,7 @@ function openRecEdit(id){
     if(r.overtime===undefined) r.overtime=0;
     if(r.noShift===undefined) r.noShift=false;
     if(r.type===undefined) r.type='';
+  if(!r.type && r.name==='瀝青混凝土') r.type='asphalt';
     if(r.truckFee===undefined) r.truckFee=0;
     if(r.priceEmulsion===undefined) r.priceEmulsion=0;
     if(r.hasTruck===undefined) r.hasTruck=false;
@@ -1868,13 +1892,17 @@ function printRecord(id) {
     if(!items.length && sec!=='其餘') return;
     html+=`<tr><td colspan="6" class="sec-title">${sec}</td></tr>`;
     items.forEach((row,idx)=>{
+      const noteStr=row.note?` <span style="color:#888;font-size:12px;">(${row.note})</span>`:'';
+      const nameCell=row.type==='asphalt'
+        ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
+        :row.name;
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
-        <td>${row.name}</td>
+        <td>${nameCell}${noteStr}</td>
         <td>${row.unit}</td>
-        <td class="num">${row.qty.toLocaleString('zh-TW')}</td>
-        <td class="num">${row.fixed?'固定':'$'+row.price.toLocaleString('zh-TW')}</td>
-        <td class="num">$${row.sub.toLocaleString('zh-TW')}</td>
+        <td class="num">${(row.qty||0).toLocaleString('zh-TW')}</td>
+        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||row.price||0).toLocaleString('zh-TW')))}</td>
+        <td class="num">$${(row.sub||0).toLocaleString('zh-TW')}</td>
       </tr>`;
     });
     if(sec==='其餘'){
