@@ -857,11 +857,31 @@ const DEFAULTS = {
        '新料':    {price:2400},
        '改三再生': {price:2600},
        '改三新料': {price:2800},
+       '透水':    {price:2800},
+     }
+    },
+    // 冷拌瀝青混凝土：同 asphalt 計算，料別：發泡/乳化
+    {name:'冷拌瀝青混凝土',unit:'T', fixed:false, noShift:true, type:'coldmix',
+     grades:{
+       '發泡': {price:0},
+       '乳化': {price:0},
      }
     },
     {name:'AC細料',   unit:'T', priceDay:2400, priceNight:2400, fixed:false,noShift:true},
     {name:'底層料',   unit:'T', priceDay:1800, priceNight:1800, fixed:false,noShift:true},
     {name:'路基處理', unit:'m²',priceDay:350,  priceNight:350,  fixed:false,noShift:true},
+    // 廢方處理：m³ × 單價 + 車數 × 運費/車
+    {name:'廢方處理', unit:'m³', fixed:false, noShift:true, type:'waste',
+     pricePerM3:0, freightPerTruck:0
+    },
+    // 水泥：料別 × m³ × 單價 + 車數 × 運費/車 + 加班固定金額
+    {name:'水泥', unit:'m³', fixed:false, noShift:true, type:'cement',
+     grades:{
+       'CLSM':  {price:0},
+       '2000磅': {price:0},
+     },
+     freightPerTruck:0
+    },
     // 標線：type='marking'
     {name:'一型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
     {name:'二型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
@@ -976,9 +996,9 @@ function makeDbRow(sec,item){
           <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="em" type="number" value="${item.priceEmulsion||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
       </div>`;
-  } else if(item.type==='asphalt'){
-    // 瀝青混凝土：各料別單價
-    const grades=item.grades||{'再生':{price:0},'新料':{price:0},'改三再生':{price:0},'改三新料':{price:0}};
+  } else if(item.type==='asphalt'||item.type==='coldmix'){
+    // 瀝青/冷拌：各料別單價
+    const grades=item.grades||{};
     priceHtml=`
       <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
         ${Object.entries(grades).map(([grade,g])=>`
@@ -990,6 +1010,43 @@ function makeDbRow(sec,item){
               oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
           <span style="font-size:10px;color:var(--t3);">/T</span>
         </div>`).join('')}
+      </div>`;
+  } else if(item.type==='waste'){
+    // 廢方處理：$/m³ + 運費/車
+    priceHtml=`
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">$/m³</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span>
+            <input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="pricePerM3"
+              type="number" value="${item.pricePerM3||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">運費/車</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span>
+            <input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="freightPerTruck"
+              type="number" value="${item.freightPerTruck||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
+        </div>
+      </div>`;
+  } else if(item.type==='cement'){
+    // 水泥：料別單價 + 運費/車
+    const grades=item.grades||{'CLSM':{price:0},'2000磅':{price:0}};
+    priceHtml=`
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
+        ${Object.entries(grades).map(([grade,g])=>`
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">${grade}</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span>
+            <input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="grade-${grade}"
+              type="number" value="${g.price||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
+          <span style="font-size:10px;color:var(--t3);">/m³</span>
+        </div>`).join('')}
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">運費/車</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span>
+            <input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="freightPerTruck"
+              type="number" value="${item.freightPerTruck||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
+        </div>
       </div>`;
   } else if(item.type==='marking'){
     priceHtml=`
@@ -1026,7 +1083,7 @@ function makeDbRow(sec,item){
     </div>` : '';
 
   // 特殊類型鎖定：不可刪除
-  const isLocked = ['worker','oilcar','marking','asphalt'].includes(item.type);
+  const isLocked = ['worker','oilcar','marking','asphalt','coldmix','waste','cement'].includes(item.type);
 
   d.innerHTML=`
     <div class="db-name">${item.name}<span class="unit-tag" style="margin-left:5px;">${item.unit}</span>${isLocked?`<span style="font-size:10px;color:var(--t3);margin-left:6px;">🔒</span>`:''}</div>
@@ -1060,6 +1117,8 @@ function dbMarkChangedEl(inp){
   else if(field==='hd') item.priceHalfDay=v;
   else if(field==='fd') item.priceFullDay=v;
   else if(field==='m2') item.pricePerM2=v;
+  else if(field==='pricePerM3') item.pricePerM3=v;
+  else if(field==='freightPerTruck') item.freightPerTruck=v;
   else if(field.startsWith('grade-')){
     const grade=field.slice(6);
     if(!item.grades) item.grades={};
@@ -1141,9 +1200,18 @@ function addCR(sec,name,unit,qty){
     shift:noShift?'日':dayNight,overtime:0,
     truckTrips:truckTripDefault,truckCross:truckCrossDefault,
     markingMode:'none', markingM2:0, note:'', arrivalTime:'',
-    // asphalt specific - pre-fill freight from last saved value
+    // asphalt/coldmix specific - pre-fill freight from last saved value
     asphaltGrade:'再生',
-    asphaltFreight:(dbItem?.grades?.['再生']?.freightDefault)||0
+    asphaltFreight:(dbItem?.grades?.['再生']?.freightDefault)||0,
+    // coldmix
+    coldmixGrade: type==='coldmix'?'發泡':'發泡',
+    // waste specific
+    pricePerM3:dbItem?.pricePerM3||0,
+    freightPerTruck:dbItem?.freightPerTruck||0,
+    truckCount:0,
+    // cement specific
+    cementGrade:'CLSM',
+    overtimeFixed:0,
   });
 }
 
@@ -1152,9 +1220,16 @@ function calcRowSub(r){
   const price = r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
 
   let sub=0;
-  if(r.type==='asphalt'){
-    const gradePrice=(r.grades?.[r.asphaltGrade]?.price)||0;
-    sub=r.qty*(gradePrice+(r.asphaltFreight||0));
+  if(r.type==='asphalt'||r.type==='coldmix'){
+    const gp=(r.grades?.[r.asphaltGrade]?.price)||0;
+    sub=r.qty*(gp+(r.asphaltFreight||0));
+  } else if(r.type==='waste'){
+    // m³ × $/m³ + 車數 × 運費/車
+    sub=(r.qty||0)*(r.pricePerM3||0)+(r.truckCount||0)*(r.freightPerTruck||0);
+  } else if(r.type==='cement'){
+    // m³ × 料別$/m³ + 車數 × 運費/車 + 加班固定金額
+    const gp=(r.grades?.[r.cementGrade]?.price)||0;
+    sub=(r.qty||0)*gp+(r.truckCount||0)*(r.freightPerTruck||0)+(r.overtimeFixed||0);
   } else if(r.type==='marking'){
     if(r.markingMode==='none') return 0;
     const baseFee = r.markingMode==='fullDay'?(r.priceFullDay||0):(r.priceHalfDay||0);
@@ -1213,13 +1288,19 @@ function makeCostRow(r){
   if(r.grades===undefined) r.grades={};
   if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
   if(r.asphaltFreight===undefined) r.asphaltFreight=0;
+  if(r.coldmixGrade===undefined) r.coldmixGrade='發泡';
+  if(r.pricePerM3===undefined) r.pricePerM3=0;
+  if(r.freightPerTruck===undefined) r.freightPerTruck=0;
+  if(r.truckCount===undefined) r.truckCount=0;
+  if(r.cementGrade===undefined) r.cementGrade='CLSM';
+  if(r.overtimeFixed===undefined) r.overtimeFixed=0;
   if(r.markingM2===undefined) r.markingM2=0;
 
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
 
   // ── qty 顯示 ──
-  const isNumInput=(r.type==='asphalt'||r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
+  const isNumInput=(r.type==='asphalt'||r.type==='coldmix'||r.type==='waste'||r.type==='cement'||r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
   const qH= r.type==='marking' ? '' // 標線不顯示數量欄
     : isNumInput
     ?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
@@ -1303,13 +1384,15 @@ function makeCostRow(r){
       </div>`:''}
     </div>`:'' ;
 
-  // ── 瀝青混凝土列 ──
-  const asphaltSection=r.type==='asphalt'?`
+  // ── 瀝青/冷拌列 ──
+  const isAsphaltType=r.type==='asphalt'||r.type==='coldmix';
+  const curGrade=r.type==='coldmix'?(r.coldmixGrade||'發泡'):(r.asphaltGrade||'再生');
+  const asphaltSection=isAsphaltType?`
     <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;background:rgba(234,88,12,.03);border-top-color:rgba(234,88,12,.2);">
       <span class="ot-lbl">料別</span>
-      <select id="ag-${r.id}" onchange="setAsphaltGrade(${r.id},this.value)"
+      <select id="ag-${r.id}" onchange="setAsphaltGrade(${r.id},this.value,${r.type==='coldmix'})"
         style="font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;outline:none;">
-        ${Object.keys(r.grades||{}).map(g=>`<option value="${g}" ${r.asphaltGrade===g?'selected':''}>${g}</option>`).join('')}
+        ${Object.keys(r.grades||{}).map(g=>`<option value="${g}" ${curGrade===g?'selected':''}>${g}</option>`).join('')}
       </select>
       <span class="ot-lbl" style="margin-left:4px;">運費 $</span>
       <input class="ot-inp" type="number" inputmode="numeric" value="${r.asphaltFreight||0}" min="0"
@@ -1319,8 +1402,43 @@ function makeCostRow(r){
         style="width:72px;" />
       <span class="ot-lbl">/T</span>
       <span id="asp-sub-${r.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);margin-left:auto;">
-        ${r.qty}T × ($${((r.grades?.[r.asphaltGrade]?.price)||0).toLocaleString('zh-TW')}+$${r.asphaltFreight||0}) = ${fmt(calcRowSub(r))}
+        ${r.qty}T × ($${((r.grades?.[curGrade]?.price)||0).toLocaleString('zh-TW')}+$${r.asphaltFreight||0}) = ${fmt(calcRowSub(r))}
       </span>
+    </div>`:'' ;
+
+  // ── 廢方處理列 ──
+  const wasteSection=r.type==='waste'?`
+    <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;background:rgba(120,53,15,.03);border-top-color:rgba(120,53,15,.2);">
+      <span class="ot-lbl">$/m³</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.pricePerM3||0}" min="0"
+        id="wpm-${r.id}" onchange="setWasteField(${r.id},'pricePerM3',this.value)" onblur="setWasteField(${r.id},'pricePerM3',this.value)" style="width:80px;" />
+      <span class="ot-lbl" style="margin-left:4px;">車數</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.truckCount||0}" min="0"
+        id="wtc-${r.id}" oninput="setWasteField(${r.id},'truckCount',this.value)" style="width:52px;" />
+      <span class="ot-lbl">× 運費$</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.freightPerTruck||0}" min="0"
+        id="wft-${r.id}" onchange="setWasteField(${r.id},'freightPerTruck',this.value)" onblur="setWasteField(${r.id},'freightPerTruck',this.value)" style="width:72px;" />
+      <span id="waste-sub-${r.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);margin-left:auto;">${fmt(calcRowSub(r))}</span>
+    </div>`:'' ;
+
+  // ── 水泥列 ──
+  const cementSection=r.type==='cement'?`
+    <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;background:rgba(71,85,105,.03);border-top-color:rgba(71,85,105,.2);">
+      <span class="ot-lbl">料別</span>
+      <select id="cg-${r.id}" onchange="setCementField(${r.id},'cementGrade',this.value)"
+        style="font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;outline:none;">
+        ${Object.keys(r.grades||{}).map(g=>`<option value="${g}" ${r.cementGrade===g?'selected':''}>${g}</option>`).join('')}
+      </select>
+      <span class="ot-lbl" style="margin-left:4px;">車數</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.truckCount||0}" min="0"
+        id="ctc-${r.id}" oninput="setCementField(${r.id},'truckCount',this.value)" style="width:52px;" />
+      <span class="ot-lbl">× 運費$</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.freightPerTruck||0}" min="0"
+        id="cft-${r.id}" onchange="setCementField(${r.id},'freightPerTruck',this.value)" onblur="setCementField(${r.id},'freightPerTruck',this.value)" style="width:72px;" />
+      <span class="ot-lbl" style="margin-left:4px;">加班$</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.overtimeFixed||0}" min="0"
+        id="cot-${r.id}" onchange="setCementField(${r.id},'overtimeFixed',this.value)" onblur="setCementField(${r.id},'overtimeFixed',this.value)" style="width:72px;" />
+      <span id="cement-sub-${r.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);margin-left:auto;">${fmt(calcRowSub(r))}</span>
     </div>`:'' ;
 
   const moveButtons=`<div class="move-btns"><button class="move-btn" onclick="moveRow(${r.id},-1)" title="上移">▲</button><button class="move-btn" onclick="moveRow(${r.id},1)" title="下移">▼</button></div>`;
@@ -1334,7 +1452,7 @@ function makeCostRow(r){
         <div class="item-note">${r.unit}</div>
       </div>
       <div class="qty-wrap">${r.type==='asphalt'?qH:qH}</div>
-      ${(r.type==='marking'||r.type==='asphalt')?`<div class="shift-placeholder"></div><div class="price-cell"></div>`:shiftHtml+`<div class="price-cell">${priceLabel}</div>`}
+      ${(r.type==='marking'||r.type==='asphalt'||r.type==='coldmix'||r.type==='waste'||r.type==='cement')?`<div class="shift-placeholder"></div><div class="price-cell"></div>`:shiftHtml+`<div class="price-cell">${priceLabel}</div>`}
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
@@ -1352,7 +1470,7 @@ function makeCostRow(r){
         oninput="setNote(${r.id},this.value)"
         style="flex:1;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;padding:1px 4px;" />
     </div>
-    ${workerSection}${oilcarSection}${asphaltSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt')?otSection:''}${truckSection}`;
+    ${workerSection}${oilcarSection}${asphaltSection}${wasteSection}${cementSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt'&&r.type!=='coldmix'&&r.type!=='waste'&&r.type!=='cement')?otSection:''}${truckSection}`;
   return d;
 }
 function chQty(id,d){
@@ -1490,15 +1608,31 @@ function confirmApplyTime(sec){
   document.getElementById('time-popover')?.remove();
   showToast('✅ 已套用 '+t+' 至'+sec+'區段','ok');
 }
-function setAsphaltGrade(id,v){
-  const r=findCR(id);if(!r)return;r.asphaltGrade=v;
+function setAsphaltGrade(id,v,isColdmix){
+  const r=findCR(id);if(!r)return;
+  if(isColdmix) r.coldmixGrade=v;
+  else r.asphaltGrade=v;
   // restore saved freight for this grade
   const dbItem=costDB['其餘']?.find(i=>i.name===r.name);
   if(dbItem?.grades?.[v]?.freightDefault) r.asphaltFreight=dbItem.grades[v].freightDefault;
-  // update input display
   const afEl=document.getElementById('af-'+id);
   if(afEl) afEl.value=r.asphaltFreight||0;
   updateAsphaltDisplay(r);recalc();
+}
+function setWasteField(id,field,v){
+  const r=findCR(id);if(!r)return;
+  r[field]=parseFloat(v)||0;
+  const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
+  const wsEl=document.getElementById('waste-sub-'+id);if(wsEl)wsEl.textContent=fmt(calcRowSub(r));
+  recalc();
+}
+function setCementField(id,field,v){
+  const r=findCR(id);if(!r)return;
+  if(field==='cementGrade') r.cementGrade=v;
+  else r[field]=parseFloat(v)||0;
+  const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
+  const csEl=document.getElementById('cement-sub-'+id);if(csEl)csEl.textContent=fmt(calcRowSub(r));
+  recalc();
 }
 function setAsphaltFreight(id,v){
   const r=findCR(id);if(!r)return;r.asphaltFreight=parseFloat(v)||0;
@@ -1677,6 +1811,9 @@ function getSnapshot(){
     markingMode:r.markingMode||'halfDay',markingM2:r.markingM2||0,
     note:r.note||'',arrivalTime:r.arrivalTime||'',
     grades:r.grades||{},asphaltGrade:r.asphaltGrade||'再生',asphaltFreight:r.asphaltFreight||0,
+    coldmixGrade:r.coldmixGrade||'發泡',
+    pricePerM3:r.pricePerM3||0,freightPerTruck:r.freightPerTruck||0,truckCount:r.truckCount||0,
+    cementGrade:r.cementGrade||'CLSM',overtimeFixed:r.overtimeFixed||0,
     sub:calcRowSub(r)
   }));});
   return snapshot;
@@ -2058,6 +2195,12 @@ function openRecEdit(id){
   if(r.grades===undefined) r.grades={};
   if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
   if(r.asphaltFreight===undefined) r.asphaltFreight=0;
+  if(r.coldmixGrade===undefined) r.coldmixGrade='發泡';
+  if(r.pricePerM3===undefined) r.pricePerM3=0;
+  if(r.freightPerTruck===undefined) r.freightPerTruck=0;
+  if(r.truckCount===undefined) r.truckCount=0;
+  if(r.cementGrade===undefined) r.cementGrade='CLSM';
+  if(r.overtimeFixed===undefined) r.overtimeFixed=0;
     if(r.markingM2===undefined) r.markingM2=0;
     if(r.note===undefined) r.note=''; if(r.arrivalTime===undefined) r.arrivalTime='';
   }));
@@ -2100,6 +2243,9 @@ function openPicker(sec){
     let meta=item.unit;
     if(item.fixed) meta+=' · 固定';
     else if(item.type==='asphalt') meta+=' · 料別計費';
+    else if(item.type==='coldmix') meta+=' · 冷拌料別';
+    else if(item.type==='waste') meta+=' · m³+車運費';
+    else if(item.type==='cement') meta+=' · 料別+車運費';
     else if(item.type==='marking') meta+=' · 半天/一天';
     else if(item.type==='worker') meta+=' · 出車+人員';
     else if(item.type==='oilcar') meta+=' · 出車+乳化';
@@ -2127,8 +2273,11 @@ function pkToggle(sec,item,chk){
       grades:deepCopy(item.grades||{}),
       shift:noShift?'日':dayNight,overtime:0,
       truckTrips:item.truckTripDefault||0,truckCross:item.truckCrossDefault||0,
-      markingMode:'none',markingM2:0,note:'',
-      asphaltGrade:'再生',asphaltFreight:0
+      markingMode:'none',markingM2:0,note:'',arrivalTime:'',
+      asphaltGrade:'再生',asphaltFreight:0,
+      coldmixGrade:'發泡',
+      pricePerM3:item.pricePerM3||0,freightPerTruck:item.freightPerTruck||0,truckCount:0,
+      cementGrade:'CLSM',overtimeFixed:0
     });
     renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);
   } else {
@@ -2254,6 +2403,17 @@ function calcStoredSub(row){
     const gp=(row.grades?.[row.asphaltGrade]?.price)||0;
     return (row.qty||0)*(gp+(row.asphaltFreight||0));
   }
+  if(row.type==='coldmix'){
+    const gp=(row.grades?.[row.coldmixGrade]?.price)||0;
+    return (row.qty||0)*(gp+(row.asphaltFreight||0));
+  }
+  if(row.type==='waste'){
+    return (row.qty||0)*(row.pricePerM3||0)+(row.truckCount||0)*(row.freightPerTruck||0);
+  }
+  if(row.type==='cement'){
+    const gp=(row.grades?.[row.cementGrade]?.price)||0;
+    return (row.qty||0)*gp+(row.truckCount||0)*(row.freightPerTruck||0)+(row.overtimeFixed||0);
+  }
   if(row.type==='marking'){
     if(!row.markingMode||row.markingMode==='none') return 0;
     const base=row.markingMode==='fullDay'?(row.priceFullDay||0):(row.priceHalfDay||0);
@@ -2322,7 +2482,13 @@ function printRecord(id) {
       const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
         ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
-        :`${row.name}${row.arrivalTime?' <span style="color:#4a5578;font-size:13px;">(${row.arrivalTime})</span>'  :''}` ;
+        :row.type==='coldmix'
+        ?`${row.name} ${row.coldmixGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
+        :row.type==='waste'
+        ?`${row.name} $${row.pricePerM3||0}/m³${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}`
+        :row.type==='cement'
+        ?`${row.name} ${row.cementGrade||''}${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}${row.overtimeFixed>0?' 加班$'+row.overtimeFixed:''}`
+        :`${row.name}${row.arrivalTime?` <span style="color:#4a5578;font-size:13px;">(${row.arrivalTime})</span>`:''}` ;
       const rowSub=calcStoredSub(row);
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
