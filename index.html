@@ -2201,11 +2201,13 @@ function printRecord(id) {
       .meta{text-align:center;font-size:14px;color:#4a5578;margin-bottom:16px;font-weight:500;}
       table{width:100%;border-collapse:collapse;margin-bottom:12px;}
       th{background:#f0f2f7;font-size:14px;font-weight:700;color:#4a5578;padding:8px 10px;text-align:left;border:1px solid #dde2ee;}
-      th.r{text-align:right;}
+      th.c{text-align:center;}th.r{text-align:right;}
       td{padding:8px 10px;border:1px solid #dde2ee;font-size:14px;vertical-align:middle;}
+      td.c{text-align:center;}
       .sec-title{background:#f0f2f7;font-weight:900;font-size:15px;padding:8px 10px;border:1px solid #dde2ee;color:#1a2035;}
       .num{font-family:monospace;text-align:right;}
-      .chk{text-align:center;color:#059669;font-weight:900;font-size:15px;}
+      .chk{text-align:center;color:#059669;font-weight:900;font-size:16px;width:36px;}
+      .note-red{color:#dc2626;font-size:12px;font-weight:700;}
       .total-row td{font-weight:700;font-size:14px;}
       .grand-row td{background:#fff8ee;font-weight:900;font-size:16px;color:#e07b00;}
       @media print{body{padding:10px;}button{display:none;} @page{margin:10mm;}}
@@ -2214,10 +2216,10 @@ function printRecord(id) {
     <div class="meta">${meta}</div>
     <table>
       <thead><tr>
-        <th style="width:26px"></th>
+        <th style="width:36px;text-align:center;">✓</th>
         <th style="min-width:140px;">項目</th>
-        <th style="width:54px">單位</th>
-        <th style="width:60px" class="r">數量</th>
+        <th style="width:54px" class="c">單位</th>
+        <th style="width:60px" class="c">數量</th>
         <th style="width:90px" class="r">單價</th>
         <th style="width:90px" class="r">小計</th>
       </tr></thead>
@@ -2229,16 +2231,22 @@ function printRecord(id) {
     if(!items.length && sec!=='其餘') return;
     html+=`<tr><td colspan="6" class="sec-title">${sec}</td></tr>`;
     items.forEach((row,idx)=>{
-      const noteStr=row.note?` <span style="color:#888;font-size:12px;">(${row.note})</span>`:'';
+      // 備註（紅字）+ 加班 + 板車
+      const extraParts=[];
+      if(row.note) extraParts.push(`<span class="note-red">${row.note}</span>`);
+      if(row.overtime>0) extraParts.push(`<span class="note-red">加班${row.overtime}h</span>`);
+      if((row.truckTrips||0)>0) extraParts.push(`<span class="note-red">板車移動$${(row.truckTrips).toLocaleString('zh-TW')}</span>`);
+      if((row.truckCross||0)>0) extraParts.push(`<span class="note-red">跨縣市$${(row.truckCross).toLocaleString('zh-TW')}</span>`);
+      const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
         ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
         :row.name;
       const rowSub=calcStoredSub(row);
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
-        <td>${nameCell}${noteStr}</td>
-        <td>${row.unit}</td>
-        <td class="num">${(row.qty||0).toLocaleString('zh-TW')}</td>
+        <td>${nameCell}${extraStr}</td>
+        <td class="c">${row.unit}</td>
+        <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
         <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
         <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
       </tr>`;
