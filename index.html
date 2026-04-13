@@ -110,6 +110,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .cost-col-hdrs{grid-template-columns:20px 1fr 76px 52px 68px 84px 28px;}
 .cost-row-wrap{background:var(--surface);border-top:1px solid var(--border);}
 .cost-row-main{display:grid;grid-template-columns:20px 1fr 76px 52px 68px 84px 28px;align-items:center;padding:10px 10px 10px 8px;gap:4px;}
+.col-h.no-wrap{white-space:nowrap;overflow:hidden;font-size:11px;}
 .item-name{font-size:14px;font-weight:700;color:var(--text);}
 .item-note{font-size:11px;color:var(--t3);margin-top:1px;}
 .qty-wrap{display:flex;align-items:center;justify-content:center;gap:3px;}
@@ -415,7 +416,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-前置">$0</span><span class="sec-tog open" id="ctog-前置">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-前置">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h no-wrap">工項</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-前置"></div>
       <div class="add-row" onclick="openPicker('前置')"><div class="add-icon">＋</div><div class="add-lbl">新增前置機具</div></div>
     </div>
@@ -427,7 +428,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-刨除">$0</span><span class="sec-tog open" id="ctog-刨除">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-刨除">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h">機具</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h no-wrap">工項</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-刨除"></div>
       <div class="add-row" onclick="openPicker('刨除')"><div class="add-icon">＋</div><div class="add-lbl">新增刨除機具</div></div>
     </div>
@@ -439,7 +440,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-鋪設">$0</span><span class="sec-tog open" id="ctog-鋪設">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-鋪設">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具／人員</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h no-wrap">工項</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-鋪設"></div>
       <div class="add-row" onclick="openPicker('鋪設')"><div class="add-icon">＋</div><div class="add-lbl">新增鋪設機具</div></div>
     </div>
@@ -451,7 +452,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-其餘">$0</span><span class="sec-tog open" id="ctog-其餘">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-其餘">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h">項目</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h no-wrap">工項</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-其餘"></div>
       <div class="special-row" id="sprow-便當">
         <div class="sp-name">便當</div>
@@ -792,6 +793,33 @@ let priceDB={}, dbDirty=false;
 function loadPriceDB() {
   try { const s=localStorage.getItem(STORAGE_KEY); priceDB=s?JSON.parse(s):deepCopy(DEFAULTS); SECS.forEach(sec=>{if(!priceDB[sec])priceDB[sec]=deepCopy(DEFAULTS[sec]);}); }
   catch(e){priceDB=deepCopy(DEFAULTS);}
+
+  // item-level migration: 補上 DEFAULTS 裡有但 priceDB 裡缺少的項目
+  SECS.forEach(sec=>{
+    (DEFAULTS[sec]||[]).forEach(def=>{
+      if(!priceDB[sec].find(i=>i.name===def.name)){
+        priceDB[sec].push(deepCopy(def));
+      }
+    });
+  });
+
+  // 舊名稱 migration: 油車 → 油車(冷油)
+  const 鋪設=priceDB['鋪設'];
+  const oldOil=鋪設?.find(i=>i.name==='油車');
+  if(oldOil){ oldOil.name='油車(冷油)'; oldOil.type='oilcar'; if(!oldOil.priceEmulsion) oldOil.priceEmulsion=25; }
+
+  // 瀝青混凝土 type migration
+  const ac=priceDB['其餘']?.find(i=>i.name==='瀝青混凝土');
+  if(ac){
+    if(!ac.type) ac.type='asphalt';
+    if(!ac.grades) ac.grades={'再生':{price:ac.priceDay||2100},'新料':{price:2400},'改三再生':{price:2600},'改三新料':{price:2800}};
+  }
+
+  // 確保 oilcar 有正確 type
+  ['油車(冷油)','油車(熱油)'].forEach(n=>{
+    const item=priceDB['鋪設']?.find(i=>i.name===n);
+    if(item && !item.type) item.type='oilcar';
+  });
 }
 function dbSave() {
   SECS.forEach(sec=>priceDB[sec].forEach(item=>{
@@ -883,6 +911,7 @@ function makeDbRow(sec,item){
           <span style="font-size:10px;color:var(--t3);">/T</span>
         </div>`).join('')}
       </div>`;
+  } else if(item.type==='marking'){
     priceHtml=`
       <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
         <div style="display:flex;align-items:center;gap:4px;">
@@ -916,10 +945,13 @@ function makeDbRow(sec,item){
         style="font-size:12px;color:var(--t2);cursor:pointer;">可板車移動</label>
     </div>` : '';
 
+  // 特殊類型鎖定：不可刪除
+  const isLocked = ['worker','oilcar','marking','asphalt'].includes(item.type);
+
   d.innerHTML=`
-    <div class="db-name">${item.name}<span class="unit-tag" style="margin-left:5px;">${item.unit}</span></div>
+    <div class="db-name">${item.name}<span class="unit-tag" style="margin-left:5px;">${item.unit}</span>${isLocked?`<span style="font-size:10px;color:var(--t3);margin-left:6px;">🔒</span>`:''}</div>
     ${priceHtml}
-    <button class="del-btn" data-sec="${sec}" data-name="${item.name}" onclick="dbDelItemBtn(this)">✕</button>
+    ${isLocked?`<div></div>`:`<button class="del-btn" data-sec="${sec}" data-name="${item.name}" onclick="dbDelItemBtn(this)">✕</button>`}
     ${truckChk}`;
   return d;
 }
@@ -990,7 +1022,12 @@ function dbAddItem(sec){
   renderDbSec(sec);setDbDirty(true);showToast('✅ 已新增 '+name);
 }
 function dbDelItemBtn(btn){dbDelItem(btn.dataset.sec,btn.dataset.name);}
-function dbDelItem(sec,name){const idx=priceDB[sec].findIndex(i=>i.name===name);if(idx!==-1){priceDB[sec].splice(idx,1);document.getElementById('dbrow-'+sec+'-'+name)?.remove();document.getElementById('dcnt-'+sec).textContent=priceDB[sec].length+' 項';setDbDirty(true);}}
+function dbDelItem(sec,name){
+  const item=priceDB[sec]?.find(i=>i.name===name);
+  if(item && ['worker','oilcar','marking','asphalt'].includes(item.type)){showToast('⚠️ 特殊工項不可刪除');return;}
+  const idx=priceDB[sec].findIndex(i=>i.name===name);
+  if(idx!==-1){priceDB[sec].splice(idx,1);document.getElementById('dbrow-'+sec+'-'+name)?.remove();document.getElementById('dcnt-'+sec).textContent=priceDB[sec].length+' 項';setDbDirty(true);}
+}
 
 // ══════════ COST TABLE ══════════
 let costDB={},costRows={前置:[],刨除:[],鋪設:[],其餘:[]},uid=1,curSec=null;
@@ -1208,7 +1245,7 @@ function makeCostRow(r){
 
   const dragHandle=`<div class="drag-handle" title="拖曳排序"><span></span><span></span><span></span></div>`;
 
-  d.setAttribute('draggable','true');
+  d.setAttribute('draggable','false');
   d.innerHTML=`
     <div class="cost-row-main">
       ${dragHandle}
@@ -1339,13 +1376,23 @@ function initDragDrop(sec){
   if(!container) return;
 
   container.querySelectorAll('.cost-row-wrap').forEach(el=>{
+    const handle=el.querySelector('.drag-handle');
+    if(!handle) return;
+
+    // ── Mouse drag: only enable draggable when handle is pressed ──
+    handle.addEventListener('mousedown', ()=>{ el.setAttribute('draggable','true'); });
+    el.addEventListener('dragend', ()=>{ el.setAttribute('draggable','false'); });
+    document.addEventListener('mouseup', ()=>{ el.setAttribute('draggable','false'); }, {once:false});
+
     el.addEventListener('dragstart', e=>{
+      if(el.getAttribute('draggable')!=='true'){e.preventDefault();return;}
       dragSrc=el; dragSec=sec;
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed='move';
     });
     el.addEventListener('dragend', ()=>{
       el.classList.remove('dragging');
+      el.setAttribute('draggable','false');
       container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
         x.classList.remove('drag-over-top','drag-over-bot');
       });
@@ -1357,8 +1404,7 @@ function initDragDrop(sec){
         x.classList.remove('drag-over-top','drag-over-bot');
       });
       const rect=el.getBoundingClientRect();
-      const mid=rect.top+rect.height/2;
-      el.classList.add(e.clientY<mid?'drag-over-top':'drag-over-bot');
+      el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bot');
     });
     el.addEventListener('dragleave', ()=>{
       el.classList.remove('drag-over-top','drag-over-bot');
@@ -1366,11 +1412,8 @@ function initDragDrop(sec){
     el.addEventListener('drop', e=>{
       e.preventDefault();
       if(!dragSrc||el===dragSrc||dragSec!==sec) return;
+      const isTop=el.classList.contains('drag-over-top');
       el.classList.remove('drag-over-top','drag-over-bot');
-      const rect=el.getBoundingClientRect();
-      const mid=rect.top+rect.height/2;
-      const insertBefore=e.clientY<mid;
-      // reorder costRows array
       const srcId=parseInt(dragSrc.id.replace('crow-',''));
       const tgtId=parseInt(el.id.replace('crow-',''));
       const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
@@ -1378,45 +1421,39 @@ function initDragDrop(sec){
       if(srcIdx===-1||tgtIdx===-1) return;
       const [moved]=costRows[sec].splice(srcIdx,1);
       const newTgt=costRows[sec].findIndex(r=>r.id===tgtId);
-      costRows[sec].splice(insertBefore?newTgt:newTgt+1,0,moved);
+      costRows[sec].splice(isTop?newTgt:newTgt+1,0,moved);
       renderCostSec(sec);recalc();
     });
 
-    // ── Touch drag support ──
-    const handle=el.querySelector('.drag-handle');
-    if(!handle) return;
-    let touchY=0, clone=null, origIdx=-1;
+    // ── Touch drag ──
     handle.addEventListener('touchstart', e=>{
       e.preventDefault();
-      touchY=e.touches[0].clientY;
       dragSrc=el; dragSec=sec;
       el.classList.add('dragging');
-      origIdx=costRows[sec].findIndex(r=>r.id===parseInt(el.id.replace('crow-','')));
     },{passive:false});
     handle.addEventListener('touchmove', e=>{
       e.preventDefault();
       const ty=e.touches[0].clientY;
-      const siblings=[...container.querySelectorAll('.cost-row-wrap')].filter(x=>x!==el);
       container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
         x.classList.remove('drag-over-top','drag-over-bot');
       });
-      for(const sib of siblings){
+      for(const sib of container.querySelectorAll('.cost-row-wrap')){
+        if(sib===el) continue;
         const rect=sib.getBoundingClientRect();
-        if(ty>=rect.top && ty<=rect.bottom){
-          const mid=rect.top+rect.height/2;
-          sib.classList.add(ty<mid?'drag-over-top':'drag-over-bot');
+        if(ty>=rect.top&&ty<=rect.bottom){
+          sib.classList.add(ty<rect.top+rect.height/2?'drag-over-top':'drag-over-bot');
           break;
         }
       }
     },{passive:false});
-    handle.addEventListener('touchend', e=>{
+    handle.addEventListener('touchend', ()=>{
       el.classList.remove('dragging');
       const target=container.querySelector('.drag-over-top,.drag-over-bot');
       if(target){
         const isTop=target.classList.contains('drag-over-top');
         target.classList.remove('drag-over-top','drag-over-bot');
-        const tgtId=parseInt(target.id.replace('crow-',''));
         const srcId=parseInt(el.id.replace('crow-',''));
+        const tgtId=parseInt(target.id.replace('crow-',''));
         const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
         const tgtIdx=costRows[sec].findIndex(r=>r.id===tgtId);
         if(srcIdx!==-1&&tgtIdx!==-1){
@@ -1634,6 +1671,12 @@ function makeRecCardHtml(rec){
   return rowsHtml;
 }
 
+// 取得紀錄中瀝青混凝土噸數
+function recAsphaltTons(rec){
+  const row=(rec.rows?.['其餘']||[]).find(r=>r.name==='瀝青混凝土'||r.type==='asphalt');
+  return row?row.qty:0;
+}
+
 function renderRecords(){
   const list=document.getElementById('recList'),empty=document.getElementById('recEmpty'),actions=document.getElementById('recActions');
   document.getElementById('recCount').textContent=records.length+' 筆';
@@ -1658,7 +1701,7 @@ function renderRecords(){
     // 單筆派案：直接顯示原本卡片樣式
     if(!isMulti){
       const rec=recs[0];
-      const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' · ');
+      const _t=recAsphaltTons(rec);const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別,_t>0?'瀝青'+_t+'T':''].filter(Boolean).join(' · ');
       const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.5);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
       const card=document.createElement('div');card.className='rec-card';
       card.innerHTML=`
@@ -1706,7 +1749,7 @@ function renderRecords(){
         </div>
         <div class="rec-group-body" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
           ${recs.map(rec=>{
-            const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' / ');
+            const _t=recAsphaltTons(rec);const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別,_t>0?'瀝青'+_t+'T':''].filter(Boolean).join(' / ');
             const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.4);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
             return `
               <div class="rec-sub-card">
