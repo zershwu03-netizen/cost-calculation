@@ -4,8 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="機具成本">
+<link id="apple-touch-icon" rel="apple-touch-icon" sizes="180x180">
 <style>html{touch-action:manipulation;}</style>
 <title>施工機具成本表</title>
+<script>
+// 用 Canvas 把 emoji 畫成 180x180 icon
+(function(){
+  try{
+    const c=document.createElement('canvas');c.width=180;c.height=180;
+    const ctx=c.getContext('2d');
+    // 背景：橘色圓角
+    ctx.fillStyle='#e07b00';
+    ctx.beginPath();ctx.roundRect(0,0,180,180,36);ctx.fill();
+    // emoji
+    ctx.font='100px serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText('📋',90,95);
+    const link=document.getElementById('apple-touch-icon');
+    if(link) link.href=c.toDataURL('image/png');
+  }catch(e){}
+})();
+</script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
