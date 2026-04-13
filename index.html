@@ -237,7 +237,27 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .rec-actions{display:flex;gap:8px;padding:0 10px 10px;}
 .rec-act-btn{flex:1;padding:11px;border-radius:11px;border:1.5px solid rgba(220,38,38,.15);background:rgba(220,38,38,.06);color:var(--red);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 
-/* PICKER */
+/* GROUP CARD */
+.rec-group{margin:8px 10px;border-radius:14px;overflow:hidden;border:2px solid var(--purple);background:var(--surface);box-shadow:var(--shadow2);}
+.rec-group-hdr{display:flex;align-items:flex-start;padding:13px 14px;cursor:pointer;user-select:none;gap:8px;background:rgba(124,58,237,.04);}
+.rec-group-info{flex:1;min-width:0;}
+.rec-group-title{font-size:16px;font-weight:900;color:var(--purple);}
+.rec-group-meta{font-size:12px;color:var(--t3);margin-top:2px;}
+.rec-sub-card{border-top:1px solid var(--border);background:var(--surface);}
+.rec-sub-card:first-child{border-top:none;}
+
+/* STATS CASE CARD */
+.stats-case-card{margin:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
+.stats-case-hdr{display:flex;align-items:center;padding:13px 14px;cursor:pointer;user-select:none;gap:10px;background:rgba(37,99,235,.03);}
+.stats-case-title{font-size:15px;font-weight:900;color:var(--text);flex:1;}
+.stats-case-meta{font-size:13px;color:var(--t2);white-space:nowrap;}
+.stats-case-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;}
+.stats-case-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
+.stats-case-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);gap:10px;}
+.stats-case-row-l{flex:1;min-width:0;}
+.stats-case-row-title{font-size:14px;font-weight:700;color:var(--text);}
+.stats-case-row-meta{font-size:11px;color:var(--t3);margin-top:2px;}
+.stats-case-total{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1.5px solid var(--border);background:rgba(224,123,0,.04);}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .2s;}
 .overlay.show{opacity:1;pointer-events:all;}
 .picker{width:100%;background:var(--surface);border-radius:22px 22px 0 0;border-top:1px solid var(--border);max-height:82vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease;box-shadow:0 -4px 24px rgba(0,0,0,.12);}
@@ -316,12 +336,6 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     <span class="search-icon">🔍</span>
     <input class="search-inp" id="searchInp" placeholder="搜尋派案、工區、料別…" oninput="onSearch()" />
     <span class="search-clear" id="searchClear" onclick="clearSearch()">✕</span>
-  </div>
-  <!-- 篩選 chips -->
-  <div class="filter-row" id="filterRow">
-    <div class="filter-chip active" onclick="setFilter('all',this)">全部</div>
-    <div class="filter-chip" onclick="setFilter('日',this)">日班</div>
-    <div class="filter-chip" onclick="setFilter('夜',this)">夜班</div>
   </div>
   <div id="recEmpty" style="margin:40px 20px;text-align:center;color:var(--t3);">
     <div style="font-size:44px;margin-bottom:14px;">🗂️</div>
@@ -478,17 +492,16 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="db-bar"><button class="db-btn reset" onclick="dbReset()">↺ 重設預設</button><button class="db-btn save" onclick="dbSave()">💾 儲存並套用</button></div>
 </div>
 
-<!-- ══ PAGE 4: 月報統計 ══ -->
+<!-- ══ PAGE 4: 派案統計 ══ -->
 <div class="page" id="page-stats">
   <div class="hdr">
-    <div class="hdr-l"><div class="sub">工程統計</div><div class="main" style="color:var(--blue)">月報</div></div>
+    <div class="hdr-l"><div class="sub">工程統計</div><div class="main" style="color:var(--blue)">派案統計</div></div>
     <div class="sync-badge state-idle" onclick="fbSync()" style="padding:5px 8px;"><div class="sd"></div></div>
   </div>
-  <!-- 月份選擇 -->
-  <div class="stats-month-sel">
-    <button class="stats-arrow" onclick="changeStatsMonth(-1)">‹</button>
-    <div class="stats-month-lbl" id="statsMonthLbl"></div>
-    <button class="stats-arrow" onclick="changeStatsMonth(1)">›</button>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input class="search-inp" id="statsSearchInp" placeholder="搜尋派案名稱…" oninput="renderStats()" />
+    <span class="search-clear" id="statsSearchClear" onclick="clearStatsSearch()">✕</span>
   </div>
   <div id="statsContent"></div>
 </div>
@@ -498,7 +511,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="tab-ind" id="tabInd"></div>
   <button class="tab active" id="tab-rec" onclick="switchTab('rec')"><span class="tab-icon">🗂️</span><span class="tab-label">歷史紀錄</span></button>
   <button class="tab" id="tab-cost" onclick="switchTab('cost')"><span class="tab-icon">📋</span><span class="tab-label">成本表</span></button>
-  <button class="tab" id="tab-stats" onclick="switchTab('stats')"><span class="tab-icon">📊</span><span class="tab-label">月報統計</span></button>
+  <button class="tab" id="tab-stats" onclick="switchTab('stats')"><span class="tab-icon">📊</span><span class="tab-label">派案統計</span></button>
   <button class="tab" id="tab-db" onclick="switchTab('db')"><span class="tab-icon">🗃️</span><span class="tab-label">單價管理</span></button>
 </div>
 
@@ -648,68 +661,63 @@ function rocToDate(roc) {
   return new Date(y, parseInt(m[2])-1, parseInt(m[3]));
 }
 
-function changeStatsMonth(delta) {
-  statsMonth += delta;
-  if(statsMonth > 12) { statsMonth = 1; statsYear++; }
-  if(statsMonth < 1)  { statsMonth = 12; statsYear--; }
+function clearStatsSearch(){
+  const inp=document.getElementById('statsSearchInp');
+  if(inp) inp.value='';
+  document.getElementById('statsSearchClear')?.classList.remove('show');
   renderStats();
 }
 
 function renderStats() {
-  const lbl = document.getElementById('statsMonthLbl');
-  const rocYear = statsYear - 1911;
-  lbl.textContent = `民國 ${rocYear} 年 ${statsMonth} 月`;
-
-  // 篩選當月紀錄
-  const monthRecs = records.filter(r => {
-    const d = rocToDate(r.日期);
-    return d && d.getFullYear() === statsYear && d.getMonth()+1 === statsMonth;
-  });
-
   const el = document.getElementById('statsContent');
-  if(!monthRecs.length) {
-    el.innerHTML = `<div class="stats-empty">本月尚無施工紀錄</div>`;
-    return;
-  }
+  const inp = document.getElementById('statsSearchInp');
+  const q = inp?inp.value.trim().toLowerCase():'';
+  if(inp) document.getElementById('statsSearchClear')?.classList.toggle('show', q.length>0);
 
-  const totalGrand = monthRecs.reduce((s,r) => s + (r.grand||0), 0);
-  const totalMach  = monthRecs.reduce((s,r) => s + (r.mach||0), 0);
-  const avgGrand   = totalGrand / monthRecs.length;
-  const dayCount   = monthRecs.filter(r=>r.日夜==='日').length;
-  const nightCount = monthRecs.filter(r=>r.日夜==='夜').length;
+  if(!records.length){ el.innerHTML=`<div class="stats-empty">尚無施工紀錄</div>`; return; }
 
-  // 工區統計
-  const areaMap = {};
-  monthRecs.forEach(r => {
-    const a = r.工區||'未知'; 
-    if(!areaMap[a]) areaMap[a]={count:0,total:0};
-    areaMap[a].count++; areaMap[a].total+=(r.grand||0);
+  // 依派案名稱分組
+  const caseMap = {};
+  records.forEach(r=>{
+    const key = r.派案||'（未命名）';
+    if(!caseMap[key]) caseMap[key]=[];
+    caseMap[key].push(r);
   });
-  const areaSorted = Object.entries(areaMap).sort((a,b)=>b[1].total-a[1].total);
 
-  // 料別統計
-  const matMap = {};
-  monthRecs.forEach(r => { const m=r.料別||'未知'; matMap[m]=(matMap[m]||0)+1; });
-  const matSorted = Object.entries(matMap).sort((a,b)=>b[1]-a[1]);
+  // 搜尋篩選
+  const filtered = Object.entries(caseMap).filter(([k])=>!q||k.toLowerCase().includes(q));
+  if(!filtered.length){ el.innerHTML=`<div class="stats-empty">無符合的派案</div>`; return; }
 
-  el.innerHTML = `
-    <div class="stats-cards">
-      <div class="stats-card"><div class="stats-card-lbl">工程筆數</div><div class="stats-card-val">${monthRecs.length} 筆</div><div class="stats-card-sub">日班 ${dayCount} · 夜班 ${nightCount}</div></div>
-      <div class="stats-card"><div class="stats-card-lbl">平均每筆</div><div class="stats-card-val blue">$${Math.round(avgGrand).toLocaleString('zh-TW')}</div></div>
-      <div class="stats-card wide"><div class="stats-card-lbl">月總金額</div><div class="stats-card-val accent">$${Math.round(totalGrand).toLocaleString('zh-TW')}</div><div class="stats-card-sub">機具費 $${Math.round(totalMach).toLocaleString('zh-TW')}</div></div>
-    </div>
-    <div class="stats-list">
-      <div class="stats-list-hdr">工區明細</div>
-      ${areaSorted.map(([area,v])=>`<div class="stats-item"><div><div class="stats-item-l">${area}</div><div style="font-size:11px;color:var(--t3)">${v.count} 筆</div></div><div class="stats-item-r">$${Math.round(v.total).toLocaleString('zh-TW')}</div></div>`).join('')}
-    </div>
-    <div class="stats-list">
-      <div class="stats-list-hdr">料別使用</div>
-      ${matSorted.map(([mat,cnt])=>`<div class="stats-item"><div class="stats-item-l">${mat}</div><div class="stats-item-r">${cnt} 次</div></div>`).join('')}
-    </div>
-    <div class="stats-list">
-      <div class="stats-list-hdr">本月施工紀錄</div>
-      ${monthRecs.map(r=>`<div class="stats-item"><div><div class="stats-item-l">${r.派案||''} · ${r.工區||''}</div><div style="font-size:11px;color:var(--t3)">${r.日期||''} ${r.星期||''} ${r.日夜||''}班</div></div><div class="stats-item-r">$${Math.round(r.grand||0).toLocaleString('zh-TW')}</div></div>`).join('')}
-    </div>`;
+  let html='';
+  filtered.forEach(([caseName, recs])=>{
+    const total = recs.reduce((s,r)=>s+(r.grand||0),0);
+    const count = recs.length;
+    const sorted = [...recs].sort((a,b)=>(rocToDate(b.日期)||0)-(rocToDate(a.日期)||0));
+
+    html+=`
+      <div class="stats-case-card">
+        <div class="stats-case-hdr" onclick="toggleStatsCase(this)">
+          <div class="stats-case-title">${caseName}</div>
+          <div class="stats-case-meta">${count} 筆 · <span style="color:var(--accent);font-family:'JetBrains Mono',monospace;font-weight:700;">$${Math.round(total).toLocaleString('zh-TW')}</span></div>
+          <div class="stats-case-tog">▾</div>
+        </div>
+        <div class="stats-case-body">
+          ${sorted.map(r=>`
+            <div class="stats-case-row">
+              <div class="stats-case-row-l">
+                <div class="stats-case-row-title">${r.工區||'（未填工區）'}</div>
+                <div class="stats-case-row-meta">${[r.日期,r.星期,r.日夜?r.日夜+'班':'',r.料別?'料別：'+r.料別:''].filter(Boolean).join(' / ')}</div>
+              </div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);white-space:nowrap;">$${Math.round(r.grand||0).toLocaleString('zh-TW')}</div>
+            </div>`).join('')}
+          <div class="stats-case-total">
+            <span style="font-size:13px;font-weight:700;color:var(--t2);">合計</span>
+            <span style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);">$${Math.round(total).toLocaleString('zh-TW')}</span>
+          </div>
+        </div>
+      </div>`;
+  });
+  el.innerHTML=html;
 }
 const SECS = ['前置','刨除','鋪設','其餘'];
 const STORAGE_KEY = 'machinery_price_db_v2';
@@ -752,6 +760,9 @@ const DEFAULTS = {
     {name:'AC細料',   unit:'T', priceDay:2400, priceNight:2400, fixed:false,noShift:true},
     {name:'底層料',   unit:'T', priceDay:1800, priceNight:1800, fixed:false,noShift:true},
     {name:'路基處理', unit:'m²',priceDay:350,  priceNight:350,  fixed:false,noShift:true},
+    // 標線：type='marking'，有半天/一天/m²三種計費
+    {name:'一型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
+    {name:'二型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
   ],
 };
 
@@ -836,10 +847,27 @@ function makeDbRow(sec,item){
           <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-em-${sec}-${item.name}" type="number" value="${item.priceEmulsion||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
         </div>
       </div>`;
+  } else if(item.type==='marking'){
+    // 標線：半天/一天/m² 三欄
+    priceHtml=`
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">半天</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-hd-${sec}-${item.name}" type="number" value="${item.priceHalfDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">一天</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-fd-${sec}-${item.name}" type="number" value="${item.priceFullDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">標線/m²</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-m2-${sec}-${item.name}" type="number" value="${item.pricePerM2||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+        </div>
+      </div>`;
   } else {
     priceHtml=`
-      <div class="price-field"><span class="pf-pre">☀️</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="日間"/></div>
-      <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="夜間"/></div>`;
+      <div class="price-field"><span class="pf-pre">☀️</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="日間"/></div>
+      <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="夜間"/></div>`;
   }
 
   // hasTruck checkbox
@@ -867,11 +895,17 @@ function dbMarkChanged(inp,sec,name){
   const nEl=document.getElementById('dpi-n-'+sec+'-'+name);
   const tfEl=document.getElementById('dpi-tf-'+sec+'-'+name);
   const emEl=document.getElementById('dpi-em-'+sec+'-'+name);
+  const hdEl=document.getElementById('dpi-hd-'+sec+'-'+name);
+  const fdEl=document.getElementById('dpi-fd-'+sec+'-'+name);
+  const m2El=document.getElementById('dpi-m2-'+sec+'-'+name);
   if(dEl) item.priceDay=parseFloat(dEl.value)||0;
   if(nEl) item.priceNight=parseFloat(nEl.value)||0;
   if(tfEl) item.truckFee=parseFloat(tfEl.value)||0;
   if(emEl) item.priceEmulsion=parseFloat(emEl.value)||0;
-  item.price=item.priceDay;
+  if(hdEl) item.priceHalfDay=parseFloat(hdEl.value)||0;
+  if(fdEl) item.priceFullDay=parseFloat(fdEl.value)||0;
+  if(m2El) item.pricePerM2=parseFloat(m2El.value)||0;
+  item.price=item.priceDay||0;
   setDbDirty(true);
 }
 function dbSave(){
@@ -880,11 +914,17 @@ function dbSave(){
     const nEl=document.getElementById('dpi-n-'+sec+'-'+item.name);
     const tfEl=document.getElementById('dpi-tf-'+sec+'-'+item.name);
     const emEl=document.getElementById('dpi-em-'+sec+'-'+item.name);
+    const hdEl=document.getElementById('dpi-hd-'+sec+'-'+item.name);
+    const fdEl=document.getElementById('dpi-fd-'+sec+'-'+item.name);
+    const m2El=document.getElementById('dpi-m2-'+sec+'-'+item.name);
     if(dEl) item.priceDay=parseFloat(dEl.value)||0;
     if(nEl) item.priceNight=parseFloat(nEl.value)||0;
     if(tfEl) item.truckFee=parseFloat(tfEl.value)||0;
     if(emEl) item.priceEmulsion=parseFloat(emEl.value)||0;
-    item.price=item.priceDay;
+    if(hdEl) item.priceHalfDay=parseFloat(hdEl.value)||0;
+    if(fdEl) item.priceFullDay=parseFloat(fdEl.value)||0;
+    if(m2El) item.pricePerM2=parseFloat(m2El.value)||0;
+    item.price=item.priceDay||0;
   }));
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
   catch(e){showToast('⚠️ 儲存失敗','err');}
@@ -918,11 +958,21 @@ function addCR(sec,name,unit,qty){
   const priceNight=dbItem?(dbItem.priceNight||dbItem.price||0):0;
   const fixed=dbItem?(dbItem.fixed||false):false;
   const noShift=dbItem?(dbItem.noShift||false):false;
-  const type=dbItem?(dbItem.type||''):'' ;
+  const type=dbItem?(dbItem.type||''):'';
   const truckFee=dbItem?(dbItem.truckFee||0):0;
   const priceEmulsion=dbItem?(dbItem.priceEmulsion||0):0;
   const hasTruck=dbItem?(dbItem.hasTruck||false):false;
-  costRows[sec].push({id:uid++,name,unit,priceDay,priceNight,qty,fixed,noShift,type,truckFee,priceEmulsion,hasTruck,shift:'日',overtime:0,truckTrips:0,truckCross:0});
+  const priceHalfDay=dbItem?(dbItem.priceHalfDay||0):0;
+  const priceFullDay=dbItem?(dbItem.priceFullDay||0):0;
+  const pricePerM2=dbItem?(dbItem.pricePerM2||0):0;
+  costRows[sec].push({
+    id:uid++,name,unit,priceDay,priceNight,qty,fixed,noShift,type,
+    truckFee,priceEmulsion,hasTruck,
+    priceHalfDay,priceFullDay,pricePerM2,
+    shift:noShift?'日':dayNight,overtime:0,truckTrips:0,truckCross:0,
+    // marking specific
+    markingMode:'halfDay', markingM2:0
+  });
 }
 
 // compute subtotal for a cost row
@@ -930,15 +980,18 @@ function calcRowSub(r){
   const price = r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
 
   let sub=0;
-  if(r.type==='worker'){
-    // 出車費 + 人數×人員單價 + 加班費
+  if(r.type==='marking'){
+    // 半天或一天費 + m²費
+    const baseFee = r.markingMode==='fullDay'?(r.priceFullDay||0):(r.priceHalfDay||0);
+    const m2Fee = (r.markingM2||0)*(r.pricePerM2||0);
+    sub = baseFee + m2Fee;
+  } else if(r.type==='worker'){
     const truckFee=r.truckFee||0;
     const personFee=r.qty*price;
     const ot=r.overtime>0?r.qty*(price/8)*r.overtime:0;
     sub=truckFee+personFee+ot;
   } else if(r.type==='oilcar'){
-    // 出車費(日/夜) + 乳化瀝青m²×單價
-    const carFee=price; // priceDay/Night = 出車費
+    const carFee=price;
     const emFee=(r.qty||0)*(r.priceEmulsion||0);
     const ot=r.overtime>0?(price/8)*r.overtime:0;
     sub=carFee+emFee+ot;
@@ -950,7 +1003,7 @@ function calcRowSub(r){
     sub=normal+ot;
   }
 
-  // 板車費：直接金額加總
+  // 板車費
   const truckTotal=(r.truckTrips||0)+(r.truckCross||0);
   return sub+truckTotal;
 }
@@ -975,13 +1028,19 @@ function makeCostRow(r){
   if(r.priceEmulsion===undefined) r.priceEmulsion=0;
   if(r.truckTrips===undefined) r.truckTrips=0;
   if(r.truckCross===undefined) r.truckCross=0;
+  if(r.priceHalfDay===undefined) r.priceHalfDay=0;
+  if(r.priceFullDay===undefined) r.priceFullDay=0;
+  if(r.pricePerM2===undefined) r.pricePerM2=0;
+  if(r.markingMode===undefined) r.markingMode='halfDay';
+  if(r.markingM2===undefined) r.markingM2=0;
 
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
 
   // ── qty 顯示 ──
   const isNumInput=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
-  const qH=isNumInput
+  const qH= r.type==='marking' ? '' // 標線不顯示數量欄
+    : isNumInput
     ?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
     :`<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
 
@@ -1031,10 +1090,15 @@ function makeCostRow(r){
 
   // ── 鋪設工詳情列 ──
   const workerSection=r.type==='worker'?`
-    <div class="ot-wrap" style="background:rgba(5,150,105,.04);border-top-color:rgba(5,150,105,.2);">
+    <div class="ot-wrap" style="background:rgba(5,150,105,.04);border-top-color:rgba(5,150,105,.2);flex-wrap:wrap;gap:6px;">
       <span class="ot-lbl" style="color:var(--green);">出車費</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);">${fmt(r.truckFee||0)}</span>
-      <span class="ot-lbl" style="margin-left:8px;">人員費</span>
+      <div class="price-field" style="max-width:110px;">
+        <span class="pf-pre" style="font-size:11px;">$</span>
+        <input class="pf-inp" type="number" value="${r.truckFee||0}" min="0"
+          id="wtf-${r.id}" oninput="setWorkerTruckFee(${r.id},this.value)" onclick="this.select()"
+          style="padding:5px 4px 5px 0;font-size:13px;" />
+      </div>
+      <span class="ot-lbl" style="margin-left:4px;">人員費</span>
       <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">${r.qty}人×${price>0?'$'+price.toLocaleString('zh-TW'):'—'}</span>
     </div>`:'' ;
 
@@ -1047,6 +1111,23 @@ function makeCostRow(r){
       <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">${r.qty}m²×$${(r.priceEmulsion||0).toLocaleString('zh-TW')}</span>
     </div>`:'' ;
 
+  // ── 標線列 ──
+  const markingSection=r.type==='marking'?`
+    <div class="ot-wrap" style="flex-direction:column;align-items:flex-start;gap:8px;padding:10px 14px;">
+      <div style="display:flex;align-items:center;gap:6px;width:100%;">
+        <span class="ot-lbl">計費方式</span>
+        <button class="shift-btn${r.markingMode==='halfDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'halfDay')">半天 ${(r.priceHalfDay||0)>0?'$'+(r.priceHalfDay||0).toLocaleString('zh-TW'):''}</button>
+        <button class="shift-btn${r.markingMode==='fullDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'fullDay')">一天 ${(r.priceFullDay||0)>0?'$'+(r.priceFullDay||0).toLocaleString('zh-TW'):''}</button>
+        <span class="ot-sub" id="sv-mk-${r.id}" style="margin-left:auto;">${fmt(calcRowSub(r))}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <span class="ot-lbl">標線 m²</span>
+        <input class="ot-inp" type="number" value="${r.markingM2||0}" min="0" id="mm2-${r.id}" oninput="setMarkingM2(${r.id},this.value)" onclick="this.select()" style="width:70px;" />
+        <span class="ot-lbl">× $${(r.pricePerM2||0).toLocaleString('zh-TW')}/m²</span>
+        <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">= ${fmt((r.markingM2||0)*(r.pricePerM2||0))}</span>
+      </div>
+    </div>`:'' ;
+
   d.innerHTML=`
     <div class="cost-row-main">
       <div>
@@ -1054,12 +1135,11 @@ function makeCostRow(r){
         <div class="item-note">${r.unit}</div>
       </div>
       <div class="qty-wrap">${qH}</div>
-      ${shiftHtml}
-      <div class="price-cell">${priceLabel}</div>
+      ${r.type==='marking'?`<div class="shift-placeholder"></div><div class="price-cell"></div>`:shiftHtml+`<div class="price-cell">${priceLabel}</div>`}
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
-    ${workerSection}${oilcarSection}${otSection}${truckSection}`;
+    ${workerSection}${oilcarSection}${markingSection}${r.type!=='marking'?otSection:''}${truckSection}`;
   return d;
 }
 function chQty(id,d){
@@ -1092,6 +1172,22 @@ function setOvertime(id,v){
 }
 function setTruckTrips(id,v){const r=findCR(id);if(!r)return;r.truckTrips=parseFloat(v)||0;updateRowDisplay(r);recalc();}
 function setTruckCross(id,v){const r=findCR(id);if(!r)return;r.truckCross=parseFloat(v)||0;updateRowDisplay(r);recalc();}
+function setMarkingMode(id,mode){
+  const r=findCR(id);if(!r)return;r.markingMode=mode;
+  const wrap=document.getElementById('crow-'+id);
+  if(wrap){ const newEl=makeCostRow(r); wrap.replaceWith(newEl); }
+  recalc();
+}
+function setMarkingM2(id,v){
+  const r=findCR(id);if(!r)return;r.markingM2=parseFloat(v)||0;
+  const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
+  recalc();
+}
+function setWorkerTruckFee(id,v){
+  const r=findCR(id);if(!r)return;r.truckFee=parseFloat(v)||0;
+  const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
+  recalc();
+}
 function updateRowDisplay(r){
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
@@ -1145,6 +1241,13 @@ function setDayNight(v){
   dayNight=v;
   document.getElementById('btn-日').classList.toggle('active',v==='日');
   document.getElementById('btn-夜').classList.toggle('active',v==='夜');
+  // 同步所有機具的日/夜設定
+  SECS.forEach(sec=>{
+    costRows[sec].forEach(r=>{
+      if(!r.noShift){ r.shift=v; }
+    });
+  });
+  renderCostAll();
 }
 function initMaterialSelect(){
   const sel=document.getElementById('infoMaterial');
@@ -1193,6 +1296,8 @@ function getSnapshot(){
     type:r.type||'',truckFee:r.truckFee||0,
     priceEmulsion:r.priceEmulsion||0,hasTruck:r.hasTruck||false,
     truckTrips:r.truckTrips||0,truckCross:r.truckCross||0,
+    priceHalfDay:r.priceHalfDay||0,priceFullDay:r.priceFullDay||0,pricePerM2:r.pricePerM2||0,
+    markingMode:r.markingMode||'halfDay',markingM2:r.markingM2||0,
     sub:calcRowSub(r)
   }));});
   return snapshot;
@@ -1209,7 +1314,7 @@ function saveRecord(){
   const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
   const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},標線:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
-  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const other=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   const rec={id:Date.now(),...info,rows:snapshot,sp:spSnap,mach,machTax:mach*1.05,grand:mach*1.05+other,savedAt:new Date().toLocaleString('zh-TW',{hour12:false})};
   // rec-item checked state (per row per rec, default all false)
@@ -1256,80 +1361,151 @@ function toggleRecItemChk(recId, key) {
   if(chkEl){chkEl.classList.toggle('on',isOn);chkEl.textContent=isOn?'✓':'';}
 }
 
+// ── 單筆紀錄卡片內容（共用）──
+function makeRecCardHtml(rec){
+  if(!rec.recChecked) rec.recChecked={};
+  if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
+  let rowsHtml='';
+  SECS.forEach(sec=>{
+    const items=rec.rows[sec]||[];
+    if(!items.length&&sec!=='其餘') return;
+    rowsHtml+=`<div class="rec-sec-hdr">${sec}</div>`;
+    items.forEach((row,idx)=>{
+      const key=sec+idx;const isOn=!!rec.recChecked[key];
+      const price=row.noShift?(row.priceDay||0):(row.shift==='夜'?(row.priceNight||row.priceDay||0):(row.priceDay||0));
+      const shiftTag=row.noShift?'':
+        `<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${row.shift==='夜'?'rgba(37,99,235,.1)':'rgba(224,123,0,.1)'};color:${row.shift==='夜'?'var(--blue)':'var(--accent)'};">${row.shift}班</span>`;
+      const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h</span>`:'';
+      rowsHtml+=`<div class="rec-item">
+        <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
+        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}</span></div>
+        <div class="ri-cost">${fmt(row.sub)}</div>
+      </div>`;
+    });
+    if(sec==='其餘'){
+      if(rec.sp?.便當?.cost){const k='sp-便當';const on=!!rec.spChecked['便當'];rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${k}" onclick="toggleRecItemChk(${rec.id},'${k}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">便當</span><span class="ri-detail">${rec.sp.便當.note||''}</span></div><div class="ri-cost">${fmt(rec.sp.便當.cost)}</div></div>`;}
+      ['標線','錄影'].forEach(k=>{const spk='sp-'+k;const on=!!rec.spChecked[k];rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${spk}" onclick="toggleRecItemChk(${rec.id},'${spk}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">${k}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;});
+      const lk='sp-里長';const lon=!!rec.spChecked['里長'];rowsHtml+=`<div class="rec-item"><div class="ri-chk${lon?' on':''}" id="ri-chk-${rec.id}-${lk}" onclick="toggleRecItemChk(${rec.id},'${lk}')">${lon?'✓':''}</div><div class="ri-main"><span class="ri-name${lon?' checked':''}">里長</span><span class="ri-detail">${rec.sp?.里長?.note||''}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;
+    }
+  });
+  return rowsHtml;
+}
+
 function renderRecords(){
   const list=document.getElementById('recList'),empty=document.getElementById('recEmpty'),actions=document.getElementById('recActions');
   document.getElementById('recCount').textContent=records.length+' 筆';
-  const shown = filteredRecords();
+  const shown=filteredRecords();
   if(!records.length){list.innerHTML='';empty.style.display='block';actions.style.display='none';return;}
   empty.style.display='none';actions.style.display='flex';
   if(!shown.length){list.innerHTML='<div style="padding:30px;text-align:center;color:var(--t3);font-size:13px;">無符合的紀錄</div>';return;}
   list.innerHTML='';
+
+  // 依派案分組
+  const groupMap={};
   shown.forEach(rec=>{
-    if(!rec.recChecked) rec.recChecked={};
-    if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
-    const card=document.createElement('div');card.className='rec-card';
-    let rowsHtml='';
-    SECS.forEach(sec=>{
-      const items=rec.rows[sec]||[];
-      const hasItems=items.length>0||(sec==='其餘');
-      if(!hasItems)return;
-      rowsHtml+=`<div class="rec-sec-hdr">${sec}</div>`;
-      items.forEach((row,idx)=>{
-        const key=sec+idx;const isOn=!!rec.recChecked[key];
-        const price=row.shift==='夜'?(row.priceNight||row.priceDay||0):(row.priceDay||0);
-        const otAmt=row.overtime>0?row.qty*(price/8)*row.overtime:0;
-        const shiftTag=row.fixed?'':`<span style="font-size:10px;padding:1px 5px;border-radius:4px;background:${row.shift==='夜'?'rgba(37,99,235,.1)':'rgba(224,123,0,.1)'};color:${row.shift==='夜'?'var(--blue)':'var(--accent)'};">${row.shift}班</span>`;
-        const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h加班</span>`:'';
-        rowsHtml+=`<div class="rec-item">
-          <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
-          <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}</span></div>
-          <div class="ri-cost">${fmt(row.sub)}</div>
-        </div>`;
-      });
-      if(sec==='其餘'){
-        // 便當
-        if(rec.sp?.便當?.cost){
-          const k='sp-便當';const on=!!rec.spChecked['便當'];
-          rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${k}" onclick="toggleRecItemChk(${rec.id},'${k}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">便當</span><span class="ri-detail">${rec.sp.便當.note||''}</span></div><div class="ri-cost">${fmt(rec.sp.便當.cost)}</div></div>`;
-        }
-        ['標線','錄影'].forEach(k=>{
-          const spk='sp-'+k;const on=!!rec.spChecked[k];
-          rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${spk}" onclick="toggleRecItemChk(${rec.id},'${spk}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">${k}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;
-        });
-        const lk='sp-里長';const lon=!!rec.spChecked['里長'];
-        rowsHtml+=`<div class="rec-item"><div class="ri-chk${lon?' on':''}" id="ri-chk-${rec.id}-${lk}" onclick="toggleRecItemChk(${rec.id},'${lk}')">${lon?'✓':''}</div><div class="ri-main"><span class="ri-name${lon?' checked':''}">里長</span><span class="ri-detail">${rec.sp?.里長?.note||''}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;
-      }
-    });
-    const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' · ');
-    const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.5);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
-    card.innerHTML=`
-      <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
-        <div class="rec-info">
-          <div class="rec-title">${[rec.派案,rec.工區].filter(Boolean).join(' · ')||'（未填）'}</div>
-          <div class="rec-meta">${meta}${upd}</div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
-          <div class="rec-total">${fmt(rec.grand)}</div>
-          <div style="display:flex;gap:5px;">
-            <button class="rec-btn" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();printRecord(${rec.id})" title="列印">🖨️</button>
-            <button class="rec-btn del" style="padding:4px 8px;font-size:14px;border-radius:8px;" onclick="event.stopPropagation();deleteRecord(${rec.id})" title="刪除">🗑️</button>
-          </div>
-        </div>
-        <div class="rec-tog" id="rectog-${rec.id}">▾</div>
-      </div>
-      <div class="rec-body" id="recbody-${rec.id}">
-        ${rowsHtml}
-        <div class="rec-foot">
-          <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div><div class="rec-grand">${fmt(rec.grand)}</div></div>
-          <div class="rec-btns">
-            <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
-            <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
-            <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
-          </div>
-        </div>
-      </div>`;
-    list.appendChild(card);
+    const key=rec.派案||'（未命名）';
+    if(!groupMap[key]) groupMap[key]=[];
+    groupMap[key].push(rec);
   });
+
+  Object.entries(groupMap).forEach(([caseName,recs])=>{
+    const groupTotal=recs.reduce((s,r)=>s+(r.grand||0),0);
+    const isMulti=recs.length>1;
+
+    // 單筆派案：直接顯示原本卡片樣式
+    if(!isMulti){
+      const rec=recs[0];
+      const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' · ');
+      const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.5);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
+      const card=document.createElement('div');card.className='rec-card';
+      card.innerHTML=`
+        <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
+          <div class="rec-info">
+            <div class="rec-title">${[rec.派案,rec.工區].filter(Boolean).join(' · ')||'（未填）'}</div>
+            <div class="rec-meta">${meta}${upd}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
+            <div class="rec-total">${fmt(rec.grand)}</div>
+            <div style="display:flex;gap:5px;">
+              <button class="rec-btn" style="padding:4px 8px;font-size:14px;" onclick="event.stopPropagation();printRecord(${rec.id})">🖨️</button>
+              <button class="rec-btn del" style="padding:4px 8px;font-size:14px;" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑️</button>
+            </div>
+          </div>
+          <div class="rec-tog" id="rectog-${rec.id}">▾</div>
+        </div>
+        <div class="rec-body" id="recbody-${rec.id}">
+          ${makeRecCardHtml(rec)}
+          <div class="rec-foot">
+            <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div><div class="rec-grand">${fmt(rec.grand)}</div></div>
+            <div class="rec-btns">
+              <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
+              <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
+              <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
+            </div>
+          </div>
+        </div>`;
+      list.appendChild(card);
+    } else {
+      // 多筆同派案：群組大卡片
+      const group=document.createElement('div');
+      group.className='rec-group';
+      group.innerHTML=`
+        <div class="rec-group-hdr" onclick="toggleGroupCard(this)">
+          <div class="rec-group-info">
+            <div class="rec-group-title">${caseName}</div>
+            <div class="rec-group-meta">${recs.length} 筆</div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;flex-shrink:0;margin-left:10px;">
+            <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);">${fmt(groupTotal)}</div>
+            <div style="font-size:10px;color:var(--t3);">合計</div>
+          </div>
+          <div class="rec-tog" style="margin-top:2px;">▾</div>
+        </div>
+        <div class="rec-group-body" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
+          ${recs.map(rec=>{
+            const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' / ');
+            const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.4);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
+            return `
+              <div class="rec-sub-card">
+                <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px;">
+                  <div class="rec-info">
+                    <div class="rec-title" style="font-size:14px;">${rec.工區||'（未填工區）'}</div>
+                    <div class="rec-meta">${meta}${upd}</div>
+                  </div>
+                  <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:8px;">
+                    <div class="rec-total" style="font-size:14px;">${fmt(rec.grand)}</div>
+                    <div style="display:flex;gap:4px;">
+                      <button class="rec-btn" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();printRecord(${rec.id})">🖨️</button>
+                      <button class="rec-btn del" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑️</button>
+                    </div>
+                  </div>
+                  <div class="rec-tog" id="rectog-${rec.id}">▾</div>
+                </div>
+                <div class="rec-body" id="recbody-${rec.id}">
+                  ${makeRecCardHtml(rec)}
+                  <div class="rec-foot">
+                    <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div><div class="rec-grand">${fmt(rec.grand)}</div></div>
+                    <div class="rec-btns">
+                      <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
+                      <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
+                      <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+          }).join('')}
+        </div>`;
+      list.appendChild(group);
+    }
+  });
+}
+
+function toggleGroupCard(hdr){
+  const body=hdr.nextElementSibling;
+  const tog=hdr.querySelector('.rec-tog');
+  const open=body.style.maxHeight&&body.style.maxHeight!=='0px';
+  body.style.maxHeight=open?'0px':body.scrollHeight+500+'px';
+  tog.classList.toggle('open',!open);
 }
 
 function toggleRecCard(id){
@@ -1363,6 +1539,11 @@ function openRecEdit(id){
     if(r.hasTruck===undefined) r.hasTruck=false;
     if(r.truckTrips===undefined) r.truckTrips=0;
     if(r.truckCross===undefined) r.truckCross=0;
+    if(r.priceHalfDay===undefined) r.priceHalfDay=0;
+    if(r.priceFullDay===undefined) r.priceFullDay=0;
+    if(r.pricePerM2===undefined) r.pricePerM2=0;
+    if(r.markingMode===undefined) r.markingMode='halfDay';
+    if(r.markingM2===undefined) r.markingM2=0;
   }));
   renderCostAll();
   const benEl=document.getElementById('spcost-便當');if(benEl)benEl.value=rec.sp?.便當?.cost||0;
@@ -1381,7 +1562,7 @@ function updateRecord(){
   const info=getInfoSnapshot();const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
   const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},標線:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
-  const other=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const other=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   // preserve recChecked/spChecked
   const oldRec=records[idx];
@@ -1409,15 +1590,17 @@ function openPicker(sec){
 function pkToggle(sec,item,chk){
   const idx=costRows[sec].findIndex(r=>r.name===item.name);
   if(idx===-1){
-    const priceDay=item.priceDay||item.price||0;
-    const priceNight=item.priceNight||item.price||0;
+    const noShift=item.noShift||false;
     costRows[sec].push({
       id:uid++,name:item.name,unit:item.unit,
-      priceDay,priceNight,qty:1,
-      fixed:item.fixed||false,noShift:item.noShift||false,
+      priceDay:item.priceDay||item.price||0,
+      priceNight:item.priceNight||item.price||0,
+      qty:1,fixed:item.fixed||false,noShift,
       type:item.type||'',truckFee:item.truckFee||0,
       priceEmulsion:item.priceEmulsion||0,hasTruck:item.hasTruck||false,
-      shift:'日',overtime:0,truckTrips:0,truckCross:0
+      priceHalfDay:item.priceHalfDay||0,priceFullDay:item.priceFullDay||0,pricePerM2:item.pricePerM2||0,
+      shift:noShift?'日':dayNight,overtime:0,truckTrips:0,truckCross:0,
+      markingMode:'halfDay',markingM2:0
     });
     renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);
   } else {
@@ -1435,7 +1618,7 @@ async function exportExcel(){
   showToast('正在產生 Excel…');
   const info=getInfoSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
-  const sub其餘V=costRows['其餘'].reduce((t,r)=>t+(r.fixed?r.price:r.qty*r.price),0);
+  const sub其餘V=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   const grand=mach*1.05+sub其餘V;
   const snap=getSnapshot();
