@@ -760,8 +760,8 @@ const DEFAULTS = {
     {name:'三輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false,hasTruck:true},
     {name:'膠輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false,hasTruck:true},
     // 油車：priceDay/priceNight=出車費，priceEmulsion=乳化瀝青每m²單價，type='oilcar'
-    {name:'冷油油車',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
-    {name:'熱油油車',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
+    {name:'油車(冷油)',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
+    {name:'油車(熱油)',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
     {name:'預拌車',   unit:'台',priceDay:4500, priceNight:5500, fixed:false},
   ],
   其餘:[
@@ -879,11 +879,23 @@ function makeDbRow(sec,item){
       <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="夜間"/></div>`;
   }
 
-  // hasTruck checkbox
+  // hasTruck checkbox + editable default amounts
   const truckChk = (item.type!=='worker'&&item.type!=='oilcar') ? `
-    <div style="display:flex;align-items:center;gap:5px;padding:4px 0 2px;grid-column:span 3;">
-      <input type="checkbox" id="dpt-${sec}-${item.name}" ${item.hasTruck?'checked':''} onchange="dbMarkTruck(this,'${sec}','${item.name}')" style="width:16px;height:16px;cursor:pointer;" />
-      <label for="dpt-${sec}-${item.name}" style="font-size:12px;color:var(--t2);cursor:pointer;">可板車移動（趟 $4,000 / 跨縣市 $2,000）</label>
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 0 2px;grid-column:span 3;flex-wrap:wrap;">
+      <input type="checkbox" id="dpt-${sec}-${item.name}" ${item.hasTruck?'checked':''} onchange="dbMarkTruck(this,'${sec}','${item.name}')" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;" />
+      <label for="dpt-${sec}-${item.name}" style="font-size:12px;color:var(--t2);cursor:pointer;flex-shrink:0;">可板車</label>
+      <span style="font-size:11px;color:var(--t3);flex-shrink:0;">移動 $</span>
+      <input class="pf-inp" type="number" inputmode="numeric" id="dpt-trip-${sec}-${item.name}"
+        value="${item.truckTripDefault||0}" min="0" placeholder="0"
+        onchange="dbMarkTruckAmt(this,'${sec}','${item.name}','trip')"
+        onblur="dbMarkTruckAmt(this,'${sec}','${item.name}','trip')"
+        style="width:80px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'JetBrains Mono',sans-serif;font-size:13px;font-weight:700;outline:none;" />
+      <span style="font-size:11px;color:var(--t3);flex-shrink:0;margin-left:4px;">跨縣市 $</span>
+      <input class="pf-inp" type="number" inputmode="numeric" id="dpt-cross-${sec}-${item.name}"
+        value="${item.truckCrossDefault||0}" min="0" placeholder="0"
+        onchange="dbMarkTruckAmt(this,'${sec}','${item.name}','cross')"
+        onblur="dbMarkTruckAmt(this,'${sec}','${item.name}','cross')"
+        style="width:80px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'JetBrains Mono',sans-serif;font-size:13px;font-weight:700;outline:none;" />
     </div>` : '';
 
   d.innerHTML=`
@@ -896,6 +908,13 @@ function makeDbRow(sec,item){
 function dbMarkTruck(cb,sec,name){
   const item=priceDB[sec].find(i=>i.name===name);
   if(item){item.hasTruck=cb.checked;setDbDirty(true);}
+}
+function dbMarkTruckAmt(inp,sec,name,kind){
+  const item=priceDB[sec].find(i=>i.name===name); if(!item) return;
+  const v=parseFloat(inp.value)||0;
+  if(kind==='trip') item.truckTripDefault=v;
+  else item.truckCrossDefault=v;
+  setDbDirty(true);
 }
 function dbMarkChanged(inp,sec,name){
   document.getElementById('dbrow-'+sec+'-'+name)?.classList.add('changed');
@@ -933,6 +952,10 @@ function dbSave(){
     if(hdEl) item.priceHalfDay=parseFloat(hdEl.value)||0;
     if(fdEl) item.priceFullDay=parseFloat(fdEl.value)||0;
     if(m2El) item.pricePerM2=parseFloat(m2El.value)||0;
+    const tripEl=document.getElementById('dpt-trip-'+sec+'-'+item.name);
+    const crossEl=document.getElementById('dpt-cross-'+sec+'-'+item.name);
+    if(tripEl) item.truckTripDefault=parseFloat(tripEl.value)||0;
+    if(crossEl) item.truckCrossDefault=parseFloat(crossEl.value)||0;
     item.price=item.priceDay||0;
   }));
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
@@ -958,7 +981,7 @@ function loadCostDefaults(){
   costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=1;
   addCR('前置','堆高機','台',2);addCR('前置','義交','人',15);
   addCR('刨除','刨除機(小)','台',2);addCR('刨除','鏟裝機','台',3);addCR('刨除','清掃機','台',2);addCR('刨除','40.70怪手','台',2);
-  addCR('鋪設','鋪裝機(大)','台',1);addCR('鋪設','鋪設工','人',7);addCR('鋪設','熱鏟','台',1);addCR('鋪設','二輪','台',1);addCR('鋪設','三輪','台',1);addCR('鋪設','膠輪','台',1);addCR('鋪設','冷油油車','m²',2800);
+  addCR('鋪設','鋪裝機(大)','台',1);addCR('鋪設','鋪設工','人',7);addCR('鋪設','熱鏟','台',1);addCR('鋪設','二輪','台',1);addCR('鋪設','三輪','台',1);addCR('鋪設','膠輪','台',1);addCR('鋪設','油車(冷油)','m²',2800);
   addCR('其餘','瀝青混凝土','T',331);
 }
 function addCR(sec,name,unit,qty){
@@ -971,6 +994,8 @@ function addCR(sec,name,unit,qty){
   const truckFee=dbItem?(dbItem.truckFee||0):0;
   const priceEmulsion=dbItem?(dbItem.priceEmulsion||0):0;
   const hasTruck=dbItem?(dbItem.hasTruck||false):false;
+  const truckTripDefault=dbItem?(dbItem.truckTripDefault||0):0;
+  const truckCrossDefault=dbItem?(dbItem.truckCrossDefault||0):0;
   const priceHalfDay=dbItem?(dbItem.priceHalfDay||0):0;
   const priceFullDay=dbItem?(dbItem.priceFullDay||0):0;
   const pricePerM2=dbItem?(dbItem.pricePerM2||0):0;
@@ -978,8 +1003,8 @@ function addCR(sec,name,unit,qty){
     id:uid++,name,unit,priceDay,priceNight,qty,fixed,noShift,type,
     truckFee,priceEmulsion,hasTruck,
     priceHalfDay,priceFullDay,pricePerM2,
-    shift:noShift?'日':dayNight,overtime:0,truckTrips:0,truckCross:0,
-    // marking specific
+    shift:noShift?'日':dayNight,overtime:0,
+    truckTrips:truckTripDefault,truckCross:truckCrossDefault,
     markingMode:'halfDay', markingM2:0
   });
 }
@@ -1083,14 +1108,18 @@ function makeCostRow(r){
   const truckSection=r.hasTruck?`
     <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;">
       <span class="ot-lbl">板車移動 $</span>
-      <input class="ot-inp" type="number" inputmode="numeric" pattern="[0-9]*"
-        value="${r.truckTrips||''}" min="0" placeholder="0"
-        id="tt-${r.id}" oninput="setTruckTrips(${r.id},this.value)" onclick="this.select()"
+      <input class="ot-inp" type="number" inputmode="numeric"
+        value="${r.truckTrips||0}" min="0" placeholder="0"
+        id="tt-${r.id}"
+        onchange="setTruckTrips(${r.id},this.value)"
+        onblur="setTruckTrips(${r.id},this.value)"
         style="width:90px;background:var(--surface);border:1.5px solid var(--border2);" />
       <span class="ot-lbl" style="margin-left:4px;">跨縣市 $</span>
-      <input class="ot-inp" type="number" inputmode="numeric" pattern="[0-9]*"
-        value="${r.truckCross||''}" min="0" placeholder="0"
-        id="tc-${r.id}" oninput="setTruckCross(${r.id},this.value)" onclick="this.select()"
+      <input class="ot-inp" type="number" inputmode="numeric"
+        value="${r.truckCross||0}" min="0" placeholder="0"
+        id="tc-${r.id}"
+        onchange="setTruckCross(${r.id},this.value)"
+        onblur="setTruckCross(${r.id},this.value)"
         style="width:90px;background:var(--surface);border:1.5px solid var(--border2);" />
       <span class="ot-sub" id="tks-${r.id}">${((r.truckTrips||0)+(r.truckCross||0))>0?'+'+fmt((r.truckTrips||0)+(r.truckCross||0)):''}</span>
     </div>`:'';
@@ -1177,8 +1206,8 @@ function setOvertime(id,v){
   r.overtime=parseFloat(v)||0;
   updateRowDisplay(r);recalc();
 }
-function setTruckTrips(id,v){const r=findCR(id);if(!r)return;r.truckTrips=parseFloat(v)||0;updateRowDisplay(r);recalc();}
-function setTruckCross(id,v){const r=findCR(id);if(!r)return;r.truckCross=parseFloat(v)||0;updateRowDisplay(r);recalc();}
+function setTruckTrips(id,v){const r=findCR(id);if(!r)return;r.truckTrips=v===''?0:parseFloat(v)||0;updateRowDisplay(r);recalc();}
+function setTruckCross(id,v){const r=findCR(id);if(!r)return;r.truckCross=v===''?0:parseFloat(v)||0;updateRowDisplay(r);recalc();}
 function setMarkingMode(id,mode){
   const r=findCR(id);if(!r)return;r.markingMode=mode;
   const wrap=document.getElementById('crow-'+id);
@@ -1617,7 +1646,8 @@ function pkToggle(sec,item,chk){
       type:item.type||'',truckFee:item.truckFee||0,
       priceEmulsion:item.priceEmulsion||0,hasTruck:item.hasTruck||false,
       priceHalfDay:item.priceHalfDay||0,priceFullDay:item.priceFullDay||0,pricePerM2:item.pricePerM2||0,
-      shift:noShift?'日':dayNight,overtime:0,truckTrips:0,truckCross:0,
+      shift:noShift?'日':dayNight,overtime:0,
+      truckTrips:item.truckTripDefault||0,truckCross:item.truckCrossDefault||0,
       markingMode:'halfDay',markingM2:0
     });
     renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);
