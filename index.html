@@ -454,7 +454,6 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
         <div class="sp-sub"><span style="font-size:11px;color:var(--t3);margin-right:2px;">$</span><input class="sp-inp" id="spcost-便當" type="number" value="6000" oninput="recalc()" onclick="this.select()" /></div>
       </div>
       <div class="special-row" id="sprow-錄影"><div class="sp-name">錄影</div></div>
-      <div class="special-row" id="sprow-標線"><div class="sp-name">標線</div></div>
       <div class="special-row" id="sprow-里長">
         <div class="sp-name">里長</div>
         <input class="sp-note-inp" id="spnote-里長" value="" placeholder="備註說明" style="flex:1;text-align:left;" />
@@ -765,11 +764,19 @@ const DEFAULTS = {
     {name:'預拌車',   unit:'台',priceDay:4500, priceNight:5500, fixed:false},
   ],
   其餘:[
-    {name:'瀝青混凝土',unit:'T', priceDay:2100, priceNight:2100, fixed:false,noShift:true},
+    // 瀝青混凝土：type='asphalt'，各料別單價分開設定
+    {name:'瀝青混凝土',unit:'T', fixed:false, noShift:true, type:'asphalt',
+     grades:{
+       '再生':    {price:2100},
+       '新料':    {price:2400},
+       '改三再生': {price:2600},
+       '改三新料': {price:2800},
+     }
+    },
     {name:'AC細料',   unit:'T', priceDay:2400, priceNight:2400, fixed:false,noShift:true},
     {name:'底層料',   unit:'T', priceDay:1800, priceNight:1800, fixed:false,noShift:true},
     {name:'路基處理', unit:'m²',priceDay:350,  priceNight:350,  fixed:false,noShift:true},
-    // 標線：type='marking'，有半天/一天/m²三種計費
+    // 標線：type='marking'
     {name:'一型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
     {name:'二型標線', unit:'式',priceHalfDay:0,priceFullDay:0,pricePerM2:0, fixed:false,noShift:true,type:'marking'},
   ],
@@ -819,96 +826,104 @@ function makeDbRow(sec,item){
   if(item.priceDay===undefined) item.priceDay=item.price||0;
   if(item.priceNight===undefined) item.priceNight=item.price||0;
 
+  const s=sec, n=item.name; // shorthand; use data attrs in HTML to avoid special chars
+
   let priceHtml='';
   if(item.fixed){
     priceHtml=`<div class="fixed-tag" style="grid-column:span 2;">固定費用</div>`;
   } else if(item.type==='worker'){
-    // 鋪設工：出車費 + 日間人員 + 夜間人員
     priceHtml=`
       <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">出車費</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-tf-${sec}-${item.name}" type="number" value="${item.truckFee||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="tf" type="number" value="${item.truckFee||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">☀️ /人</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="d" type="number" value="${item.priceDay}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">🌙 /人</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="n" type="number" value="${item.priceNight}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
       </div>`;
   } else if(item.type==='oilcar'){
-    // 油車：日出車費 + 夜出車費 + 乳化瀝青/m²
     priceHtml=`
       <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">☀️ 出車</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="d" type="number" value="${item.priceDay}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">🌙 出車</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="n" type="number" value="${item.priceNight}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">乳化/m²</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-em-${sec}-${item.name}" type="number" value="${item.priceEmulsion||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="em" type="number" value="${item.priceEmulsion||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
       </div>`;
-  } else if(item.type==='marking'){
-    // 標線：半天/一天/m² 三欄
+  } else if(item.type==='asphalt'){
+    // 瀝青混凝土：各料別單價
+    const grades=item.grades||{'再生':{price:0},'新料':{price:0},'改三再生':{price:0},'改三新料':{price:0}};
+    priceHtml=`
+      <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
+        ${Object.entries(grades).map(([grade,g])=>`
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span style="font-size:11px;color:var(--t3);min-width:52px;">${grade}</span>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span>
+            <input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="grade-${grade}"
+              type="number" value="${g.price||0}"
+              oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
+          <span style="font-size:10px;color:var(--t3);">/T</span>
+        </div>`).join('')}
+      </div>`;
     priceHtml=`
       <div style="grid-column:span 2;display:flex;flex-direction:column;gap:4px;">
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">半天</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-hd-${sec}-${item.name}" type="number" value="${item.priceHalfDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="hd" type="number" value="${item.priceHalfDay||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">一天</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-fd-${sec}-${item.name}" type="number" value="${item.priceFullDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="fd" type="number" value="${item.priceFullDay||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;">
           <span style="font-size:11px;color:var(--t3);min-width:52px;">標線/m²</span>
-          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp" id="dpi-m2-${sec}-${item.name}" type="number" value="${item.pricePerM2||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" /></div>
+          <div class="price-field" style="flex:1;"><span class="pf-pre">$</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="m2" type="number" value="${item.pricePerM2||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" /></div>
         </div>
       </div>`;
   } else {
     priceHtml=`
-      <div class="price-field"><span class="pf-pre">☀️</span><input class="pf-inp" id="dpi-d-${sec}-${item.name}" type="number" value="${item.priceDay||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="日間"/></div>
-      <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp" id="dpi-n-${sec}-${item.name}" type="number" value="${item.priceNight||0}" oninput="dbMarkChanged(this,'${sec}','${item.name}')" onclick="this.select()" placeholder="夜間"/></div>`;
+      <div class="price-field"><span class="pf-pre">☀️</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="d" type="number" value="${item.priceDay||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" placeholder="日間"/></div>
+      <div class="price-field"><span class="pf-pre">🌙</span><input class="pf-inp db-inp" data-sec="${s}" data-name="${n}" data-field="n" type="number" value="${item.priceNight||0}" oninput="dbMarkChangedEl(this)" onclick="this.select()" placeholder="夜間"/></div>`;
   }
 
-  // hasTruck checkbox + editable default amounts
+  // hasTruck checkbox only (no default amounts - user edits in cost table)
   const truckChk = (item.type!=='worker'&&item.type!=='oilcar') ? `
-    <div style="display:flex;align-items:center;gap:6px;padding:6px 0 2px;grid-column:span 3;flex-wrap:wrap;">
-      <input type="checkbox" id="dpt-${sec}-${item.name}" ${item.hasTruck?'checked':''} onchange="dbMarkTruck(this,'${sec}','${item.name}')" style="width:16px;height:16px;cursor:pointer;flex-shrink:0;" />
-      <label for="dpt-${sec}-${item.name}" style="font-size:12px;color:var(--t2);cursor:pointer;flex-shrink:0;">可板車</label>
-      <span style="font-size:11px;color:var(--t3);flex-shrink:0;">移動 $</span>
-      <input class="pf-inp" type="number" inputmode="numeric" id="dpt-trip-${sec}-${item.name}"
-        value="${item.truckTripDefault||0}" min="0" placeholder="0"
-        onchange="dbMarkTruckAmt(this,'${sec}','${item.name}','trip')"
-        onblur="dbMarkTruckAmt(this,'${sec}','${item.name}','trip')"
-        style="width:80px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'JetBrains Mono',sans-serif;font-size:13px;font-weight:700;outline:none;" />
-      <span style="font-size:11px;color:var(--t3);flex-shrink:0;margin-left:4px;">跨縣市 $</span>
-      <input class="pf-inp" type="number" inputmode="numeric" id="dpt-cross-${sec}-${item.name}"
-        value="${item.truckCrossDefault||0}" min="0" placeholder="0"
-        onchange="dbMarkTruckAmt(this,'${sec}','${item.name}','cross')"
-        onblur="dbMarkTruckAmt(this,'${sec}','${item.name}','cross')"
-        style="width:80px;background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:4px 6px;font-family:'JetBrains Mono',sans-serif;font-size:13px;font-weight:700;outline:none;" />
+    <div style="display:flex;align-items:center;gap:6px;padding:6px 0 2px;grid-column:span 3;">
+      <input type="checkbox" id="dpt-${sec}-${item.name.replace(/[()]/g,'_')}"
+        ${item.hasTruck?'checked':''}
+        data-sec="${sec}" data-name="${item.name}"
+        onchange="dbMarkTruckCb(this)"
+        style="width:16px;height:16px;cursor:pointer;" />
+      <label for="dpt-${sec}-${item.name.replace(/[()]/g,'_')}"
+        style="font-size:12px;color:var(--t2);cursor:pointer;">可板車移動</label>
     </div>` : '';
 
   d.innerHTML=`
     <div class="db-name">${item.name}<span class="unit-tag" style="margin-left:5px;">${item.unit}</span></div>
     ${priceHtml}
-    <button class="del-btn" onclick="dbDelItem('${sec}','${item.name}')">✕</button>
+    <button class="del-btn" data-sec="${sec}" data-name="${item.name}" onclick="dbDelItemBtn(this)">✕</button>
     ${truckChk}`;
   return d;
 }
-function dbMarkTruck(cb,sec,name){
+function dbMarkTruckCb(cb){
+  const sec=cb.dataset.sec, name=cb.dataset.name;
   const item=priceDB[sec].find(i=>i.name===name);
   if(item){item.hasTruck=cb.checked;setDbDirty(true);}
 }
+function dbMarkTruck(cb,sec,name){dbMarkTruckCb(Object.assign(cb,{dataset:{sec,name}}));}
 function dbMarkTruckAmt(inp,sec,name,kind){
   const item=priceDB[sec].find(i=>i.name===name); if(!item) return;
   const v=parseFloat(inp.value)||0;
@@ -916,48 +931,45 @@ function dbMarkTruckAmt(inp,sec,name,kind){
   else item.truckCrossDefault=v;
   setDbDirty(true);
 }
-function dbMarkChanged(inp,sec,name){
+function dbMarkChangedEl(inp){
+  const sec=inp.dataset.sec, name=inp.dataset.name, field=inp.dataset.field;
+  const item=priceDB[sec]?.find(i=>i.name===name); if(!item) return;
   document.getElementById('dbrow-'+sec+'-'+name)?.classList.add('changed');
-  const item=priceDB[sec].find(i=>i.name===name); if(!item) return;
-  const dEl=document.getElementById('dpi-d-'+sec+'-'+name);
-  const nEl=document.getElementById('dpi-n-'+sec+'-'+name);
-  const tfEl=document.getElementById('dpi-tf-'+sec+'-'+name);
-  const emEl=document.getElementById('dpi-em-'+sec+'-'+name);
-  const hdEl=document.getElementById('dpi-hd-'+sec+'-'+name);
-  const fdEl=document.getElementById('dpi-fd-'+sec+'-'+name);
-  const m2El=document.getElementById('dpi-m2-'+sec+'-'+name);
-  if(dEl) item.priceDay=parseFloat(dEl.value)||0;
-  if(nEl) item.priceNight=parseFloat(nEl.value)||0;
-  if(tfEl) item.truckFee=parseFloat(tfEl.value)||0;
-  if(emEl) item.priceEmulsion=parseFloat(emEl.value)||0;
-  if(hdEl) item.priceHalfDay=parseFloat(hdEl.value)||0;
-  if(fdEl) item.priceFullDay=parseFloat(fdEl.value)||0;
-  if(m2El) item.pricePerM2=parseFloat(m2El.value)||0;
+  const v=parseFloat(inp.value)||0;
+  if(field==='d') item.priceDay=v;
+  else if(field==='n') item.priceNight=v;
+  else if(field==='tf') item.truckFee=v;
+  else if(field==='em') item.priceEmulsion=v;
+  else if(field==='hd') item.priceHalfDay=v;
+  else if(field==='fd') item.priceFullDay=v;
+  else if(field==='m2') item.pricePerM2=v;
+  else if(field.startsWith('grade-')){
+    const grade=field.slice(6);
+    if(!item.grades) item.grades={};
+    if(!item.grades[grade]) item.grades[grade]={};
+    item.grades[grade].price=v;
+  }
   item.price=item.priceDay||0;
   setDbDirty(true);
 }
+// legacy wrapper kept for any remaining calls
+function dbMarkChanged(inp,sec,name){ inp.dataset.sec=sec; inp.dataset.name=name; dbMarkChangedEl(inp); }
 function dbSave(){
-  SECS.forEach(sec=>priceDB[sec].forEach(item=>{
-    const dEl=document.getElementById('dpi-d-'+sec+'-'+item.name);
-    const nEl=document.getElementById('dpi-n-'+sec+'-'+item.name);
-    const tfEl=document.getElementById('dpi-tf-'+sec+'-'+item.name);
-    const emEl=document.getElementById('dpi-em-'+sec+'-'+item.name);
-    const hdEl=document.getElementById('dpi-hd-'+sec+'-'+item.name);
-    const fdEl=document.getElementById('dpi-fd-'+sec+'-'+item.name);
-    const m2El=document.getElementById('dpi-m2-'+sec+'-'+item.name);
-    if(dEl) item.priceDay=parseFloat(dEl.value)||0;
-    if(nEl) item.priceNight=parseFloat(nEl.value)||0;
-    if(tfEl) item.truckFee=parseFloat(tfEl.value)||0;
-    if(emEl) item.priceEmulsion=parseFloat(emEl.value)||0;
-    if(hdEl) item.priceHalfDay=parseFloat(hdEl.value)||0;
-    if(fdEl) item.priceFullDay=parseFloat(fdEl.value)||0;
-    if(m2El) item.pricePerM2=parseFloat(m2El.value)||0;
-    const tripEl=document.getElementById('dpt-trip-'+sec+'-'+item.name);
-    const crossEl=document.getElementById('dpt-cross-'+sec+'-'+item.name);
-    if(tripEl) item.truckTripDefault=parseFloat(tripEl.value)||0;
-    if(crossEl) item.truckCrossDefault=parseFloat(crossEl.value)||0;
+  // read all db-inp fields
+  document.querySelectorAll('.db-inp').forEach(inp=>{
+    const item=priceDB[inp.dataset.sec]?.find(i=>i.name===inp.dataset.name); if(!item) return;
+    const v=parseFloat(inp.value)||0;
+    const f=inp.dataset.field;
+    if(f==='d') item.priceDay=v;
+    else if(f==='n') item.priceNight=v;
+    else if(f==='tf') item.truckFee=v;
+    else if(f==='em') item.priceEmulsion=v;
+    else if(f==='hd') item.priceHalfDay=v;
+    else if(f==='fd') item.priceFullDay=v;
+    else if(f==='m2') item.pricePerM2=v;
     item.price=item.priceDay||0;
-  }));
+  });
+  // also read truck checkbox states (already live via dbMarkTruckCb)
   try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
   catch(e){showToast('⚠️ 儲存失敗','err');}
 }
@@ -972,6 +984,7 @@ function dbAddItem(sec){
   nEl.value='';uEl.value='';if(dEl)dEl.value='';if(nPEl)nPEl.value='';
   renderDbSec(sec);setDbDirty(true);showToast('✅ 已新增 '+name);
 }
+function dbDelItemBtn(btn){dbDelItem(btn.dataset.sec,btn.dataset.name);}
 function dbDelItem(sec,name){const idx=priceDB[sec].findIndex(i=>i.name===name);if(idx!==-1){priceDB[sec].splice(idx,1);document.getElementById('dbrow-'+sec+'-'+name)?.remove();document.getElementById('dcnt-'+sec).textContent=priceDB[sec].length+' 項';setDbDirty(true);}}
 
 // ══════════ COST TABLE ══════════
@@ -982,8 +995,7 @@ function loadCostDefaults(){
   addCR('前置','堆高機','台',2);addCR('前置','義交','人',15);
   addCR('刨除','刨除機(小)','台',2);addCR('刨除','鏟裝機','台',3);addCR('刨除','清掃機','台',2);addCR('刨除','40.70怪手','台',2);
   addCR('鋪設','鋪裝機(大)','台',1);addCR('鋪設','鋪設工','人',7);addCR('鋪設','熱鏟','台',1);addCR('鋪設','二輪','台',1);addCR('鋪設','三輪','台',1);addCR('鋪設','膠輪','台',1);addCR('鋪設','油車(冷油)','m²',2800);
-  addCR('其餘','瀝青混凝土','T',331);
-}
+  addCR('其餘','瀝青混凝土','T',331);}
 function addCR(sec,name,unit,qty){
   const dbItem=(costDB[sec]||[]).find(i=>i.name===name);
   const priceDay=dbItem?(dbItem.priceDay||dbItem.price||0):0;
@@ -999,13 +1011,16 @@ function addCR(sec,name,unit,qty){
   const priceHalfDay=dbItem?(dbItem.priceHalfDay||0):0;
   const priceFullDay=dbItem?(dbItem.priceFullDay||0):0;
   const pricePerM2=dbItem?(dbItem.pricePerM2||0):0;
+  const grades=dbItem?(deepCopy(dbItem.grades||{})):{};
   costRows[sec].push({
     id:uid++,name,unit,priceDay,priceNight,qty,fixed,noShift,type,
     truckFee,priceEmulsion,hasTruck,
-    priceHalfDay,priceFullDay,pricePerM2,
+    priceHalfDay,priceFullDay,pricePerM2,grades,
     shift:noShift?'日':dayNight,overtime:0,
     truckTrips:truckTripDefault,truckCross:truckCrossDefault,
-    markingMode:'halfDay', markingM2:0
+    markingMode:'none', markingM2:0, note:'',
+    // asphalt specific
+    asphaltGrade:'再生', asphaltFreight:0
   });
 }
 
@@ -1014,8 +1029,11 @@ function calcRowSub(r){
   const price = r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
 
   let sub=0;
-  if(r.type==='marking'){
-    // 半天或一天費 + m²費
+  if(r.type==='asphalt'){
+    const gradePrice=(r.grades?.[r.asphaltGrade]?.price)||0;
+    sub=r.qty*(gradePrice+(r.asphaltFreight||0));
+  } else if(r.type==='marking'){
+    if(r.markingMode==='none') return 0;
     const baseFee = r.markingMode==='fullDay'?(r.priceFullDay||0):(r.priceHalfDay||0);
     const m2Fee = (r.markingM2||0)*(r.pricePerM2||0);
     sub = baseFee + m2Fee;
@@ -1065,14 +1083,17 @@ function makeCostRow(r){
   if(r.priceHalfDay===undefined) r.priceHalfDay=0;
   if(r.priceFullDay===undefined) r.priceFullDay=0;
   if(r.pricePerM2===undefined) r.pricePerM2=0;
-  if(r.markingMode===undefined) r.markingMode='halfDay';
+  if(r.markingMode===undefined) r.markingMode='none';
+  if(r.grades===undefined) r.grades={};
+  if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
+  if(r.asphaltFreight===undefined) r.asphaltFreight=0;
   if(r.markingM2===undefined) r.markingM2=0;
 
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
 
   // ── qty 顯示 ──
-  const isNumInput=(r.name==='瀝青混凝土'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
+  const isNumInput=(r.type==='asphalt'||r.name==='AC細料'||r.name==='底層料'||r.name==='路基處理'||r.type==='oilcar');
   const qH= r.type==='marking' ? '' // 標線不顯示數量欄
     : isNumInput
     ?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
@@ -1087,7 +1108,10 @@ function makeCostRow(r){
 
   // ── 單價顯示 ──
   let priceLabel='';
-  if(r.type==='worker'){
+  if(r.type==='asphalt'){
+    const gp=(r.grades?.[r.asphaltGrade]?.price)||0;
+    priceLabel=`<div class="price-disp" id="pd-${r.id}">$${gp.toLocaleString('zh-TW')}</div><div class="price-lbl">單價</div>`;
+  } else if(r.type==='worker'){
     priceLabel=`<div style="font-size:11px;color:var(--t3);text-align:center;">+${price>0?'$'+price.toLocaleString('zh-TW'):'—'}/人</div>`;
   } else if(r.type==='oilcar'){
     priceLabel=`<div style="font-size:11px;color:var(--t3);text-align:center;">${price>0?'$'+price.toLocaleString('zh-TW'):'—'}</div>`;
@@ -1124,44 +1148,53 @@ function makeCostRow(r){
       <span class="ot-sub" id="tks-${r.id}">${((r.truckTrips||0)+(r.truckCross||0))>0?'+'+fmt((r.truckTrips||0)+(r.truckCross||0)):''}</span>
     </div>`:'';
 
-  // ── 鋪設工詳情列 ──
-  const workerSection=r.type==='worker'?`
-    <div class="ot-wrap" style="background:rgba(5,150,105,.04);border-top-color:rgba(5,150,105,.2);flex-wrap:wrap;gap:6px;">
-      <span class="ot-lbl" style="color:var(--green);">出車費</span>
-      <div class="price-field" style="max-width:110px;">
-        <span class="pf-pre" style="font-size:11px;">$</span>
-        <input class="pf-inp" type="number" value="${r.truckFee||0}" min="0"
-          id="wtf-${r.id}" oninput="setWorkerTruckFee(${r.id},this.value)" onclick="this.select()"
-          style="padding:5px 4px 5px 0;font-size:13px;" />
-      </div>
-      <span class="ot-lbl" style="margin-left:4px;">人員費</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">${r.qty}人×${price>0?'$'+price.toLocaleString('zh-TW'):'—'}</span>
-    </div>`:'' ;
+  // ── 鋪設工詳情列：不顯示出車費 ──
+  const workerSection='';
 
-  // ── 油車詳情列 ──
+  // ── 油車詳情列：不顯示出車費 ──
   const oilcarSection=r.type==='oilcar'?`
     <div class="ot-wrap" style="background:rgba(5,150,105,.04);border-top-color:rgba(5,150,105,.2);">
-      <span class="ot-lbl" style="color:var(--green);">出車費</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--green);">${fmt(price)}</span>
-      <span class="ot-lbl" style="margin-left:8px;">乳化</span>
-      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">${r.qty}m²×$${(r.priceEmulsion||0).toLocaleString('zh-TW')}</span>
-    </div>`:'' ;
+      <span class="ot-lbl">乳化</span>
+      <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">${r.qty}m²×$${(r.priceEmulsion||0).toLocaleString('zh-TW')} = ${fmt((r.qty||0)*(r.priceEmulsion||0))}</span>
+    </div>`:'';
 
   // ── 標線列 ──
   const markingSection=r.type==='marking'?`
     <div class="ot-wrap" style="flex-direction:column;align-items:flex-start;gap:8px;padding:10px 14px;">
-      <div style="display:flex;align-items:center;gap:6px;width:100%;">
+      <div style="display:flex;align-items:center;gap:6px;width:100%;flex-wrap:wrap;">
         <span class="ot-lbl">計費方式</span>
-        <button class="shift-btn${r.markingMode==='halfDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'halfDay')">半天 ${(r.priceHalfDay||0)>0?'$'+(r.priceHalfDay||0).toLocaleString('zh-TW'):''}</button>
-        <button class="shift-btn${r.markingMode==='fullDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'fullDay')">一天 ${(r.priceFullDay||0)>0?'$'+(r.priceFullDay||0).toLocaleString('zh-TW'):''}</button>
+        <button class="shift-btn${r.markingMode==='none'?' on-day':''}" onclick="setMarkingMode(${r.id},'none')">無</button>
+        <button class="shift-btn${r.markingMode==='halfDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'halfDay')">半天${(r.priceHalfDay||0)>0?' $'+(r.priceHalfDay||0).toLocaleString('zh-TW'):''}</button>
+        <button class="shift-btn${r.markingMode==='fullDay'?' on-day':''}" onclick="setMarkingMode(${r.id},'fullDay')">一天${(r.priceFullDay||0)>0?' $'+(r.priceFullDay||0).toLocaleString('zh-TW'):''}</button>
         <span class="ot-sub" id="sv-mk-${r.id}" style="margin-left:auto;">${fmt(calcRowSub(r))}</span>
       </div>
+      ${r.markingMode!=='none'?`
       <div style="display:flex;align-items:center;gap:6px;">
         <span class="ot-lbl">標線 m²</span>
         <input class="ot-inp" type="number" value="${r.markingM2||0}" min="0" id="mm2-${r.id}" oninput="setMarkingM2(${r.id},this.value)" onclick="this.select()" style="width:70px;" />
         <span class="ot-lbl">× $${(r.pricePerM2||0).toLocaleString('zh-TW')}/m²</span>
         <span style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);">= ${fmt((r.markingM2||0)*(r.pricePerM2||0))}</span>
-      </div>
+      </div>`:''}
+    </div>`:'' ;
+
+  // ── 瀝青混凝土列 ──
+  const asphaltSection=r.type==='asphalt'?`
+    <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;background:rgba(234,88,12,.03);border-top-color:rgba(234,88,12,.2);">
+      <span class="ot-lbl">料別</span>
+      <select id="ag-${r.id}" onchange="setAsphaltGrade(${r.id},this.value)"
+        style="font-family:'Noto Sans TC',sans-serif;font-size:13px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;padding:3px 6px;outline:none;">
+        ${Object.keys(r.grades||{}).map(g=>`<option value="${g}" ${r.asphaltGrade===g?'selected':''}>${g}</option>`).join('')}
+      </select>
+      <span class="ot-lbl" style="margin-left:4px;">運費 $</span>
+      <input class="ot-inp" type="number" inputmode="numeric" value="${r.asphaltFreight||0}" min="0"
+        id="af-${r.id}"
+        onchange="setAsphaltFreight(${r.id},this.value)"
+        onblur="setAsphaltFreight(${r.id},this.value)"
+        style="width:72px;" />
+      <span class="ot-lbl">/T</span>
+      <span id="asp-sub-${r.id}" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--t2);margin-left:auto;">
+        ${r.qty}T × ($${((r.grades?.[r.asphaltGrade]?.price)||0).toLocaleString('zh-TW')}+$${r.asphaltFreight||0}) = ${fmt(calcRowSub(r))}
+      </span>
     </div>`:'' ;
 
   d.innerHTML=`
@@ -1170,12 +1203,19 @@ function makeCostRow(r){
         <div class="item-name">${r.name}</div>
         <div class="item-note">${r.unit}</div>
       </div>
-      <div class="qty-wrap">${qH}</div>
-      ${r.type==='marking'?`<div class="shift-placeholder"></div><div class="price-cell"></div>`:shiftHtml+`<div class="price-cell">${priceLabel}</div>`}
+      <div class="qty-wrap">${r.type==='asphalt'?qH:qH}</div>
+      ${(r.type==='marking'||r.type==='asphalt')?`<div class="shift-placeholder"></div><div class="price-cell"></div>`:shiftHtml+`<div class="price-cell">${priceLabel}</div>`}
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
-    ${workerSection}${oilcarSection}${markingSection}${r.type!=='marking'?otSection:''}${truckSection}`;
+    <div class="ot-wrap" style="background:rgba(132,145,176,.04);border-top-color:rgba(132,145,176,.2);padding:5px 10px 6px 14px;">
+      <span class="ot-lbl" style="color:var(--t3);">備註</span>
+      <input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="輸入備註…"
+        id="note-${r.id}"
+        oninput="setNote(${r.id},this.value)"
+        style="flex:1;border:none;background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;" />
+    </div>
+    ${workerSection}${oilcarSection}${asphaltSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt')?otSection:''}${truckSection}`;
   return d;
 }
 function chQty(id,d){
@@ -1219,17 +1259,35 @@ function setMarkingM2(id,v){
   const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
   recalc();
 }
-function setWorkerTruckFee(id,v){
-  const r=findCR(id);if(!r)return;r.truckFee=parseFloat(v)||0;
-  const svEl=document.getElementById('sv-'+id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
-  recalc();
+function setNote(id,v){const r=findCR(id);if(r)r.note=v;}
+function setAsphaltGrade(id,v){
+  const r=findCR(id);if(!r)return;r.asphaltGrade=v;
+  updateAsphaltDisplay(r);recalc();
+}
+function setAsphaltFreight(id,v){
+  const r=findCR(id);if(!r)return;r.asphaltFreight=parseFloat(v)||0;
+  updateAsphaltDisplay(r);recalc();
+}
+function updateAsphaltDisplay(r){
+  const gp=(r.grades?.[r.asphaltGrade]?.price)||0;
+  const svEl=document.getElementById('sv-'+r.id);if(svEl)svEl.textContent=fmt(calcRowSub(r));
+  const pdEl=document.getElementById('pd-'+r.id);if(pdEl)pdEl.textContent='$'+gp.toLocaleString('zh-TW');
+  const subEl=document.getElementById('asp-sub-'+r.id);
+  if(subEl)subEl.textContent=`${r.qty}T × ($${gp.toLocaleString('zh-TW')}+$${r.asphaltFreight||0}) = ${fmt(calcRowSub(r))}`;
 }
 function updateRowDisplay(r){
   const price=r.noShift?(r.priceDay||0):(r.shift==='夜'?(r.priceNight||r.priceDay||0):(r.priceDay||0));
   const sub=calcRowSub(r);
-  document.getElementById('sv-'+r.id)?.textContent && (document.getElementById('sv-'+r.id).textContent=fmt(sub));
   const svEl=document.getElementById('sv-'+r.id); if(svEl) svEl.textContent=fmt(sub);
   const pdEl=document.getElementById('pd-'+r.id); if(pdEl) pdEl.textContent=price>0?'$'+price.toLocaleString('zh-TW'):'—';
+  // update shift buttons
+  const wrap=document.getElementById('crow-'+r.id);
+  if(wrap){
+    wrap.querySelectorAll('.shift-btn').forEach(b=>{
+      if(b.textContent.startsWith('日')) b.className='shift-btn'+(r.shift==='日'?' on-day':'');
+      else if(b.textContent.startsWith('夜')) b.className='shift-btn'+(r.shift==='夜'?' on-night':'');
+    });
+  }
   // overtime sub display
   const otEl=document.getElementById('ots-'+r.id);
   if(otEl){ const ot=r.overtime>0?r.qty*(price/8)*r.overtime:0; otEl.textContent=ot>0?'+'+fmt(ot):''; }
@@ -1277,13 +1335,13 @@ function setDayNight(v){
   dayNight=v;
   document.getElementById('btn-日').classList.toggle('active',v==='日');
   document.getElementById('btn-夜').classList.toggle('active',v==='夜');
-  // 同步所有機具的日/夜設定
+  // 同步所有機具的日/夜，只更新顯示不重新渲染
   SECS.forEach(sec=>{
     costRows[sec].forEach(r=>{
-      if(!r.noShift){ r.shift=v; }
+      if(!r.noShift){ r.shift=v; updateRowDisplay(r); }
     });
   });
-  renderCostAll();
+  recalc();
 }
 function initMaterialSelect(){
   const sel=document.getElementById('infoMaterial');
@@ -1345,6 +1403,8 @@ function getSnapshot(){
     truckTrips:r.truckTrips||0,truckCross:r.truckCross||0,
     priceHalfDay:r.priceHalfDay||0,priceFullDay:r.priceFullDay||0,pricePerM2:r.pricePerM2||0,
     markingMode:r.markingMode||'halfDay',markingM2:r.markingM2||0,
+    note:r.note||'',
+    grades:r.grades||{},asphaltGrade:r.asphaltGrade||'再生',asphaltFreight:r.asphaltFreight||0,
     sub:calcRowSub(r)
   }));});
   return snapshot;
@@ -1360,14 +1420,14 @@ function saveRecord(){
   const info=getInfoSnapshot();
   const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
-  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},標線:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
+  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
   const other=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   const rec={id:Date.now(),...info,rows:snapshot,sp:spSnap,mach,machTax:mach*1.05,grand:mach*1.05+other,savedAt:new Date().toLocaleString('zh-TW',{hour12:false})};
   // rec-item checked state (per row per rec, default all false)
   rec.recChecked={};
   SECS.forEach(sec=>rec.rows[sec].forEach((r,i)=>{rec.recChecked[sec+i]=false;}));
-  rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
+  rec.spChecked={便當:false,錄影:false,里長:false};
   records.unshift(rec);
   try{
     localStorage.setItem(REC_KEY,JSON.stringify(records));
@@ -1394,7 +1454,7 @@ function clearAllRec(){
 
 function toggleRecItemChk(recId, key) {
   const rec=records.find(r=>r.id===recId); if(!rec)return;
-  if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
+  if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,里長:false};
   if(!rec.recChecked) rec.recChecked={};
   if(key.startsWith('sp-')){
     const k=key.slice(3);rec.spChecked[k]=!rec.spChecked[k];
@@ -1411,7 +1471,7 @@ function toggleRecItemChk(recId, key) {
 // ── 單筆紀錄卡片內容（共用）──
 function makeRecCardHtml(rec){
   if(!rec.recChecked) rec.recChecked={};
-  if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,標線:false,里長:false};
+  if(!rec.spChecked) rec.spChecked={便當:false,錄影:false,里長:false};
   let rowsHtml='';
   SECS.forEach(sec=>{
     const items=rec.rows[sec]||[];
@@ -1431,7 +1491,7 @@ function makeRecCardHtml(rec){
     });
     if(sec==='其餘'){
       if(rec.sp?.便當?.cost){const k='sp-便當';const on=!!rec.spChecked['便當'];rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${k}" onclick="toggleRecItemChk(${rec.id},'${k}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">便當</span><span class="ri-detail">${rec.sp.便當.note||''}</span></div><div class="ri-cost">${fmt(rec.sp.便當.cost)}</div></div>`;}
-      ['標線','錄影'].forEach(k=>{const spk='sp-'+k;const on=!!rec.spChecked[k];rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${spk}" onclick="toggleRecItemChk(${rec.id},'${spk}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">${k}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;});
+      ['錄影'].forEach(k=>{const spk='sp-'+k;const on=!!rec.spChecked[k];rowsHtml+=`<div class="rec-item"><div class="ri-chk${on?' on':''}" id="ri-chk-${rec.id}-${spk}" onclick="toggleRecItemChk(${rec.id},'${spk}')">${on?'✓':''}</div><div class="ri-main"><span class="ri-name${on?' checked':''}">${k}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;});
       const lk='sp-里長';const lon=!!rec.spChecked['里長'];rowsHtml+=`<div class="rec-item"><div class="ri-chk${lon?' on':''}" id="ri-chk-${rec.id}-${lk}" onclick="toggleRecItemChk(${rec.id},'${lk}')">${lon?'✓':''}</div><div class="ri-main"><span class="ri-name${lon?' checked':''}">里長</span><span class="ri-detail">${rec.sp?.里長?.note||''}</span></div><div class="ri-cost" style="color:var(--t3)">—</div></div>`;
     }
   });
@@ -1589,8 +1649,12 @@ function openRecEdit(id){
     if(r.priceHalfDay===undefined) r.priceHalfDay=0;
     if(r.priceFullDay===undefined) r.priceFullDay=0;
     if(r.pricePerM2===undefined) r.pricePerM2=0;
-    if(r.markingMode===undefined) r.markingMode='halfDay';
+    if(r.markingMode===undefined) r.markingMode='none';
+  if(r.grades===undefined) r.grades={};
+  if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
+  if(r.asphaltFreight===undefined) r.asphaltFreight=0;
     if(r.markingM2===undefined) r.markingM2=0;
+    if(r.note===undefined) r.note='';
   }));
   renderCostAll();
   const benEl=document.getElementById('spcost-便當');if(benEl)benEl.value=rec.sp?.便當?.cost||0;
@@ -1608,7 +1672,7 @@ function updateRecord(){
   const idx=records.findIndex(r=>r.id===editingRecId);if(idx===-1)return;
   const info=getInfoSnapshot();const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
-  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},標線:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
+  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
   const other=costRows['其餘'].reduce((t,r)=>t+calcRowSub(r),0);
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   // preserve recChecked/spChecked
@@ -1646,9 +1710,11 @@ function pkToggle(sec,item,chk){
       type:item.type||'',truckFee:item.truckFee||0,
       priceEmulsion:item.priceEmulsion||0,hasTruck:item.hasTruck||false,
       priceHalfDay:item.priceHalfDay||0,priceFullDay:item.priceFullDay||0,pricePerM2:item.pricePerM2||0,
+      grades:deepCopy(item.grades||{}),
       shift:noShift?'日':dayNight,overtime:0,
       truckTrips:item.truckTripDefault||0,truckCross:item.truckCrossDefault||0,
-      markingMode:'halfDay',markingM2:0
+      markingMode:'none',markingM2:0,note:'',
+      asphaltGrade:'再生',asphaltFreight:0
     });
     renderCostSec(sec);chk.classList.add('on');chk.textContent='✓';showToast('✅ 已加入 '+item.name);
   } else {
@@ -1670,7 +1736,7 @@ async function exportExcel(){
   const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+costRows[sec].reduce((s,r)=>s+(r.fixed?r.price:r.qty*r.price),0),0)+benDang;
   const grand=mach*1.05+sub其餘V;
   const snap=getSnapshot();
-  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},標線:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
+  const spSnap={便當:{cost:benDang,note:document.getElementById('spnote-便當')?.value||''},錄影:{},里長:{note:document.getElementById('spnote-里長')?.value||''}};
   const fakeRec={...info,rows:snap,sp:spSnap,mach,machTax:mach*1.05,grand};
   await buildExcel(fakeRec);
 }
@@ -1707,7 +1773,7 @@ async function buildExcel(rec){
       [[1,row.name,'FF1a2035',a('left')],[2,row.unit,'FF8491b0',a('center')],[3,row.qty,'FF1a2035',a('center')],[4,row.price||0,'FF2563eb',a('right')],[5,row.sub,'FF2563eb',a('right')]].forEach(([col,val,clr,al])=>{const c=wr.getCell(col);c.value=val;if(col>=4)c.numFmt='"$"#,##0';if(col===3)c.numFmt='#,##0';c.font={name:col>=3?'Courier New':'Noto Sans TC',bold:true,color:{argb:clr},size:11};c.fill=fill;c.alignment=al;c.border=bdr();});wr.height=20;r++;
     });
     if(sec==='其餘'){
-      const spList=[{name:'便當',note:rec.sp?.便當?.note,cost:rec.sp?.便當?.cost},{name:'錄影'},{name:'標線'},{name:'里長',note:rec.sp?.里長?.note}];
+      const spList=[{name:'便當',note:rec.sp?.便當?.note,cost:rec.sp?.便當?.cost},{name:'錄影'},{name:'里長',note:rec.sp?.里長?.note}];
       spList.forEach((sp,idx)=>{
         const fill={type:'pattern',pattern:'solid',fgColor:idx%2===0?W.row0:W.row1};const wr=ws.getRow(r);
         ws.mergeCells(r,1,r,2);
@@ -1816,7 +1882,7 @@ function printRecord(id) {
     });
     if(sec==='其餘'){
       if(rec.sp?.便當?.cost) html+=`<tr><td class="chk">${rec.spChecked?.便當?'✓':''}</td><td>便當${rec.sp.便當.note?' '+rec.sp.便當.note:''}</td><td></td><td></td><td></td><td class="num">$${rec.sp.便當.cost.toLocaleString('zh-TW')}</td></tr>`;
-      ['標線','錄影'].forEach(k=>{ html+=`<tr><td class="chk">${rec.spChecked?.[k]?'✓':''}</td><td>${k}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`; });
+      ['錄影'].forEach(k=>{ html+=`<tr><td class="chk">${rec.spChecked?.[k]?'✓':''}</td><td>${k}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`; });
       html+=`<tr><td class="chk">${rec.spChecked?.里長?'✓':''}</td><td>里長${rec.sp?.里長?.note?' '+rec.sp.里長.note:''}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`;
     }
   });
