@@ -284,7 +284,21 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .p-meta{font-size:12px;color:var(--t3);margin-top:1px;}
 .p-price{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--t2);}
 
-/* EDIT BANNER */
+/* CONTINUE PROMPT */
+.continue-bar{position:fixed;bottom:62px;left:0;right:0;background:var(--green);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:400;transform:translateY(100%);transition:transform .3s ease;box-shadow:0 -2px 12px rgba(0,0,0,.15);}
+.continue-bar.show{transform:translateY(0);}
+.continue-bar-txt{font-size:13px;font-weight:700;}
+.continue-bar-btns{display:flex;gap:8px;flex-shrink:0;}
+.continue-bar-btn{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans TC',sans-serif;}
+.continue-yes{background:#fff;color:var(--green);}
+.continue-no{background:rgba(255,255,255,.2);color:#fff;}
+.tpl-btn{background:rgba(37,99,235,.1);border:1.5px solid rgba(37,99,235,.25);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;color:var(--blue);cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
+.tpl-btn:active{background:rgba(37,99,235,.2);}
+.tpl-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
+.tpl-item-name{flex:1;font-size:13px;font-weight:700;color:var(--text);}
+.tpl-item-meta{font-size:11px;color:var(--t3);}
+.tpl-apply-btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;}
+.tpl-del-btn{background:rgba(220,38,38,.08);border:1px solid rgba(220,38,38,.2);border-radius:6px;padding:5px 8px;font-size:12px;color:var(--red);cursor:pointer;}
 .edit-banner{background:rgba(124,58,237,.1);border-bottom:2px solid var(--purple);padding:9px 14px;display:flex;align-items:center;justify-content:space-between;gap:8px;}
 .edit-banner-txt{font-size:13px;font-weight:700;color:var(--purple);}
 .edit-banner-btn{background:rgba(124,58,237,.15);border:1.5px solid rgba(124,58,237,.3);border-radius:8px;padding:6px 13px;color:var(--purple);font-size:13px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;}
@@ -357,10 +371,25 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 <!-- ══ PAGE 2: 成本表 ══ -->
 <div class="page" id="page-cost">
   <div class="hdr">
-    <div class="hdr-l"><div class="sub">道路施工成本試算</div><div class="main mc">機具成本表</div></div>
+    <div class="hdr-l">
+      <button class="tpl-btn" onclick="openTplPanel()" title="範本">📋 範本</button>
+      <div class="main mc" style="font-size:16px;">機具成本表</div>
+    </div>
     <div style="display:flex;align-items:center;gap:8px;">
       <div id="dbStatusBadge" class="hdr-badge" style="background:rgba(5,150,105,.08);border:1px solid rgba(5,150,105,.2);color:var(--green);">✓ 預設單價</div>
       <div class="sync-badge state-idle" onclick="fbSync()" style="padding:5px 8px;"><div class="sd"></div></div>
+    </div>
+  </div>
+  <!-- 範本面板 -->
+  <div id="tplPanel" style="display:none;background:var(--s2);border-bottom:2px solid var(--border);padding:12px 14px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <span style="font-size:14px;font-weight:900;color:var(--text);">📋 工項範本</span>
+      <button onclick="closeTplPanel()" style="background:none;border:none;font-size:18px;color:var(--t3);cursor:pointer;">✕</button>
+    </div>
+    <div id="tplList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px;"></div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input id="tplNameInp" placeholder="範本名稱（例：刨鋪標準）" style="flex:1;border:1.5px solid var(--border);border-radius:8px;padding:7px 10px;font-family:'Noto Sans TC',sans-serif;font-size:13px;background:var(--surface);color:var(--text);outline:none;" />
+      <button onclick="saveTpl()" style="background:var(--blue);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;font-family:'Noto Sans TC',sans-serif;">💾 存目前</button>
     </div>
   </div>
   <div id="editBannerSlot"></div>
@@ -525,6 +554,13 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="picker">
     <div class="pk-hdr"><span class="pk-title" id="pkTitle">選擇機具</span><button class="pk-close" onclick="closePicker()">✕</button></div>
     <div class="pk-list" id="pkList"></div>
+  </div>
+</div>
+<div class="continue-bar" id="continueBar">
+  <span class="continue-bar-txt">✅ 已儲存！繼續下一張？</span>
+  <div class="continue-bar-btns">
+    <button class="continue-bar-btn continue-yes" onclick="continueNext()">繼續 →</button>
+    <button class="continue-bar-btn continue-no" onclick="hideContinueBar()">不用了</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1612,6 +1648,8 @@ function saveRecord(){
       const next = autoIncrementCase(caseEl.textContent);
       if(next !== caseEl.textContent) caseEl.textContent = next;
     }
+    // A: 儲存後詢問是否繼續下一張
+    showContinuePrompt(rec);
   }catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 
@@ -1619,6 +1657,159 @@ function deleteRecord(id){
   records=records.filter(r=>r.id!==id);
   localStorage.setItem(REC_KEY,JSON.stringify(records));
   fbDeleteRecord(id);renderRecords();showToast('已刪除');
+}
+
+// ══════════ A: 繼續下一張 ══════════
+let _lastSavedRec=null;
+function showContinuePrompt(rec){
+  _lastSavedRec=rec;
+  const bar=document.getElementById('continueBar');
+  bar.classList.add('show');
+  setTimeout(()=>bar.classList.remove('show'), 8000);
+}
+function hideContinueBar(){
+  document.getElementById('continueBar').classList.remove('show');
+}
+function continueNext(){
+  hideContinueBar();
+  if(!_lastSavedRec) return;
+  // 保留工項配置，清空工區和日期
+  const rows=deepCopy(_lastSavedRec.rows);
+  costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=Date.now();
+  SECS.forEach(sec=>{
+    rows[sec].forEach(r=>{
+      r.id=uid++;
+      r.truckTrips=0;r.truckCross=0; // 清空板車費
+      if(r.type===undefined) r.type='';
+      if(r.note===undefined) r.note='';
+      if(r.grades===undefined) r.grades={};
+      if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
+      if(r.asphaltFreight===undefined) r.asphaltFreight=0;
+      if(r.markingMode===undefined) r.markingMode='none';
+      if(r.markingM2===undefined) r.markingM2=0;
+      costRows[sec].push(r);
+    });
+  });
+  // 清空工區
+  const workarea=document.querySelector('#page-cost .info-val:not(.accent)');
+  if(workarea) workarea.textContent='';
+  // 清空日期
+  const dateEl=document.getElementById('infoDate');
+  if(dateEl){dateEl.value='';document.getElementById('infoWeekday').textContent='';}
+  // 重設便當/里長備註
+  document.getElementById('spcost-便當').value=6000;
+  document.getElementById('spnote-便當').value='';
+  document.getElementById('spnote-里長').value='';
+  hideEditBanner();
+  renderCostAll();
+  switchTab('cost');
+  showToast('已帶入上一張工項，請填寫日期和工區');
+}
+
+// ══════════ B: 範本 ══════════
+const TPL_KEY='cost_templates_v1';
+let templates=[];
+function loadTemplates(){try{templates=JSON.parse(localStorage.getItem(TPL_KEY)||'[]');}catch(e){templates=[];}}
+function saveTemplates(){try{localStorage.setItem(TPL_KEY,JSON.stringify(templates));}catch(e){}}
+
+function openTplPanel(){
+  loadTemplates();
+  renderTplList();
+  document.getElementById('tplPanel').style.display='block';
+}
+function closeTplPanel(){
+  document.getElementById('tplPanel').style.display='none';
+}
+function renderTplList(){
+  const el=document.getElementById('tplList');
+  if(!templates.length){el.innerHTML=`<div style="font-size:12px;color:var(--t3);text-align:center;padding:8px;">尚無範本，儲存目前工項配置</div>`;return;}
+  el.innerHTML='';
+  templates.forEach((tpl,idx)=>{
+    const counts=SECS.map(sec=>`${sec}${tpl.rows[sec]?.length||0}項`).filter(s=>!s.endsWith('0項')).join('、');
+    const div=document.createElement('div');div.className='tpl-item';
+    div.innerHTML=`
+      <div>
+        <div class="tpl-item-name">${tpl.name}</div>
+        <div class="tpl-item-meta">${counts}</div>
+      </div>
+      <button class="tpl-apply-btn" onclick="applyTpl(${idx})">套用</button>
+      <button class="tpl-del-btn" onclick="deleteTpl(${idx})">✕</button>`;
+    el.appendChild(div);
+  });
+}
+function saveTpl(){
+  const name=document.getElementById('tplNameInp').value.trim();
+  if(!name){showToast('⚠️ 請輸入範本名稱');return;}
+  loadTemplates();
+  const rows={};
+  SECS.forEach(sec=>{rows[sec]=costRows[sec].map(r=>({
+    name:r.name,unit:r.unit,qty:r.qty,
+    priceDay:r.priceDay||0,priceNight:r.priceNight||0,
+    fixed:r.fixed||false,noShift:r.noShift||false,
+    type:r.type||'',truckFee:r.truckFee||0,
+    priceEmulsion:r.priceEmulsion||0,hasTruck:r.hasTruck||false,
+    priceHalfDay:r.priceHalfDay||0,priceFullDay:r.priceFullDay||0,pricePerM2:r.pricePerM2||0,
+    grades:r.grades||{},shift:'日',overtime:0,truckTrips:0,truckCross:0,
+    markingMode:r.markingMode||'none',markingM2:r.markingM2||0,note:'',
+    asphaltGrade:r.asphaltGrade||'再生',asphaltFreight:r.asphaltFreight||0
+  }));});
+  if(templates.length>=10){showToast('⚠️ 最多10個範本');return;}
+  templates.unshift({name,rows,savedAt:new Date().toLocaleString('zh-TW',{hour12:false})});
+  saveTemplates();
+  document.getElementById('tplNameInp').value='';
+  renderTplList();
+  showToast('✅ 範本已儲存：'+name,'ok');
+}
+function applyTpl(idx){
+  loadTemplates();
+  const tpl=templates[idx];if(!tpl)return;
+  costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=Date.now();
+  SECS.forEach(sec=>{
+    (tpl.rows[sec]||[]).forEach(r=>{
+      costRows[sec].push({...deepCopy(r),id:uid++,shift:dayNight,overtime:0,truckTrips:0,truckCross:0,note:''});
+    });
+  });
+  renderCostAll();
+  closeTplPanel();
+  showToast('✅ 已套用範本：'+tpl.name,'ok');
+}
+function deleteTpl(idx){
+  loadTemplates();
+  templates.splice(idx,1);
+  saveTemplates();
+  renderTplList();
+  showToast('已刪除範本');
+}
+
+// ══════════ E: 複製紀錄 ══════════
+function copyRecord(id){
+  const rec=records.find(r=>r.id===id);if(!rec)return;
+  costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=Date.now();
+  SECS.forEach(sec=>{
+    (rec.rows[sec]||[]).forEach(r=>{
+      const row=deepCopy(r);
+      row.id=uid++;row.note='';row.truckTrips=0;row.truckCross=0;
+      if(row.type===undefined) row.type='';
+      if(row.grades===undefined) row.grades={};
+      if(row.asphaltGrade===undefined) row.asphaltGrade='再生';
+      if(row.asphaltFreight===undefined) row.asphaltFreight=0;
+      if(row.markingMode===undefined) row.markingMode='none';
+      if(row.markingM2===undefined) row.markingM2=0;
+      costRows[sec].push(row);
+    });
+  });
+  // 清空工區和日期，保留派案
+  const workarea=document.querySelector('#page-cost .info-val:not(.accent)');
+  if(workarea) workarea.textContent='';
+  const dateEl=document.getElementById('infoDate');
+  if(dateEl){dateEl.value='';document.getElementById('infoWeekday').textContent='';}
+  document.getElementById('spcost-便當').value=6000;
+  document.getElementById('spnote-便當').value='';
+  document.getElementById('spnote-里長').value='';
+  hideEditBanner();
+  renderCostAll();
+  switchTab('cost');
+  showToast('已複製工項，請填寫日期和工區');
 }
 function clearAllRec(){
   if(!confirm('確定清除所有本地紀錄？'))return;
@@ -1725,6 +1916,7 @@ function renderRecords(){
             <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(safeGrand(rec)*0.9524)}</div><div class="rec-grand">${fmt(safeGrand(rec))}</div></div>
             <div class="rec-btns">
               <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
+              <button class="rec-btn" style="background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue);" onclick="copyRecord(${rec.id})">📋 複製</button>
               <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
               <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
             </div>
@@ -1773,6 +1965,7 @@ function renderRecords(){
                     <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(safeGrand(rec)*0.9524)}</div><div class="rec-grand">${fmt(safeGrand(rec))}</div></div>
                     <div class="rec-btns">
                       <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
+              <button class="rec-btn" style="background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue);" onclick="copyRecord(${rec.id})">📋 複製</button>
                       <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
                       <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
                     </div>
@@ -2084,7 +2277,7 @@ function printRecord(id) {
 }
 
 // ══════════ INIT ══════════
-loadPriceDB();loadCostDB();loadCostDefaults();loadRecords();
+loadPriceDB();loadCostDB();loadCostDefaults();loadRecords();loadTemplates();
 renderCostAll();renderDbAll();renderRecords();updateDbStatusBadge();
 initMaterialSelect();onDateInput();
 renderStats(); // init stats month label
