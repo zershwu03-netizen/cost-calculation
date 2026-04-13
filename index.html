@@ -221,8 +221,8 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .rec-total{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--purple);white-space:nowrap;text-align:right;}
 .rec-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;margin-top:2px;}
 .rec-tog.open{transform:rotate(180deg);}
-.rec-body{overflow:hidden;max-height:0;transition:max-height .35s ease;}
-.rec-body.open{max-height:3000px;}
+.rec-body{overflow:hidden;max-height:0;transition:max-height .4s ease;}
+.rec-body.open{max-height:none;overflow:visible;}
 .rec-sec-hdr{padding:8px 14px 4px;border-top:1px solid var(--border);font-size:11px;font-weight:700;color:var(--t3);letter-spacing:1px;text-transform:uppercase;background:var(--s2);}
 /* rec-item: chk | name · unit×qty | cost */
 .rec-item{display:flex;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border);gap:8px;}
@@ -1920,13 +1920,26 @@ function toggleGroupCard(hdr){
   const body=hdr.nextElementSibling;
   const tog=hdr.querySelector('.rec-tog');
   const open=body.style.maxHeight&&body.style.maxHeight!=='0px';
-  body.style.maxHeight=open?'0px':body.scrollHeight+500+'px';
-  tog.classList.toggle('open',!open);
+  if(open){
+    body.style.maxHeight='0px';
+    tog.classList.remove('open');
+  } else {
+    // set large value first, then measure and expand
+    body.style.maxHeight='10000px';
+    tog.classList.add('open');
+  }
 }
 
 function toggleRecCard(id){
-  const body=document.getElementById('recbody-'+id),tog=document.getElementById('rectog-'+id);
-  body.classList.toggle('open');tog.classList.toggle('open');
+  const body=document.getElementById('recbody-'+id);
+  const tog=document.getElementById('rectog-'+id);
+  if(!body)return;
+  const open=body.classList.contains('open');
+  body.classList.toggle('open',!open);
+  if(tog) tog.classList.toggle('open',!open);
+  // expand parent group body to accommodate
+  const grpBody=body.closest('.rec-group-body');
+  if(grpBody) grpBody.style.maxHeight='none';
 }
 
 // ══════════ RECORD EDIT ══════════
@@ -2001,7 +2014,16 @@ function openPicker(sec){
   (costDB[sec]||[]).forEach(item=>{
     const on=active.has(item.name);
     const d=document.createElement('div');d.className='pk-item';
-    d.innerHTML=`<div class="pk-item-l"><div class="p-chk${on?' on':''}">${on?'✓':''}</div><div><div class="p-name">${item.name}</div><div class="p-meta">${item.unit}${item.fixed?' · 固定':' · $'+item.price.toLocaleString('zh-TW')}</div></div></div><div class="p-price">${item.price>0?'$'+item.price.toLocaleString('zh-TW'):'固定'}</div>`;
+    const dp=item.price||item.priceDay||0;
+    let meta=item.unit;
+    if(item.fixed) meta+=' · 固定';
+    else if(item.type==='asphalt') meta+=' · 料別計費';
+    else if(item.type==='marking') meta+=' · 半天/一天';
+    else if(item.type==='worker') meta+=' · 出車+人員';
+    else if(item.type==='oilcar') meta+=' · 出車+乳化';
+    else meta+=' · $'+dp.toLocaleString('zh-TW');
+    const priceDisp=item.fixed?'固定':(item.type?'特殊':'$'+dp.toLocaleString('zh-TW'));
+    d.innerHTML=`<div class="pk-item-l"><div class="p-chk${on?' on':''}">${on?'✓':''}</div><div><div class="p-name">${item.name}</div><div class="p-meta">${meta}</div></div></div><div class="p-price">${priceDisp}</div>`;
     d.addEventListener('click',()=>pkToggle(sec,item,d.querySelector('.p-chk')));
     list.appendChild(d);
   });
@@ -2095,7 +2117,10 @@ async function buildExcel(rec){
       });
     }r++;
   });
-  [[`機具小計`,rec.mach,'FFFFFFFF'],[`機具含稅(+5%)`,rec.machTax,'FFFFFFFF'],['💰 總計',rec.grand,'FFF5F7FB']].forEach((t,ti)=>{
+  const _g=safeGrand(rec);
+  const _other=(rec.rows?.['其餘']||[]).reduce((t,r)=>t+(parseFloat(r.sub)||0),0);
+  const _machTax=_g-_other; const _mach=_machTax/1.05;
+  [[`機具小計`,_mach,'FFFFFFFF'],[`機具含稅(+5%)`,_machTax,'FFFFFFFF'],['💰 總計',_g,'FFF5F7FB']].forEach((t,ti)=>{
     ws.mergeCells(r,1,r,4);ws.mergeCells(r,5,r,5);const wr=ws.getRow(r);
     wr.getCell(1).value=t[0];wr.getCell(1).font={name:'Noto Sans TC',bold:ti===2,color:{argb:'FF4a5578'},size:ti===2?13:11};wr.getCell(1).fill={type:'pattern',pattern:'solid',fgColor:{argb:t[2]}};wr.getCell(1).alignment=a('right');wr.getCell(1).border=bdr();
     wr.getCell(5).value=t[1];wr.getCell(5).numFmt='"$"#,##0';wr.getCell(5).font={name:'Courier New',bold:true,color:{argb:'FFe07b00'},size:ti===2?14:11};wr.getCell(5).fill={type:'pattern',pattern:'solid',fgColor:{argb:t[2]}};wr.getCell(5).alignment=a('right');wr.getCell(5).border=bdr();
@@ -2140,6 +2165,29 @@ function showToast(msg,type=''){
 }
 
 // ══════════ PRINT ══════════
+// 從已儲存的 row 資料重算小計（避免舊資料 sub 是 NaN）
+function calcStoredSub(row){
+  const price = row.noShift?(row.priceDay||0):(row.shift==='夜'?(row.priceNight||row.priceDay||0):(row.priceDay||0));
+  if(row.type==='asphalt'){
+    const gp=(row.grades?.[row.asphaltGrade]?.price)||0;
+    return (row.qty||0)*(gp+(row.asphaltFreight||0));
+  }
+  if(row.type==='marking'){
+    if(!row.markingMode||row.markingMode==='none') return 0;
+    const base=row.markingMode==='fullDay'?(row.priceFullDay||0):(row.priceHalfDay||0);
+    return base+(row.markingM2||0)*(row.pricePerM2||0);
+  }
+  if(row.type==='worker'){
+    return (row.truckFee||0)+(row.qty||0)*price+(row.overtime>0?(row.qty||0)*(price/8)*row.overtime:0);
+  }
+  if(row.type==='oilcar'){
+    return price+(row.qty||0)*(row.priceEmulsion||0);
+  }
+  if(row.fixed) return price;
+  const sub=(row.qty||0)*price+(!row.noShift&&row.overtime>0?(row.qty||0)*(price/8)*row.overtime:0);
+  return sub+(row.truckTrips||0)+(row.truckCross||0);
+}
+
 function printRecord(id) {
   const rec = records.find(r=>r.id===id); if(!rec) return;
   const meta = [rec.日期, rec.星期, rec.日夜?rec.日夜+'班':'', rec.料別].filter(Boolean).join('　');
@@ -2185,13 +2233,14 @@ function printRecord(id) {
       const nameCell=row.type==='asphalt'
         ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
         :row.name;
+      const rowSub=calcStoredSub(row);
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
         <td>${nameCell}${noteStr}</td>
         <td>${row.unit}</td>
         <td class="num">${(row.qty||0).toLocaleString('zh-TW')}</td>
-        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||row.price||0).toLocaleString('zh-TW')))}</td>
-        <td class="num">$${(row.sub||0).toLocaleString('zh-TW')}</td>
+        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
+        <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
       </tr>`;
     });
     if(sec==='其餘'){
@@ -2203,9 +2252,18 @@ function printRecord(id) {
 
   html+=`</tbody></table>
     <table>
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(rec.mach).toLocaleString('zh-TW')}</td></tr>
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(rec.machTax).toLocaleString('zh-TW')}</td></tr>
-      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(rec.grand).toLocaleString('zh-TW')}</td></tr>
+      ${(()=>{
+        const benDang=parseFloat(rec.sp?.便當?.cost)||0;
+        const mach=['前置','刨除','鋪設'].reduce((t,sec)=>
+          t+(rec.rows?.[sec]||[]).reduce((s,r)=>s+calcStoredSub(r),0),0)+benDang;
+        const other=(rec.rows?.['其餘']||[]).reduce((s,r)=>s+calcStoredSub(r),0);
+        const machTax=mach*1.05;
+        const grand=machTax+other;
+        return `
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(mach).toLocaleString('zh-TW')}</td></tr>
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
+      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>`;
+      })()}
     </table>`;
 
   const win = window.open('', '_blank', 'width=640,height=860');
