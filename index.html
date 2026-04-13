@@ -1069,7 +1069,9 @@ function calcRowSub(r){
 function renderCostAll(){SECS.forEach(renderCostSec);recalc();}
 function renderCostSec(sec){
   const el=document.getElementById('crows-'+sec);el.innerHTML='';
-  costRows[sec].forEach(r=>el.appendChild(makeCostRow(r)));expandSec('cost',sec);
+  costRows[sec].forEach(r=>el.appendChild(makeCostRow(r)));
+  expandSec('cost',sec);
+  initDragDrop(sec);
 }
 
 function makeCostRow(r){
@@ -1428,12 +1430,8 @@ function initDragDrop(sec){
   });
 }
 
-// call initDragDrop after each section render
-const _origRenderCostSec=renderCostSec;
-function renderCostSec(sec){
-  _origRenderCostSec(sec);
-  initDragDrop(sec);
-}
+// call initDragDrop after each section render - hook into existing renderCostSec
+
 function findCR(id){for(const sec in costRows){const r=costRows[sec].find(r=>r.id===id);if(r)return r;}}
 function recalc(){
   let mach=0;
