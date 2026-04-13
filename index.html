@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <style>html{touch-action:manipulation;}</style>
 <title>施工機具成本表</title>
 <!-- Firebase -->
@@ -343,9 +343,6 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     <div style="font-size:12px;margin-top:6px;">在成本表點「儲存本筆」即可新增紀錄</div>
   </div>
   <div id="recList"></div>
-  <div class="rec-actions" id="recActions" style="display:none">
-    <button class="rec-act-btn" onclick="clearAllRec()">🗑️ 清除所有本地紀錄</button>
-  </div>
 </div>
 
 <!-- ══ PAGE 2: 成本表 ══ -->
@@ -1502,8 +1499,8 @@ function renderRecords(){
   const list=document.getElementById('recList'),empty=document.getElementById('recEmpty'),actions=document.getElementById('recActions');
   document.getElementById('recCount').textContent=records.length+' 筆';
   const shown=filteredRecords();
-  if(!records.length){list.innerHTML='';empty.style.display='block';actions.style.display='none';return;}
-  empty.style.display='none';actions.style.display='flex';
+  if(!records.length){list.innerHTML='';empty.style.display='block';return;}
+  empty.style.display='none';
   if(!shown.length){list.innerHTML='<div style="padding:30px;text-align:center;color:var(--t3);font-size:13px;">無符合的紀錄</div>';return;}
   list.innerHTML='';
 
