@@ -146,13 +146,11 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .add-icon{width:27px;height:27px;border-radius:50%;background:rgba(37,99,235,.1);border:1.5px dashed var(--blue);color:var(--blue);font-size:18px;display:flex;align-items:center;justify-content:center;}
 .add-lbl{font-size:13px;font-weight:700;color:var(--blue);}
 
-/* DRAG HANDLE */
-.drag-handle{width:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:grab;padding:4px 2px;flex-shrink:0;touch-action:none;opacity:.5;}
-.drag-handle:active{cursor:grabbing;opacity:1;}
-.drag-handle span{display:block;width:14px;height:2px;background:var(--t3);border-radius:1px;}
-.cost-row-wrap.dragging{opacity:.35;background:var(--s2);}
-.cost-row-wrap.drag-over-top{border-top:2.5px solid var(--blue)!important;}
-.cost-row-wrap.drag-over-bot{border-bottom:2.5px solid var(--blue)!important;}
+/* MOVE BUTTONS */
+.move-btns{display:flex;flex-direction:column;gap:2px;flex-shrink:0;width:20px;}
+.move-btn{width:20px;height:18px;border-radius:4px;background:var(--s2);border:1px solid var(--border);color:var(--t3);font-size:11px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;}
+.sec-time-btn{margin-left:8px;background:rgba(37,99,235,.08);border:1px solid rgba(37,99,235,.2);border-radius:6px;padding:2px 7px;font-size:12px;color:var(--blue);cursor:pointer;font-family:'Noto Sans TC',sans-serif;vertical-align:middle;}
+.sec-time-btn:active{background:rgba(37,99,235,.2);}
 
 /* SPECIAL ROWS */
 .special-row{display:flex;align-items:center;padding:11px 14px;background:var(--surface);border-top:1px solid var(--border);gap:8px;}
@@ -342,7 +340,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="hdr">
     <div class="hdr-l"><div class="sub">成本資料庫</div><div class="main mr">歷史紀錄</div></div>
     <div style="display:flex;align-items:center;gap:8px;">
-      <div id="recCount" class="hdr-badge" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);">0 筆</div>
+      <div id="recCount" class="hdr-badge" style="background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.2);color:var(--purple);cursor:pointer;" onclick="showStorageInfo()" title="點擊查看儲存空間">0 筆</div>
       <div class="sync-badge state-idle" id="syncBadge" onclick="fbSync()"><div class="sd"></div><span id="syncTxt">本地模式</span></div>
     </div>
   </div>
@@ -433,7 +431,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <!-- 前置 -->
   <div class="section sec-前置">
     <div class="sec-hdr" onclick="toggleSec('cost','前置')">
-      <div class="sec-title">前置<span class="badge bdg-前置">準備</span></div>
+      <div class="sec-title">前置<span class="badge bdg-前置">準備</span><button onclick="event.stopPropagation();applyTimeToSec(event,'前置')" class="sec-time-btn">⏱</button></div>
       <div class="sec-r"><span class="sec-sub" id="csub-前置">$0</span><span class="sec-tog open" id="ctog-前置">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-前置">
@@ -445,7 +443,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <!-- 刨除 -->
   <div class="section sec-刨除">
     <div class="sec-hdr" onclick="toggleSec('cost','刨除')">
-      <div class="sec-title">刨除<span class="badge bdg-刨除">機具</span></div>
+      <div class="sec-title">刨除<span class="badge bdg-刨除">機具</span><button onclick="event.stopPropagation();applyTimeToSec(event,'刨除')" class="sec-time-btn">⏱</button></div>
       <div class="sec-r"><span class="sec-sub" id="csub-刨除">$0</span><span class="sec-tog open" id="ctog-刨除">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-刨除">
@@ -457,7 +455,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <!-- 鋪設 -->
   <div class="section sec-鋪設">
     <div class="sec-hdr" onclick="toggleSec('cost','鋪設')">
-      <div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span></div>
+      <div class="sec-title">鋪設<span class="badge bdg-鋪設">機具</span><button onclick="event.stopPropagation();applyTimeToSec(event,'鋪設')" class="sec-time-btn">⏱</button></div>
       <div class="sec-r"><span class="sec-sub" id="csub-鋪設">$0</span><span class="sec-tog open" id="ctog-鋪設">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-鋪設">
@@ -579,6 +577,7 @@ function initFirebase() {
     fbReady = true;
     setSyncBadge('ok', '雲端連線');
     startRealtimeListener();
+    fbLoadSettings(); // 載入遠端單價管理和範本
   } catch(e) { setSyncBadge('err', '本地模式'); }
 }
 
@@ -631,6 +630,66 @@ async function fbSaveRecord(rec) {
 async function fbDeleteRecord(id) {
   if(!fbReady) return;
   try { await db_fb.collection(FB_COLLECTION).doc(String(id)).delete(); } catch(e){}
+}
+
+// ══════════ 4: 同步單價管理 & 範本 ══════════
+const FB_SETTINGS_DOC = 'app_settings_v1';
+async function fbSaveSettings(){
+  if(!fbReady) return;
+  try {
+    await db_fb.collection('settings').doc(FB_SETTINGS_DOC).set({
+      priceDB: JSON.stringify(priceDB),
+      templates: JSON.stringify(templates),
+      updatedAt: Date.now()
+    });
+  } catch(e){}
+}
+async function fbLoadSettings(){
+  if(!fbReady) return;
+  try {
+    const doc = await db_fb.collection('settings').doc(FB_SETTINGS_DOC).get();
+    if(!doc.exists) return;
+    const data = doc.data();
+    if(data.priceDB){
+      const remote = JSON.parse(data.priceDB);
+      // 只有在遠端比本地新才覆蓋
+      if(!data.updatedAt || data.updatedAt > (localStorage.getItem('settings_updatedAt')||0)){
+        priceDB = remote;
+        localStorage.setItem(STORAGE_KEY, data.priceDB);
+        localStorage.setItem('settings_updatedAt', data.updatedAt||Date.now());
+        loadCostDB(); renderCostAll(); renderDbAll(); updateDbStatusBadge();
+      }
+    }
+    if(data.templates){
+      templates = JSON.parse(data.templates);
+      localStorage.setItem(TPL_KEY, data.templates);
+    }
+  } catch(e){}
+}
+
+// 1: localStorage 使用量
+function getStorageUsage(){
+  let total=0;
+  for(const k in localStorage){ if(localStorage.hasOwnProperty(k)) total+=localStorage[k].length*2; }
+  return total;
+}
+function showStorageInfo(){
+  const used=getStorageUsage();
+  const usedKB=(used/1024).toFixed(1);
+  const usedMB=(used/1024/1024).toFixed(2);
+  const pct=Math.min(100,(used/(5*1024*1024)*100)).toFixed(1);
+  const label=used>1024*1024?usedMB+'MB':usedKB+'KB';
+  const warn=pct>80?'⚠️ 空間不足！':'📦';
+  showToast(`${warn} 儲存空間：${label} / 5MB（${pct}%）`, pct>80?'err':'ok');
+  // also update recCount badge with pct
+  const badge=document.getElementById('recCount');
+  if(badge){
+    const recs=records.length;
+    badge.textContent=`${recs} 筆`;
+    badge.title=`儲存空間 ${label} / 5MB（${pct}%）`;
+    badge.style.borderColor=pct>80?'rgba(220,38,38,.4)':pct>50?'rgba(234,88,12,.3)':'rgba(124,58,237,.2)';
+    badge.style.color=pct>80?'var(--red)':pct>50?'var(--accent)':'var(--purple)';
+  }
 }
 
 // ══════════ SEARCH & FILTER ══════════
@@ -851,7 +910,7 @@ function dbSave() {
     // backward compat: keep price = priceDay
     item.price = item.priceDay;
   }));
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');fbSaveSettings();}
   catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 function dbReset(){if(!confirm('確定重設為預設單價？'))return;priceDB=deepCopy(DEFAULTS);renderDbAll();setDbDirty(true);showToast('已重設，請點儲存套用');}
@@ -1028,7 +1087,7 @@ function dbSave(){
     item.price=item.priceDay||0;
   });
   // also read truck checkbox states (already live via dbMarkTruckCb)
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');}
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');fbSaveSettings();}
   catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 function dbAddItem(sec){
@@ -1081,7 +1140,7 @@ function addCR(sec,name,unit,qty){
     priceHalfDay,priceFullDay,pricePerM2,grades,
     shift:noShift?'日':dayNight,overtime:0,
     truckTrips:truckTripDefault,truckCross:truckCrossDefault,
-    markingMode:'none', markingM2:0, note:'',
+    markingMode:'none', markingM2:0, note:'', arrivalTime:'',
     // asphalt specific - pre-fill freight from last saved value
     asphaltGrade:'再生',
     asphaltFreight:(dbItem?.grades?.['再生']?.freightDefault)||0
@@ -1164,7 +1223,7 @@ function makeCostRow(r){
   const qH= r.type==='marking' ? '' // 標線不顯示數量欄
     : isNumInput
     ?`<input class="q-inp" type="number" value="${r.qty}" min="0" oninput="setQtyDirect(${r.id},this.value)" onclick="this.select()" />`
-    :`<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
+    :`<button class="q-btn" onclick="chQty(${r.id},-1)">−</button><span class="q-val" id="qv-${r.id}" onclick="qvClick(${r.id})" style="cursor:pointer;text-decoration:underline dotted var(--border2);">${r.qty}</span><button class="q-btn" onclick="chQty(${r.id},+1)">＋</button>`;
 
   // ── 日/夜 切換 ──
   const shiftHtml=r.noShift?`<div class="shift-placeholder"></div>`
@@ -1264,12 +1323,12 @@ function makeCostRow(r){
       </span>
     </div>`:'' ;
 
-  const dragHandle=`<div class="drag-handle" title="拖曳排序"><span></span><span></span><span></span></div>`;
+  const moveButtons=`<div class="move-btns"><button class="move-btn" onclick="moveRow(${r.id},-1)" title="上移">▲</button><button class="move-btn" onclick="moveRow(${r.id},1)" title="下移">▼</button></div>`;
 
   d.setAttribute('draggable','false');
   d.innerHTML=`
     <div class="cost-row-main">
-      ${dragHandle}
+      ${moveButtons}
       <div>
         <div class="item-name">${r.name}</div>
         <div class="item-note">${r.unit}</div>
@@ -1279,12 +1338,19 @@ function makeCostRow(r){
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
-    <div class="ot-wrap" style="background:rgba(132,145,176,.04);border-top-color:rgba(132,145,176,.2);padding:5px 10px 6px 14px;">
-      <span class="ot-lbl" style="color:var(--t3);">備註</span>
-      <input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="輸入備註…"
+    <div class="ot-wrap" style="background:rgba(132,145,176,.04);border-top-color:rgba(132,145,176,.2);padding:5px 8px 6px 14px;gap:6px;">
+      <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;">時間</span>
+      <input type="text" inputmode="numeric" value="${(r.arrivalTime||'').replace(/"/g,'&quot;')}"
+        placeholder="0730" maxlength="5"
+        id="atime-${r.id}"
+        oninput="fmtTimeInput(this,${r.id})"
+        onblur="validateTime(this,${r.id})"
+        style="width:50px;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);text-align:center;padding:1px 2px;" />
+      <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;margin-left:4px;">備註</span>
+      <input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="移1…"
         id="note-${r.id}"
         oninput="setNote(${r.id},this.value)"
-        style="flex:1;border:none;background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;" />
+        style="flex:1;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;padding:1px 4px;" />
     </div>
     ${workerSection}${oilcarSection}${asphaltSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt')?otSection:''}${truckSection}`;
   return d;
@@ -1292,8 +1358,28 @@ function makeCostRow(r){
 function chQty(id,d){
   const r=findCR(id);if(!r)return;
   r.qty=Math.max(0,r.qty+d);
-  document.getElementById('qv-'+id).textContent=r.qty;
+  const qvEl=document.getElementById('qv-'+id);
+  if(qvEl) qvEl.textContent=r.qty;
   updateRowDisplay(r);recalc();
+}
+function qvClick(id){
+  // click qty value → replace with editable input
+  const r=findCR(id);if(!r)return;
+  const qvEl=document.getElementById('qv-'+id);if(!qvEl)return;
+  const inp=document.createElement('input');
+  inp.type='number';inp.inputMode='numeric';inp.value=r.qty;
+  inp.style.cssText='width:44px;font-family:"JetBrains Mono",monospace;font-size:15px;font-weight:700;color:var(--text);background:var(--s2);border:1.5px solid var(--blue);border-radius:6px;text-align:center;padding:2px;outline:none;';
+  inp.onclick=e=>e.stopPropagation();
+  inp.onblur=()=>{
+    r.qty=parseFloat(inp.value)||0;
+    const span=document.createElement('span');span.className='q-val';span.id='qv-'+id;
+    span.textContent=r.qty;span.onclick=()=>qvClick(id);
+    inp.replaceWith(span);
+    updateRowDisplay(r);recalc();
+  };
+  inp.onkeydown=e=>{if(e.key==='Enter'||e.key==='Escape')inp.blur();};
+  qvEl.replaceWith(inp);
+  inp.select();
 }
 function setQtyDirect(id,v){
   const r=findCR(id);if(!r)return;
@@ -1331,6 +1417,79 @@ function setMarkingM2(id,v){
   recalc();
 }
 function setNote(id,v){const r=findCR(id);if(r)r.note=v;}
+function setArrivalTime(id,v){const r=findCR(id);if(r)r.arrivalTime=v;}
+
+function fmtTimeInput(inp,id){
+  // 只保留數字
+  let digits=inp.value.replace(/\D/g,'');
+  if(digits.length>4) digits=digits.slice(0,4);
+  // 4 位數字自動插入冒號
+  if(digits.length===4){
+    const formatted=digits.slice(0,2)+':'+digits.slice(2);
+    inp.value=formatted;
+    setArrivalTime(id,formatted);
+  } else {
+    inp.value=digits;
+    setArrivalTime(id,digits);
+  }
+}
+
+function validateTime(inp,id){
+  const v=inp.value.trim();
+  if(!v){setArrivalTime(id,'');return;}
+  // 接受 HH:MM 或 HHMM
+  const m=v.replace(':','').match(/^(\d{2})(\d{2})$/);
+  if(!m){inp.style.borderBottomColor='var(--red)';inp.title='格式錯誤，請輸入如 0730';return;}
+  const h=parseInt(m[1]),min=parseInt(m[2]);
+  if(h>23||min>59){inp.style.borderBottomColor='var(--red)';inp.title='時間超出範圍（00:00–23:59）';return;}
+  const formatted=m[1]+':'+m[2];
+  inp.value=formatted;
+  inp.style.borderBottomColor='';
+  inp.title='';
+  setArrivalTime(id,formatted);
+}
+function applyTimeToSec(e, sec){
+  e.stopPropagation();
+  const btn=e.currentTarget;
+  const existing=document.getElementById('time-popover');
+  if(existing){existing.remove();if(existing.dataset.sec===sec)return;}
+  const pop=document.createElement('div');
+  pop.id='time-popover';pop.dataset.sec=sec;
+  pop.style.cssText='position:fixed;z-index:500;background:var(--surface);border:1.5px solid var(--blue);border-radius:10px;padding:8px 10px;display:flex;align-items:center;gap:6px;box-shadow:0 4px 16px rgba(0,0,0,.15);';
+  pop.innerHTML=`
+    <input id="time-pop-inp" type="text" inputmode="numeric" placeholder="0800" maxlength="5"
+      style="width:56px;font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;text-align:center;border:none;border-bottom:2px solid var(--blue);outline:none;background:transparent;color:var(--text);padding:2px 0;"
+      oninput="fmtTimePopInput(this)" />
+    <button onclick="confirmApplyTime('${sec}')" style="background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 10px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Noto Sans TC',sans-serif;">套用</button>
+    <button onclick="document.getElementById('time-popover')?.remove()" style="background:none;border:none;font-size:16px;color:var(--t3);cursor:pointer;padding:0 2px;">✕</button>`;
+  const rect=btn.getBoundingClientRect();
+  pop.style.top=(rect.bottom+6)+'px';
+  pop.style.left=Math.max(8,rect.left-40)+'px';
+  document.body.appendChild(pop);
+  const inp=document.getElementById('time-pop-inp');
+  inp.focus();
+  inp.addEventListener('keydown',ev=>{if(ev.key==='Enter')confirmApplyTime(sec);if(ev.key==='Escape')pop.remove();});
+  setTimeout(()=>{document.addEventListener('click',function h(ev){if(!pop.contains(ev.target)&&ev.target!==btn){pop.remove();document.removeEventListener('click',h);}});},0);
+}
+function fmtTimePopInput(inp){
+  let d=inp.value.replace(/\D/g,'');if(d.length>4)d=d.slice(0,4);
+  inp.value=d.length===4?d.slice(0,2)+':'+d.slice(2):d;
+}
+function confirmApplyTime(sec){
+  const inp=document.getElementById('time-pop-inp');if(!inp)return;
+  const d=inp.value.replace(/\D/g,'');
+  if(d.length!==4){inp.style.borderBottomColor='var(--red)';inp.focus();return;}
+  const h=parseInt(d.slice(0,2)),m=parseInt(d.slice(2));
+  if(h>23||m>59){inp.style.borderBottomColor='var(--red)';inp.focus();return;}
+  const t=d.slice(0,2)+':'+d.slice(2);
+  costRows[sec].forEach(r=>{
+    r.arrivalTime=t;
+    const el=document.getElementById('atime-'+r.id);
+    if(el){el.value=t;el.style.borderBottomColor='';}
+  });
+  document.getElementById('time-popover')?.remove();
+  showToast('✅ 已套用 '+t+' 至'+sec+'區段','ok');
+}
 function setAsphaltGrade(id,v){
   const r=findCR(id);if(!r)return;r.asphaltGrade=v;
   // restore saved freight for this grade
@@ -1389,106 +1548,25 @@ function updateRowDisplay(r){
 }
 function delCostRow(id){for(const sec in costRows){const i=costRows[sec].findIndex(r=>r.id===id);if(i!==-1){costRows[sec].splice(i,1);document.getElementById('crow-'+id)?.remove();recalc();return;}}}
 
-// ══════════ DRAG & DROP REORDER ══════════
-let dragSrc=null, dragSec=null;
-
-function initDragDrop(sec){
-  const container=document.getElementById('crows-'+sec);
-  if(!container) return;
-
-  container.querySelectorAll('.cost-row-wrap').forEach(el=>{
-    const handle=el.querySelector('.drag-handle');
-    if(!handle) return;
-
-    // ── Mouse drag: only enable draggable when handle is pressed ──
-    handle.addEventListener('mousedown', ()=>{ el.setAttribute('draggable','true'); });
-    el.addEventListener('dragend', ()=>{ el.setAttribute('draggable','false'); });
-    document.addEventListener('mouseup', ()=>{ el.setAttribute('draggable','false'); }, {once:false});
-
-    el.addEventListener('dragstart', e=>{
-      if(el.getAttribute('draggable')!=='true'){e.preventDefault();return;}
-      dragSrc=el; dragSec=sec;
-      el.classList.add('dragging');
-      e.dataTransfer.effectAllowed='move';
-    });
-    el.addEventListener('dragend', ()=>{
-      el.classList.remove('dragging');
-      el.setAttribute('draggable','false');
-      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
-        x.classList.remove('drag-over-top','drag-over-bot');
-      });
-    });
-    el.addEventListener('dragover', e=>{
-      e.preventDefault();
-      if(el===dragSrc) return;
-      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
-        x.classList.remove('drag-over-top','drag-over-bot');
-      });
-      const rect=el.getBoundingClientRect();
-      el.classList.add(e.clientY<rect.top+rect.height/2?'drag-over-top':'drag-over-bot');
-    });
-    el.addEventListener('dragleave', ()=>{
-      el.classList.remove('drag-over-top','drag-over-bot');
-    });
-    el.addEventListener('drop', e=>{
-      e.preventDefault();
-      if(!dragSrc||el===dragSrc||dragSec!==sec) return;
-      const isTop=el.classList.contains('drag-over-top');
-      el.classList.remove('drag-over-top','drag-over-bot');
-      const srcId=parseInt(dragSrc.id.replace('crow-',''));
-      const tgtId=parseInt(el.id.replace('crow-',''));
-      const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
-      const tgtIdx=costRows[sec].findIndex(r=>r.id===tgtId);
-      if(srcIdx===-1||tgtIdx===-1) return;
-      const [moved]=costRows[sec].splice(srcIdx,1);
-      const newTgt=costRows[sec].findIndex(r=>r.id===tgtId);
-      costRows[sec].splice(isTop?newTgt:newTgt+1,0,moved);
-      renderCostSec(sec);recalc();
-    });
-
-    // ── Touch drag ──
-    handle.addEventListener('touchstart', e=>{
-      e.preventDefault();
-      dragSrc=el; dragSec=sec;
-      el.classList.add('dragging');
-    },{passive:false});
-    handle.addEventListener('touchmove', e=>{
-      e.preventDefault();
-      const ty=e.touches[0].clientY;
-      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
-        x.classList.remove('drag-over-top','drag-over-bot');
-      });
-      for(const sib of container.querySelectorAll('.cost-row-wrap')){
-        if(sib===el) continue;
-        const rect=sib.getBoundingClientRect();
-        if(ty>=rect.top&&ty<=rect.bottom){
-          sib.classList.add(ty<rect.top+rect.height/2?'drag-over-top':'drag-over-bot');
-          break;
-        }
-      }
-    },{passive:false});
-    handle.addEventListener('touchend', ()=>{
-      el.classList.remove('dragging');
-      const target=container.querySelector('.drag-over-top,.drag-over-bot');
-      if(target){
-        const isTop=target.classList.contains('drag-over-top');
-        target.classList.remove('drag-over-top','drag-over-bot');
-        const srcId=parseInt(el.id.replace('crow-',''));
-        const tgtId=parseInt(target.id.replace('crow-',''));
-        const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
-        const tgtIdx=costRows[sec].findIndex(r=>r.id===tgtId);
-        if(srcIdx!==-1&&tgtIdx!==-1){
-          const [moved]=costRows[sec].splice(srcIdx,1);
-          const newTgt=costRows[sec].findIndex(r=>r.id===tgtId);
-          costRows[sec].splice(isTop?newTgt:newTgt+1,0,moved);
-          renderCostSec(sec);recalc();
-        }
-      }
-    });
-  });
+// ══════════ MOVE ROW (▲▼ 按鈕) ══════════
+function moveRow(id, dir){
+  for(const sec in costRows){
+    const arr=costRows[sec];
+    const idx=arr.findIndex(r=>r.id===id);
+    if(idx===-1) continue;
+    const newIdx=idx+dir;
+    if(newIdx<0||newIdx>=arr.length) return;
+    [arr[idx],arr[newIdx]]=[arr[newIdx],arr[idx]];
+    renderCostSec(sec);recalc();
+    setTimeout(()=>{
+      const el=document.getElementById('crow-'+id);
+      if(el){el.classList.add('moving');setTimeout(()=>el.classList.remove('moving'),400);}
+    },0);
+    return;
+  }
 }
+function initDragDrop(){} // no-op
 
-// call initDragDrop after each section render - hook into existing renderCostSec
 
 function findCR(id){for(const sec in costRows){const r=costRows[sec].find(r=>r.id===id);if(r)return r;}}
 function recalc(){
@@ -1597,7 +1675,7 @@ function getSnapshot(){
     truckTrips:r.truckTrips||0,truckCross:r.truckCross||0,
     priceHalfDay:r.priceHalfDay||0,priceFullDay:r.priceFullDay||0,pricePerM2:r.pricePerM2||0,
     markingMode:r.markingMode||'halfDay',markingM2:r.markingM2||0,
-    note:r.note||'',
+    note:r.note||'',arrivalTime:r.arrivalTime||'',
     grades:r.grades||{},asphaltGrade:r.asphaltGrade||'再生',asphaltFreight:r.asphaltFreight||0,
     sub:calcRowSub(r)
   }));});
@@ -1647,7 +1725,7 @@ function deleteRecord(id){
 const TPL_KEY='cost_templates_v1';
 let templates=[];
 function loadTemplates(){try{templates=JSON.parse(localStorage.getItem(TPL_KEY)||'[]');}catch(e){templates=[];}}
-function saveTemplates(){try{localStorage.setItem(TPL_KEY,JSON.stringify(templates));}catch(e){}}
+function saveTemplates(){try{localStorage.setItem(TPL_KEY,JSON.stringify(templates));fbSaveSettings();}catch(e){}}
 
 function openTplPanel(){
   loadTemplates();
@@ -1808,6 +1886,10 @@ function recAsphaltTons(rec){
 function renderRecords(){
   const list=document.getElementById('recList'),empty=document.getElementById('recEmpty'),actions=document.getElementById('recActions');
   document.getElementById('recCount').textContent=records.length+' 筆';
+  // update storage usage on badge
+  const _used=getStorageUsage();const _pct=Math.min(100,(_used/(5*1024*1024)*100)).toFixed(1);
+  const _badge=document.getElementById('recCount');
+  if(_badge){_badge.title=`儲存空間 ${(_used/1024).toFixed(0)}KB / 5MB（${_pct}%）`;}
   const shown=filteredRecords();
   if(!records.length){list.innerHTML='';empty.style.display='block';return;}
   empty.style.display='none';
@@ -1977,7 +2059,7 @@ function openRecEdit(id){
   if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
   if(r.asphaltFreight===undefined) r.asphaltFreight=0;
     if(r.markingM2===undefined) r.markingM2=0;
-    if(r.note===undefined) r.note='';
+    if(r.note===undefined) r.note=''; if(r.arrivalTime===undefined) r.arrivalTime='';
   }));
   renderCostAll();
   const benEl=document.getElementById('spcost-便當');if(benEl)benEl.value=rec.sp?.便當?.cost||0;
@@ -2240,7 +2322,7 @@ function printRecord(id) {
       const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
         ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
-        :row.name;
+        :`${row.name}${row.arrivalTime?' <span style="color:#4a5578;font-size:13px;">(${row.arrivalTime})</span>'  :''}` ;
       const rowSub=calcStoredSub(row);
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
