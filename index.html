@@ -284,14 +284,6 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .p-meta{font-size:12px;color:var(--t3);margin-top:1px;}
 .p-price{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--t2);}
 
-/* CONTINUE PROMPT */
-.continue-bar{position:fixed;bottom:62px;left:0;right:0;background:var(--green);color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:400;transform:translateY(100%);transition:transform .3s ease;box-shadow:0 -2px 12px rgba(0,0,0,.15);}
-.continue-bar.show{transform:translateY(0);}
-.continue-bar-txt{font-size:13px;font-weight:700;}
-.continue-bar-btns{display:flex;gap:8px;flex-shrink:0;}
-.continue-bar-btn{padding:6px 14px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;font-family:'Noto Sans TC',sans-serif;}
-.continue-yes{background:#fff;color:var(--green);}
-.continue-no{background:rgba(255,255,255,.2);color:#fff;}
 .tpl-btn{background:rgba(37,99,235,.1);border:1.5px solid rgba(37,99,235,.25);border-radius:8px;padding:5px 10px;font-size:13px;font-weight:700;color:var(--blue);cursor:pointer;font-family:'Noto Sans TC',sans-serif;white-space:nowrap;}
 .tpl-btn:active{background:rgba(37,99,235,.2);}
 .tpl-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
@@ -554,13 +546,6 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
   <div class="picker">
     <div class="pk-hdr"><span class="pk-title" id="pkTitle">選擇機具</span><button class="pk-close" onclick="closePicker()">✕</button></div>
     <div class="pk-list" id="pkList"></div>
-  </div>
-</div>
-<div class="continue-bar" id="continueBar">
-  <span class="continue-bar-txt">✅ 已儲存！繼續下一張？</span>
-  <div class="continue-bar-btns">
-    <button class="continue-bar-btn continue-yes" onclick="continueNext()">繼續 →</button>
-    <button class="continue-bar-btn continue-no" onclick="hideContinueBar()">不用了</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -1626,7 +1611,7 @@ function saveRecord(){
     return;
   }
   hideEditBanner();
-  _lastCostRows=deepCopy(costRows); // 存下目前工項供「繼續下一張」使用
+
   const info=getInfoSnapshot();
   const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
@@ -1649,8 +1634,6 @@ function saveRecord(){
       const next = autoIncrementCase(caseEl.textContent);
       if(next !== caseEl.textContent) caseEl.textContent = next;
     }
-    // A: 儲存後詢問是否繼續下一張
-    showContinuePrompt(rec);
   }catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 
@@ -1658,47 +1641,6 @@ function deleteRecord(id){
   records=records.filter(r=>r.id!==id);
   localStorage.setItem(REC_KEY,JSON.stringify(records));
   fbDeleteRecord(id);renderRecords();showToast('已刪除');
-}
-
-// A: 繼續下一張 — 在 saveRecord 時存下目前 costRows
-let _lastSavedRec=null, _lastCostRows=null;
-function showContinuePrompt(rec){
-  _lastSavedRec=rec;
-  const bar=document.getElementById('continueBar');
-  bar.classList.add('show');
-  setTimeout(()=>bar.classList.remove('show'), 8000);
-}
-function hideContinueBar(){
-  document.getElementById('continueBar').classList.remove('show');
-}
-function continueNext(){
-  hideContinueBar();
-  if(!_lastCostRows) return;
-  // 保留工項配置（從儲存前的 costRows deepCopy），清空工區和日期
-  costRows=deepCopy(_lastCostRows);
-  uid=Date.now();
-  // 重新分配 id，清空板車費/備註
-  SECS.forEach(sec=>{
-    costRows[sec].forEach(r=>{
-      r.id=uid++;
-      r.truckTrips=0; r.truckCross=0;
-      r.note='';
-    });
-  });
-  // 清空工區
-  const workarea=document.querySelector('#page-cost .info-val:not(.accent)');
-  if(workarea) workarea.textContent='';
-  // 清空日期
-  const dateEl=document.getElementById('infoDate');
-  if(dateEl){dateEl.value='';document.getElementById('infoWeekday').textContent='';}
-  // 重設便當/里長備註
-  document.getElementById('spcost-便當').value=6000;
-  document.getElementById('spnote-便當').value='';
-  document.getElementById('spnote-里長').value='';
-  hideEditBanner();
-  renderCostAll();
-  switchTab('cost');
-  showToast('已帶入上一張工項，請填寫日期和工區');
 }
 
 // ══════════ B: 範本 ══════════
