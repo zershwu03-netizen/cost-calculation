@@ -116,7 +116,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .q-btn{width:26px;height:26px;border-radius:50%;background:var(--s2);border:1.5px solid var(--border);color:var(--t2);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;user-select:none;}
 .q-btn:active{background:var(--s3);}
 .q-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--text);min-width:22px;text-align:center;}
-.q-inp{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;width:68px;text-align:center;padding:4px 2px;outline:none;-moz-appearance:textfield;}
+.q-inp{font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--text);background:var(--s2);border:1px solid var(--border);border-radius:6px;width:68px;text-align:center;padding:4px 2px;outline:none;-moz-appearance:textfield;-webkit-appearance:none;touch-action:manipulation;cursor:text;}
 .q-inp::-webkit-outer-spin-button,.q-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 .q-inp:focus{border-color:var(--blue);}
 /* shift toggle */
@@ -134,7 +134,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 /* overtime row */
 .ot-wrap{display:flex;align-items:center;gap:6px;padding:5px 10px 8px 56px;background:rgba(245,158,11,.04);border-top:1px dashed rgba(245,158,11,.25);}
 .ot-lbl{font-size:11px;font-weight:700;color:var(--t3);}
-.ot-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);background:var(--s2);border:1px solid rgba(245,158,11,.3);border-radius:6px;width:52px;text-align:center;padding:3px 4px;outline:none;-moz-appearance:textfield;}
+.ot-inp{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--accent);background:var(--s2);border:1px solid rgba(245,158,11,.3);border-radius:6px;width:52px;text-align:center;padding:3px 4px;outline:none;-moz-appearance:textfield;-webkit-appearance:none;touch-action:manipulation;cursor:text;user-select:text;-webkit-user-select:text;}
 .ot-inp::-webkit-outer-spin-button,.ot-inp::-webkit-inner-spin-button{-webkit-appearance:none;}
 .ot-inp:focus{border-color:var(--accent);}
 .ot-sub{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;color:var(--accent);}
@@ -690,7 +690,7 @@ function renderStats() {
 
   let html='';
   filtered.forEach(([caseName, recs])=>{
-    const total = recs.reduce((s,r)=>s+(r.grand||0),0);
+    const total = recs.reduce((s,r)=>s+safeGrand(r),0);
     const count = recs.length;
     const sorted = [...recs].sort((a,b)=>(rocToDate(b.日期)||0)-(rocToDate(a.日期)||0));
 
@@ -708,7 +708,7 @@ function renderStats() {
                 <div class="stats-case-row-title">${r.工區||'（未填工區）'}</div>
                 <div class="stats-case-row-meta">${[r.日期,r.星期,r.日夜?r.日夜+'班':'',r.料別?'料別：'+r.料別:''].filter(Boolean).join(' / ')}</div>
               </div>
-              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);white-space:nowrap;">$${Math.round(r.grand||0).toLocaleString('zh-TW')}</div>
+              <div style="font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--purple);white-space:nowrap;">$${Math.round(safeGrand(r)).toLocaleString('zh-TW')}</div>
             </div>`).join('')}
           <div class="stats-case-total">
             <span style="font-size:13px;font-weight:700;color:var(--t2);">合計</span>
@@ -718,6 +718,14 @@ function renderStats() {
       </div>`;
   });
   el.innerHTML=html;
+}
+
+function toggleStatsCase(hdr){
+  const body=hdr.nextElementSibling;
+  const tog=hdr.querySelector('.stats-case-tog');
+  const open=body.style.maxHeight&&body.style.maxHeight!=='0px';
+  body.style.maxHeight=open?'0px':body.scrollHeight+300+'px';
+  tog.style.transform=open?'':'rotate(180deg)';
 }
 const SECS = ['前置','刨除','鋪設','其餘'];
 const STORAGE_KEY = 'machinery_price_db_v2';
@@ -752,7 +760,8 @@ const DEFAULTS = {
     {name:'三輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false,hasTruck:true},
     {name:'膠輪',     unit:'台',priceDay:14500,priceNight:18000,fixed:false,hasTruck:true},
     // 油車：priceDay/priceNight=出車費，priceEmulsion=乳化瀝青每m²單價，type='oilcar'
-    {name:'油車',     unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
+    {name:'冷油油車',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
+    {name:'熱油油車',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
     {name:'預拌車',   unit:'台',priceDay:4500, priceNight:5500, fixed:false},
   ],
   其餘:[
@@ -949,7 +958,7 @@ function loadCostDefaults(){
   costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=1;
   addCR('前置','堆高機','台',2);addCR('前置','義交','人',15);
   addCR('刨除','刨除機(小)','台',2);addCR('刨除','鏟裝機','台',3);addCR('刨除','清掃機','台',2);addCR('刨除','40.70怪手','台',2);
-  addCR('鋪設','鋪裝機(大)','台',1);addCR('鋪設','鋪設工','人',7);addCR('鋪設','熱鏟','台',1);addCR('鋪設','二輪','台',1);addCR('鋪設','三輪','台',1);addCR('鋪設','膠輪','台',1);addCR('鋪設','油車','m²',2800);
+  addCR('鋪設','鋪裝機(大)','台',1);addCR('鋪設','鋪設工','人',7);addCR('鋪設','熱鏟','台',1);addCR('鋪設','二輪','台',1);addCR('鋪設','三輪','台',1);addCR('鋪設','膠輪','台',1);addCR('鋪設','冷油油車','m²',2800);
   addCR('其餘','瀝青混凝土','T',331);
 }
 function addCR(sec,name,unit,qty){
@@ -1072,19 +1081,17 @@ function makeCostRow(r){
 
   // ── 板車列：直接填金額 ──
   const truckSection=r.hasTruck?`
-    <div class="ot-wrap" style="gap:8px;">
-      <span class="ot-lbl">板車移動</span>
-      <div class="price-field" style="flex:1;max-width:120px;">
-        <span class="pf-pre">$</span>
-        <input class="pf-inp ot-inp" type="number" value="${r.truckTrips||0}" min="0" step="1000"
-          id="tt-${r.id}" oninput="setTruckTrips(${r.id},this.value)" onclick="this.select()" style="padding:4px 4px 4px 0;" />
-      </div>
-      <span class="ot-lbl" style="margin-left:6px;">跨縣市</span>
-      <div class="price-field" style="flex:1;max-width:120px;">
-        <span class="pf-pre">$</span>
-        <input class="pf-inp ot-inp" type="number" value="${r.truckCross||0}" min="0" step="1000"
-          id="tc-${r.id}" oninput="setTruckCross(${r.id},this.value)" onclick="this.select()" style="padding:4px 4px 4px 0;" />
-      </div>
+    <div class="ot-wrap" style="gap:8px;flex-wrap:wrap;">
+      <span class="ot-lbl">板車移動 $</span>
+      <input class="ot-inp" type="number" inputmode="numeric" pattern="[0-9]*"
+        value="${r.truckTrips||''}" min="0" placeholder="0"
+        id="tt-${r.id}" oninput="setTruckTrips(${r.id},this.value)" onclick="this.select()"
+        style="width:90px;background:var(--surface);border:1.5px solid var(--border2);" />
+      <span class="ot-lbl" style="margin-left:4px;">跨縣市 $</span>
+      <input class="ot-inp" type="number" inputmode="numeric" pattern="[0-9]*"
+        value="${r.truckCross||''}" min="0" placeholder="0"
+        id="tc-${r.id}" oninput="setTruckCross(${r.id},this.value)" onclick="this.select()"
+        style="width:90px;background:var(--surface);border:1.5px solid var(--border2);" />
       <span class="ot-sub" id="tks-${r.id}">${((r.truckTrips||0)+(r.truckCross||0))>0?'+'+fmt((r.truckTrips||0)+(r.truckCross||0)):''}</span>
     </div>`:'';
 
@@ -1286,6 +1293,17 @@ function editInfo(el){
 let records=[];
 function loadRecords(){try{records=JSON.parse(localStorage.getItem(REC_KEY)||'[]');}catch(e){records=[];}}
 
+// 從 snapshot 的 sub 欄位重新計算 grand（修正舊資料的 NaN）
+function safeGrand(rec){
+  if(rec.grand && !isNaN(rec.grand)) return rec.grand;
+  // 重算：所有 sec 的 sub 加總 + 便當
+  const mach = ['前置','刨除','鋪設'].reduce((t,sec)=>{
+    return t+(rec.rows?.[sec]||[]).reduce((s,r)=>s+(parseFloat(r.sub)||0),0);
+  },0)+(parseFloat(rec.sp?.便當?.cost)||0);
+  const other = (rec.rows?.['其餘']||[]).reduce((s,r)=>s+(parseFloat(r.sub)||0),0);
+  return mach*1.05+other;
+}
+
 function getSnapshot(){
   const snapshot={};
   SECS.forEach(sec=>{snapshot[sec]=costRows[sec].map(r=>({
@@ -1409,7 +1427,7 @@ function renderRecords(){
   });
 
   Object.entries(groupMap).forEach(([caseName,recs])=>{
-    const groupTotal=recs.reduce((s,r)=>s+(r.grand||0),0);
+    const groupTotal=recs.reduce((s,r)=>s+safeGrand(r),0);
     const isMulti=recs.length>1;
 
     // 單筆派案：直接顯示原本卡片樣式
@@ -1425,7 +1443,7 @@ function renderRecords(){
             <div class="rec-meta">${meta}${upd}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
-            <div class="rec-total">${fmt(rec.grand)}</div>
+            <div class="rec-total">${fmt(safeGrand(rec))}</div>
             <div style="display:flex;gap:5px;">
               <button class="rec-btn" style="padding:4px 8px;font-size:14px;" onclick="event.stopPropagation();printRecord(${rec.id})">🖨️</button>
               <button class="rec-btn del" style="padding:4px 8px;font-size:14px;" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑️</button>
@@ -1436,7 +1454,7 @@ function renderRecords(){
         <div class="rec-body" id="recbody-${rec.id}">
           ${makeRecCardHtml(rec)}
           <div class="rec-foot">
-            <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div><div class="rec-grand">${fmt(rec.grand)}</div></div>
+            <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(safeGrand(rec)*0.9524)}</div><div class="rec-grand">${fmt(safeGrand(rec))}</div></div>
             <div class="rec-btns">
               <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
               <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
@@ -1473,7 +1491,7 @@ function renderRecords(){
                     <div class="rec-meta">${meta}${upd}</div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:8px;">
-                    <div class="rec-total" style="font-size:14px;">${fmt(rec.grand)}</div>
+                    <div class="rec-total" style="font-size:14px;">${fmt(safeGrand(rec))}</div>
                     <div style="display:flex;gap:4px;">
                       <button class="rec-btn" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();printRecord(${rec.id})">🖨️</button>
                       <button class="rec-btn del" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑️</button>
@@ -1484,7 +1502,7 @@ function renderRecords(){
                 <div class="rec-body" id="recbody-${rec.id}">
                   ${makeRecCardHtml(rec)}
                   <div class="rec-foot">
-                    <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(rec.machTax)}</div><div class="rec-grand">${fmt(rec.grand)}</div></div>
+                    <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(safeGrand(rec)*0.9524)}</div><div class="rec-grand">${fmt(safeGrand(rec))}</div></div>
                     <div class="rec-btns">
                       <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
                       <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
