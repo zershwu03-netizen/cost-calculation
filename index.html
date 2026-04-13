@@ -1626,6 +1626,7 @@ function saveRecord(){
     return;
   }
   hideEditBanner();
+  _lastCostRows=deepCopy(costRows); // 存下目前工項供「繼續下一張」使用
   const info=getInfoSnapshot();
   const snapshot=getSnapshot();
   const benDang=parseFloat(document.getElementById('spcost-便當')?.value)||0;
@@ -1659,8 +1660,8 @@ function deleteRecord(id){
   fbDeleteRecord(id);renderRecords();showToast('已刪除');
 }
 
-// ══════════ A: 繼續下一張 ══════════
-let _lastSavedRec=null;
+// A: 繼續下一張 — 在 saveRecord 時存下目前 costRows
+let _lastSavedRec=null, _lastCostRows=null;
 function showContinuePrompt(rec){
   _lastSavedRec=rec;
   const bar=document.getElementById('continueBar');
@@ -1672,22 +1673,16 @@ function hideContinueBar(){
 }
 function continueNext(){
   hideContinueBar();
-  if(!_lastSavedRec) return;
-  // 保留工項配置，清空工區和日期
-  const rows=deepCopy(_lastSavedRec.rows);
-  costRows={前置:[],刨除:[],鋪設:[],其餘:[]};uid=Date.now();
+  if(!_lastCostRows) return;
+  // 保留工項配置（從儲存前的 costRows deepCopy），清空工區和日期
+  costRows=deepCopy(_lastCostRows);
+  uid=Date.now();
+  // 重新分配 id，清空板車費/備註
   SECS.forEach(sec=>{
-    rows[sec].forEach(r=>{
+    costRows[sec].forEach(r=>{
       r.id=uid++;
-      r.truckTrips=0;r.truckCross=0; // 清空板車費
-      if(r.type===undefined) r.type='';
-      if(r.note===undefined) r.note='';
-      if(r.grades===undefined) r.grades={};
-      if(r.asphaltGrade===undefined) r.asphaltGrade='再生';
-      if(r.asphaltFreight===undefined) r.asphaltFreight=0;
-      if(r.markingMode===undefined) r.markingMode='none';
-      if(r.markingM2===undefined) r.markingM2=0;
-      costRows[sec].push(r);
+      r.truckTrips=0; r.truckCross=0;
+      r.note='';
     });
   });
   // 清空工區
