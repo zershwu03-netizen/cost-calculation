@@ -2234,8 +2234,8 @@ function printRecord(id) {
       // 備註（紅字）+ 加班 + 板車
       const extraParts=[];
       if(row.note) extraParts.push(`<span class="note-red">${row.note}</span>`);
-      if(row.overtime>0) extraParts.push(`<span class="note-red">加班${row.overtime}h</span>`);
-      if((row.truckTrips||0)>0) extraParts.push(`<span class="note-red">板車移動$${(row.truckTrips).toLocaleString('zh-TW')}</span>`);
+      if(row.overtime>0) extraParts.push(`<span style="color:#d97706;font-size:12px;font-weight:700;">加班${row.overtime}h</span>`);
+      if((row.truckTrips||0)>0) extraParts.push(`<span style="color:#2563eb;font-size:12px;font-weight:700;">板車移動$${(row.truckTrips).toLocaleString('zh-TW')}</span>`);
       if((row.truckCross||0)>0) extraParts.push(`<span class="note-red">跨縣市$${(row.truckCross).toLocaleString('zh-TW')}</span>`);
       const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
