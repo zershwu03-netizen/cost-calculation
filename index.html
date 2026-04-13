@@ -107,9 +107,9 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 
 
 /* COST ROW — wrap > main(name|qty|shift|price|sub|del) + ot-wrap */
-.cost-col-hdrs{grid-template-columns:1fr 76px 52px 68px 84px 28px;}
+.cost-col-hdrs{grid-template-columns:20px 1fr 76px 52px 68px 84px 28px;}
 .cost-row-wrap{background:var(--surface);border-top:1px solid var(--border);}
-.cost-row-main{display:grid;grid-template-columns:1fr 76px 52px 68px 84px 28px;align-items:center;padding:10px 10px 10px 14px;gap:4px;}
+.cost-row-main{display:grid;grid-template-columns:20px 1fr 76px 52px 68px 84px 28px;align-items:center;padding:10px 10px 10px 8px;gap:4px;}
 .item-name{font-size:14px;font-weight:700;color:var(--text);}
 .item-note{font-size:11px;color:var(--t3);margin-top:1px;}
 .qty-wrap{display:flex;align-items:center;justify-content:center;gap:3px;}
@@ -144,6 +144,14 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .add-row:active{background:var(--s3);}
 .add-icon{width:27px;height:27px;border-radius:50%;background:rgba(37,99,235,.1);border:1.5px dashed var(--blue);color:var(--blue);font-size:18px;display:flex;align-items:center;justify-content:center;}
 .add-lbl{font-size:13px;font-weight:700;color:var(--blue);}
+
+/* DRAG HANDLE */
+.drag-handle{width:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:grab;padding:4px 2px;flex-shrink:0;touch-action:none;opacity:.5;}
+.drag-handle:active{cursor:grabbing;opacity:1;}
+.drag-handle span{display:block;width:14px;height:2px;background:var(--t3);border-radius:1px;}
+.cost-row-wrap.dragging{opacity:.35;background:var(--s2);}
+.cost-row-wrap.drag-over-top{border-top:2.5px solid var(--blue)!important;}
+.cost-row-wrap.drag-over-bot{border-bottom:2.5px solid var(--blue)!important;}
 
 /* SPECIAL ROWS */
 .special-row{display:flex;align-items:center;padding:11px 14px;background:var(--surface);border-top:1px solid var(--border);gap:8px;}
@@ -419,7 +427,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-刨除">$0</span><span class="sec-tog open" id="ctog-刨除">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-刨除">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">機具</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h">機具</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-刨除"></div>
       <div class="add-row" onclick="openPicker('刨除')"><div class="add-icon">＋</div><div class="add-lbl">新增刨除機具</div></div>
     </div>
@@ -443,7 +451,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="sec-r"><span class="sec-sub" id="csub-其餘">$0</span><span class="sec-tog open" id="ctog-其餘">▾</span></div>
     </div>
     <div class="sec-body" id="cbody-其餘">
-      <div class="col-hdrs cost-col-hdrs"><div class="col-h">項目</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
+      <div class="col-hdrs cost-col-hdrs"><div class="col-h"></div><div class="col-h">項目</div><div class="col-h c">數量</div><div class="col-h c">日/夜</div><div class="col-h c">單價</div><div class="col-h r">小計</div><div class="col-h"></div></div>
       <div id="crows-其餘"></div>
       <div class="special-row" id="sprow-便當">
         <div class="sp-name">便當</div>
@@ -1196,8 +1204,12 @@ function makeCostRow(r){
       </span>
     </div>`:'' ;
 
+  const dragHandle=`<div class="drag-handle" title="拖曳排序"><span></span><span></span><span></span></div>`;
+
+  d.setAttribute('draggable','true');
   d.innerHTML=`
     <div class="cost-row-main">
+      ${dragHandle}
       <div>
         <div class="item-name">${r.name}</div>
         <div class="item-note">${r.unit}</div>
@@ -1316,6 +1328,112 @@ function updateRowDisplay(r){
   if(tkEl){ const tf=(r.truckTrips||0)+(r.truckCross||0); tkEl.textContent=tf>0?'+'+fmt(tf):''; }
 }
 function delCostRow(id){for(const sec in costRows){const i=costRows[sec].findIndex(r=>r.id===id);if(i!==-1){costRows[sec].splice(i,1);document.getElementById('crow-'+id)?.remove();recalc();return;}}}
+
+// ══════════ DRAG & DROP REORDER ══════════
+let dragSrc=null, dragSec=null;
+
+function initDragDrop(sec){
+  const container=document.getElementById('crows-'+sec);
+  if(!container) return;
+
+  container.querySelectorAll('.cost-row-wrap').forEach(el=>{
+    el.addEventListener('dragstart', e=>{
+      dragSrc=el; dragSec=sec;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed='move';
+    });
+    el.addEventListener('dragend', ()=>{
+      el.classList.remove('dragging');
+      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
+        x.classList.remove('drag-over-top','drag-over-bot');
+      });
+    });
+    el.addEventListener('dragover', e=>{
+      e.preventDefault();
+      if(el===dragSrc) return;
+      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
+        x.classList.remove('drag-over-top','drag-over-bot');
+      });
+      const rect=el.getBoundingClientRect();
+      const mid=rect.top+rect.height/2;
+      el.classList.add(e.clientY<mid?'drag-over-top':'drag-over-bot');
+    });
+    el.addEventListener('dragleave', ()=>{
+      el.classList.remove('drag-over-top','drag-over-bot');
+    });
+    el.addEventListener('drop', e=>{
+      e.preventDefault();
+      if(!dragSrc||el===dragSrc||dragSec!==sec) return;
+      el.classList.remove('drag-over-top','drag-over-bot');
+      const rect=el.getBoundingClientRect();
+      const mid=rect.top+rect.height/2;
+      const insertBefore=e.clientY<mid;
+      // reorder costRows array
+      const srcId=parseInt(dragSrc.id.replace('crow-',''));
+      const tgtId=parseInt(el.id.replace('crow-',''));
+      const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
+      const tgtIdx=costRows[sec].findIndex(r=>r.id===tgtId);
+      if(srcIdx===-1||tgtIdx===-1) return;
+      const [moved]=costRows[sec].splice(srcIdx,1);
+      const newTgt=costRows[sec].findIndex(r=>r.id===tgtId);
+      costRows[sec].splice(insertBefore?newTgt:newTgt+1,0,moved);
+      renderCostSec(sec);recalc();
+    });
+
+    // ── Touch drag support ──
+    const handle=el.querySelector('.drag-handle');
+    if(!handle) return;
+    let touchY=0, clone=null, origIdx=-1;
+    handle.addEventListener('touchstart', e=>{
+      e.preventDefault();
+      touchY=e.touches[0].clientY;
+      dragSrc=el; dragSec=sec;
+      el.classList.add('dragging');
+      origIdx=costRows[sec].findIndex(r=>r.id===parseInt(el.id.replace('crow-','')));
+    },{passive:false});
+    handle.addEventListener('touchmove', e=>{
+      e.preventDefault();
+      const ty=e.touches[0].clientY;
+      const siblings=[...container.querySelectorAll('.cost-row-wrap')].filter(x=>x!==el);
+      container.querySelectorAll('.drag-over-top,.drag-over-bot').forEach(x=>{
+        x.classList.remove('drag-over-top','drag-over-bot');
+      });
+      for(const sib of siblings){
+        const rect=sib.getBoundingClientRect();
+        if(ty>=rect.top && ty<=rect.bottom){
+          const mid=rect.top+rect.height/2;
+          sib.classList.add(ty<mid?'drag-over-top':'drag-over-bot');
+          break;
+        }
+      }
+    },{passive:false});
+    handle.addEventListener('touchend', e=>{
+      el.classList.remove('dragging');
+      const target=container.querySelector('.drag-over-top,.drag-over-bot');
+      if(target){
+        const isTop=target.classList.contains('drag-over-top');
+        target.classList.remove('drag-over-top','drag-over-bot');
+        const tgtId=parseInt(target.id.replace('crow-',''));
+        const srcId=parseInt(el.id.replace('crow-',''));
+        const srcIdx=costRows[sec].findIndex(r=>r.id===srcId);
+        const tgtIdx=costRows[sec].findIndex(r=>r.id===tgtId);
+        if(srcIdx!==-1&&tgtIdx!==-1){
+          const [moved]=costRows[sec].splice(srcIdx,1);
+          const newTgt=costRows[sec].findIndex(r=>r.id===tgtId);
+          costRows[sec].splice(isTop?newTgt:newTgt+1,0,moved);
+          renderCostSec(sec);recalc();
+        }
+      }
+    });
+  });
+}
+
+// call initDragDrop after each section render
+const _origRenderCostSec=renderCostSec;
+function renderCostSec(sec){
+  _origRenderCostSec(sec);
+  initDragDrop(sec);
+}
 function findCR(id){for(const sec in costRows){const r=costRows[sec].find(r=>r.id===id);if(r)return r;}}
 function recalc(){
   let mach=0;
