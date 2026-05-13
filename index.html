@@ -672,11 +672,13 @@ async function fbLoadSettings(){
     const data = doc.data();
     if(data.priceDB){
       const remote = JSON.parse(data.priceDB);
-      // 只有在遠端比本地新才覆蓋
-      if(!data.updatedAt || data.updatedAt > (localStorage.getItem('settings_updatedAt')||0)){
+      // 只有在遠端比本地新才覆蓋（確保都用 Number 比較，避免字串 vs 數字判斷錯誤）
+      const remoteTs = Number(data.updatedAt) || 0;
+      const localTs = Number(localStorage.getItem('settings_updatedAt')) || 0;
+      if(remoteTs > localTs){
         priceDB = remote;
         localStorage.setItem(STORAGE_KEY, data.priceDB);
-        localStorage.setItem('settings_updatedAt', data.updatedAt||Date.now());
+        localStorage.setItem('settings_updatedAt', remoteTs);
         loadCostDB(); renderCostAll(); renderDbAll(); updateDbStatusBadge();
       }
     }
@@ -975,7 +977,14 @@ function dbSave() {
     // backward compat: keep price = priceDay
     item.price = item.priceDay;
   }));
-  try{localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();showToast('✅ 已儲存，成本表已套用','ok');fbSaveSettings();}
+  try{
+    const now=Date.now();
+    localStorage.setItem(STORAGE_KEY,JSON.stringify(priceDB));
+    localStorage.setItem('settings_updatedAt',now);
+    setDbDirty(false);loadCostDB();renderCostAll();updateDbStatusBadge();
+    showToast('✅ 已儲存，成本表已套用','ok');
+    fbSaveSettings();
+  }
   catch(e){showToast('⚠️ 儲存失敗','err');}
 }
 function dbReset(){if(!confirm('確定重設為預設單價？'))return;priceDB=deepCopy(DEFAULTS);renderDbAll();setDbDirty(true);showToast('已重設，請點儲存套用');}
