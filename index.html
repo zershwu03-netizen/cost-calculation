@@ -1500,7 +1500,21 @@ function makeCostRow(r){
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
-    ${workerSection}${oilcarSection}${asphaltSection}${wasteSection}${cementSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt'&&r.type!=='coldmix'&&r.type!=='waste'&&r.type!=='cement')?otSection:''}${truckSection}`;
+    <div class="ot-wrap" style="background:rgba(132,145,176,.04);border-top-color:rgba(132,145,176,.2);padding:5px 8px 6px 14px;gap:6px;">
+  <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;">時間</span>
+  <input type="text" inputmode="numeric" value="${(r.arrivalTime||'').replace(/"/g,'&quot;')}"
+    maxlength="5"
+    id="atime-${r.id}"
+    oninput="fmtTimeInput(this,${r.id})"
+    onblur="validateTime(this,${r.id})"
+    style="width:50px;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);text-align:center;padding:1px 2px;" />
+  <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;margin-left:4px;">備註</span>
+  <input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" 
+    id="note-${r.id}"
+    oninput="setNote(${r.id},this.value)"
+    style="flex:1;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;padding:1px 4px;" />
+</div>
+${workerSection}${oilcarSection}${asphaltSection}${wasteSection}${cementSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt'&&r.type!=='coldmix'&&r.type!=='waste'&&r.type!=='cement')?otSection:''}${truckSection}`;
   return d;
 }
 function chQty(id,d){
@@ -2030,7 +2044,7 @@ function makeRecCardHtml(rec){
       const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h</span>`:'';
       rowsHtml+=`<div class="rec-item">
         <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
-        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}${row.arrivalTime?' · '+row.arrivalTime:''}${row.note?' · '+row.note:''}</span></div>
+        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}${row.arrivalTime?' · '+row.arrivalTime:''}</span>${row.note?`<span style="color:var(--red);font-size:12px;font-weight:700;"> · ${row.note}</span>`:''}</div>
         <div class="ri-cost">${fmt(row.sub)}</div>
       </div>`;
     });
