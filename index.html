@@ -415,7 +415,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="info-cell" style="border-bottom:none;">
         <div class="info-lbl">日期</div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <input id="infoDate" type="text" class="info-field" value="114/3/15" placeholder="114/3/15" oninput="onDateInput()" style="flex:1;min-width:0;" />
+          <input id="infoDate" type="date" class="info-field" oninput="onDateInput()" style="flex:1;min-width:0;" />
           <span id="infoWeekday" style="font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;min-width:28px;text-align:right;"></span>
         </div>
       </div>
@@ -1500,20 +1500,6 @@ function makeCostRow(r){
       <div class="sub-cell"><div class="sub-val" id="sv-${r.id}">${fmt(sub)}</div></div>
       <button class="del-btn" onclick="delCostRow(${r.id})">✕</button>
     </div>
-    <div class="ot-wrap" style="background:rgba(132,145,176,.04);border-top-color:rgba(132,145,176,.2);padding:5px 8px 6px 14px;gap:6px;">
-      <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;">時間</span>
-      <input type="text" inputmode="numeric" value="${(r.arrivalTime||'').replace(/"/g,'&quot;')}"
-        placeholder="0730" maxlength="5"
-        id="atime-${r.id}"
-        oninput="fmtTimeInput(this,${r.id})"
-        onblur="validateTime(this,${r.id})"
-        style="width:50px;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);text-align:center;padding:1px 2px;" />
-      <span class="ot-lbl" style="color:var(--t3);flex-shrink:0;margin-left:4px;">備註</span>
-      <input type="text" value="${(r.note||'').replace(/"/g,'&quot;')}" placeholder="移1…"
-        id="note-${r.id}"
-        oninput="setNote(${r.id},this.value)"
-        style="flex:1;border:none;border-bottom:1.5px dashed var(--border2);background:transparent;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:12px;color:var(--t2);min-width:0;padding:1px 4px;" />
-    </div>
     ${workerSection}${oilcarSection}${asphaltSection}${wasteSection}${cementSection}${markingSection}${(r.type!=='marking'&&r.type!=='asphalt'&&r.type!=='coldmix'&&r.type!=='waste'&&r.type!=='cement')?otSection:''}${truckSection}`;
   return d;
 }
@@ -1773,12 +1759,11 @@ function resetCost(){
 // ══════════ INFO HELPERS ══════════
 let dayNight='日';
 function onDateInput(){
-  const raw=document.getElementById('infoDate').value.trim();
+  const raw=document.getElementById('infoDate').value; // yyyy-mm-dd
   const wd=document.getElementById('infoWeekday');
-  const m=raw.match(/^(\d+)[\/\-](\d+)[\/\-](\d+)$/);
-  if(!m){wd.textContent='';return;}
-  const y=parseInt(m[1])+(parseInt(m[1])<200?1911:0),mo=parseInt(m[2])-1,d=parseInt(m[3]);
-  const dt=new Date(y,mo,d);if(isNaN(dt.getTime())){wd.textContent='';return;}
+  if(!raw){wd.textContent='';return;}
+  const dt=new Date(raw+'T00:00:00');
+  if(isNaN(dt.getTime())){wd.textContent='';return;}
   wd.textContent='週'+'日一二三四五六'[dt.getDay()];
 }
 function setDayNight(v){
@@ -1809,7 +1794,7 @@ function initMaterialSelect(){
 function getInfoSnapshot(){
   return {
     派案:document.querySelector('#page-cost .info-val.accent')?.textContent.trim()||'',
-    日期:document.getElementById('infoDate')?.value.trim()||'',
+    日期:(()=>{const v=document.getElementById('infoDate')?.value;if(!v)return'';const d=new Date(v+'T00:00:00');return(d.getFullYear()-1911)+'/'+(d.getMonth()+1)+'/'+d.getDate();})(),
     星期:document.getElementById('infoWeekday')?.textContent||'',
     工區:document.querySelector('#page-cost .info-val:not(.accent)')?.textContent.trim()||'',
     日夜:dayNight,
@@ -2045,7 +2030,7 @@ function makeRecCardHtml(rec){
       const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h</span>`:'';
       rowsHtml+=`<div class="rec-item">
         <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
-        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}</span></div>
+        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}${row.arrivalTime?' · '+row.arrivalTime:''}${row.note?' · '+row.note:''}</span></div>
         <div class="ri-cost">${fmt(row.sub)}</div>
       </div>`;
     });
