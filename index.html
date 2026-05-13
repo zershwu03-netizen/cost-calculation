@@ -2051,7 +2051,7 @@ function makeRecCardHtml(rec){
       const otTag=row.overtime>0?`<span style="font-size:10px;color:var(--accent);">+${row.overtime}h</span>`:'';
       rowsHtml+=`<div class="rec-item">
         <div class="ri-chk${isOn?' on':''}" id="ri-chk-${rec.id}-${key}" onclick="toggleRecItemChk(${rec.id},'${key}')">${isOn?'✓':''}</div>
-        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}${row.arrivalTime?' · '+row.arrivalTime:''}</span>${row.note?`<span style="color:var(--red);font-size:12px;font-weight:700;"> · ${row.note}</span>`:''}</div>
+        <div class="ri-main"><span class="ri-name${isOn?' checked':''}">${row.name}</span>${shiftTag}${otTag}<span class="ri-detail">${row.unit} × ${row.qty}${row.arrivalTime?` · <span style="color:#2563eb;font-weight:700;">${row.arrivalTime}</span>`:''}</span>${row.note?`<span style="color:var(--red);font-size:12px;font-weight:700;"> · ${row.note}</span>`:''}</div>
         <div class="ri-cost">${fmt(row.sub)}</div>
       </div>`;
     });
@@ -2542,7 +2542,7 @@ function printRecord(id) {
       const rowSub=calcStoredSub(row);
       html+=`<tr>
         <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
-        <td>${nameCell}${extraStr}</td>
+        <td>${nameCell}${extraStr}${row.arrivalTime?` <span style="color:#2563eb;font-size:12px;font-weight:700;">[${row.arrivalTime}]</span>`:''}</td>
         <td class="c">${row.unit}</td>
         <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
         <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
