@@ -842,18 +842,12 @@ const DEFAULTS = {
   前置:[
     {name:'堆高機',   unit:'台',priceDay:9000, priceNight:11000,fixed:false,hasTruck:true},
     {name:'義交',     unit:'人',priceDay:4000, priceNight:5000, fixed:false},
-    {name:'交通錐',   unit:'套',priceDay:2000, priceNight:2000, fixed:false},
-    {name:'警示燈',   unit:'組',priceDay:1500, priceNight:1500, fixed:false},
-    {name:'工地圍籬', unit:'m', priceDay:500,  priceNight:500,  fixed:false},
-    {name:'清潔工',   unit:'人',priceDay:3500, priceNight:4500, fixed:false},
   ],
   刨除:[
     {name:'刨除機(小)',unit:'台',priceDay:43000,priceNight:55000,fixed:false,hasTruck:true},
     {name:'刨除機(大)',unit:'台',priceDay:65000,priceNight:80000,fixed:false,hasTruck:true},
     {name:'鏟裝機',   unit:'台',priceDay:8000, priceNight:10000,fixed:false,hasTruck:true},
     {name:'清掃機',   unit:'台',priceDay:12600,priceNight:15000,fixed:false,hasTruck:true},
-    {name:'40.70怪手', unit:'台',priceDay:14500,priceNight:18000,fixed:false,hasTruck:true},
-    {name:'50噸怪手',  unit:'台',priceDay:18000,priceNight:22000,fixed:false,hasTruck:true},
     {name:'傾卸車',   unit:'台',priceDay:5500, priceNight:7000, fixed:false},
     {name:'水車',     unit:'台',priceDay:6000, priceNight:7500, fixed:false},
   ],
@@ -869,7 +863,6 @@ const DEFAULTS = {
     // 油車：priceDay/priceNight=出車費，priceEmulsion=乳化瀝青每m²單價，type='oilcar'
     {name:'油車(冷油)',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
     {name:'油車(熱油)',   unit:'m²',priceDay:30400,priceNight:38000,priceEmulsion:25, fixed:false, type:'oilcar'},
-    {name:'預拌車',   unit:'台',priceDay:4500, priceNight:5500, fixed:false},
   ],
   其餘:[
     // 瀝青混凝土：type='asphalt'，各料別單價分開設定
@@ -889,9 +882,6 @@ const DEFAULTS = {
        '乳化': {price:0},
      }
     },
-    {name:'AC細料',   unit:'T', priceDay:2400, priceNight:2400, fixed:false,noShift:true},
-    {name:'底層料',   unit:'T', priceDay:1800, priceNight:1800, fixed:false,noShift:true},
-    {name:'路基處理', unit:'m²',priceDay:350,  priceNight:350,  fixed:false,noShift:true},
     // 廢方處理：m³ × 單價 + 車數 × 運費/車
     {name:'廢方處理', unit:'m³', fixed:false, noShift:true, type:'waste',
      pricePerM3:0, freightPerTruck:0
