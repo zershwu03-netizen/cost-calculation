@@ -270,8 +270,53 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .rec-group-info{flex:1;min-width:0;}
 .rec-group-title{font-size:16px;font-weight:900;color:var(--purple);}
 .rec-group-meta{font-size:12px;color:var(--t3);margin-top:2px;}
-.rec-sub-card{border-top:1px solid var(--border);background:var(--surface);}
+.rec-sub-card{border-top:1px solid var(--border);background:var(--surface);position:relative;}
 .rec-sub-card:first-child{border-top:none;}
+
+/* 每天卡片色帶（循環 6 色） */
+:root{
+  --dc0:#2563eb; --dc0bg:rgba(37,99,235,.05);   --dc0bd:rgba(37,99,235,.18);
+  --dc1:#059669; --dc1bg:rgba(5,150,105,.05);   --dc1bd:rgba(5,150,105,.18);
+  --dc2:#e07b00; --dc2bg:rgba(224,123,0,.05);   --dc2bd:rgba(224,123,0,.18);
+  --dc3:#7c3aed; --dc3bg:rgba(124,58,237,.05);  --dc3bd:rgba(124,58,237,.18);
+  --dc4:#db2777; --dc4bg:rgba(219,39,119,.05);  --dc4bd:rgba(219,39,119,.18);
+  --dc5:#0891b2; --dc5bg:rgba(8,145,178,.05);   --dc5bd:rgba(8,145,178,.18);
+}
+.rec-sub-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
+.dc0{background:var(--dc0bg);border-top-color:var(--dc0bd);}.dc0::before{background:var(--dc0);}
+.dc1{background:var(--dc1bg);border-top-color:var(--dc1bd);}.dc1::before{background:var(--dc1);}
+.dc2{background:var(--dc2bg);border-top-color:var(--dc2bd);}.dc2::before{background:var(--dc2);}
+.dc3{background:var(--dc3bg);border-top-color:var(--dc3bd);}.dc3::before{background:var(--dc3);}
+.dc4{background:var(--dc4bg);border-top-color:var(--dc4bd);}.dc4::before{background:var(--dc4);}
+.dc5{background:var(--dc5bg);border-top-color:var(--dc5bd);}.dc5::before{background:var(--dc5);}
+/* 卡片內標題色、金額色跟著色帶走 */
+.dc0 .rec-title,.dc0 .rec-total{color:var(--dc0);}
+.dc1 .rec-title,.dc1 .rec-total{color:var(--dc1);}
+.dc2 .rec-title,.dc2 .rec-total{color:var(--dc2);}
+.dc3 .rec-title,.dc3 .rec-total{color:var(--dc3);}
+.dc4 .rec-title,.dc4 .rec-total{color:var(--dc4);}
+.dc5 .rec-title,.dc5 .rec-total{color:var(--dc5);}
+/* 天數角標 */
+.day-badge{position:absolute;top:10px;right:42px;font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;letter-spacing:.3px;opacity:.85;}
+.dc0 .day-badge{background:rgba(37,99,235,.12);color:var(--dc0);}
+.dc1 .day-badge{background:rgba(5,150,105,.12);color:var(--dc1);}
+.dc2 .day-badge{background:rgba(224,123,0,.12);color:var(--dc2);}
+.dc3 .day-badge{background:rgba(124,58,237,.12);color:var(--dc3);}
+.dc4 .day-badge{background:rgba(219,39,119,.12);color:var(--dc4);}
+.dc5 .day-badge{background:rgba(8,145,178,.12);color:var(--dc5);}
+/* rec-foot 底部跟隨色 */
+.dc0 .rec-foot{background:rgba(37,99,235,.04);}
+.dc1 .rec-foot{background:rgba(5,150,105,.04);}
+.dc2 .rec-foot{background:rgba(224,123,0,.04);}
+.dc3 .rec-foot{background:rgba(124,58,237,.04);}
+.dc4 .rec-foot{background:rgba(219,39,119,.04);}
+.dc5 .rec-foot{background:rgba(8,145,178,.04);}
+.dc0 .rec-grand{color:var(--dc0);}
+.dc1 .rec-grand{color:var(--dc1);}
+.dc2 .rec-grand{color:var(--dc2);}
+.dc3 .rec-grand{color:var(--dc3);}
+.dc4 .rec-grand{color:var(--dc4);}
+.dc5 .rec-grand{color:var(--dc5);}
 
 /* STATS CASE CARD */
 .stats-case-card{margin:8px 10px;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;box-shadow:var(--shadow);}
@@ -2146,12 +2191,15 @@ function renderRecords(){
           <div class="rec-tog" style="margin-top:2px;">▾</div>
         </div>
         <div class="rec-group-body" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
-          ${recs.map(rec=>{
+          ${recs.map((rec,dayIdx)=>{
+            const dc='dc'+(dayIdx%6);
             const _t=recAsphaltTons(rec);const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別,_t>0?'瀝青'+_t+'T':''].filter(Boolean).join(' / ');
-            const upd=rec.updatedAt?`<span style="color:rgba(124,58,237,.4);font-size:11px;"> · 更新 ${rec.updatedAt}</span>`:'';
+            const upd=rec.updatedAt?`<span style="font-size:11px;opacity:.5;"> · 更新 ${rec.updatedAt}</span>`:'';
+            const dayLabel=`第 ${dayIdx+1} 天`;
             return `
-              <div class="rec-sub-card">
-                <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px;">
+              <div class="rec-sub-card ${dc}">
+                <span class="day-badge">${dayLabel}</span>
+                <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px 10px 18px;">
                   <div class="rec-info">
                     <div class="rec-title" style="font-size:14px;">${rec.工區||'（未填工區）'}</div>
                     <div class="rec-meta">${meta}${upd}</div>
@@ -2171,7 +2219,7 @@ function renderRecords(){
                     <div><div style="font-size:11px;color:var(--t3);margin-bottom:2px;">機具含稅 ${fmt(safeGrand(rec)*0.9524)}</div><div class="rec-grand">${fmt(safeGrand(rec))}</div></div>
                     <div class="rec-btns">
                       <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
-              <button class="rec-btn" style="background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue);" onclick="copyRecord(${rec.id})">📋 複製</button>
+                      <button class="rec-btn" style="background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue);" onclick="copyRecord(${rec.id})">📋 複製</button>
                       <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
                       <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
                     </div>
