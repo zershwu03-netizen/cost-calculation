@@ -415,7 +415,7 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
       <div class="info-cell" style="border-bottom:none;">
         <div class="info-lbl">日期</div>
         <div style="display:flex;align-items:center;gap:6px;">
-          <input id="infoDate" type="date" class="info-field" oninput="onDateInput()" style="flex:1;min-width:0;" />
+          <input id="infoDate" type="text" class="info-field" placeholder="114/5/13" oninput="onDateInput()" style="flex:1;min-width:0;" />
           <span id="infoWeekday" style="font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;min-width:28px;text-align:right;"></span>
         </div>
       </div>
@@ -1773,12 +1773,19 @@ function resetCost(){
 // ══════════ INFO HELPERS ══════════
 let dayNight='日';
 function onDateInput(){
-  const raw=document.getElementById('infoDate').value; // yyyy-mm-dd
+  const raw=document.getElementById('infoDate').value.trim();
   const wd=document.getElementById('infoWeekday');
-  if(!raw){wd.textContent='';return;}
-  const dt=new Date(raw+'T00:00:00');
-  if(isNaN(dt.getTime())){wd.textContent='';return;}
+  const m=raw.match(/^(\d+)[\/\-](\d+)[\/\-](\d+)$/);
+  if(!m){wd.textContent='';return;}
+  const y=parseInt(m[1])+(parseInt(m[1])<200?1911:0),mo=parseInt(m[2])-1,d=parseInt(m[3]);
+  const dt=new Date(y,mo,d);if(isNaN(dt.getTime())){wd.textContent='';return;}
   wd.textContent='週'+'日一二三四五六'[dt.getDay()];
+}
+function setTodayDate(){
+  const now=new Date();
+  const roc=(now.getFullYear()-1911)+'/'+(now.getMonth()+1)+'/'+now.getDate();
+  document.getElementById('infoDate').value=roc;
+  onDateInput();
 }
 function setDayNight(v){
   dayNight=v;
@@ -1808,7 +1815,7 @@ function initMaterialSelect(){
 function getInfoSnapshot(){
   return {
     派案:document.querySelector('#page-cost .info-val.accent')?.textContent.trim()||'',
-    日期:(()=>{const v=document.getElementById('infoDate')?.value;if(!v)return'';const d=new Date(v+'T00:00:00');return(d.getFullYear()-1911)+'/'+(d.getMonth()+1)+'/'+d.getDate();})(),
+    日期:document.getElementById('infoDate')?.value.trim()||'',
     星期:document.getElementById('infoWeekday')?.textContent||'',
     工區:document.querySelector('#page-cost .info-val:not(.accent)')?.textContent.trim()||'',
     日夜:dayNight,
@@ -2573,7 +2580,7 @@ function printRecord(id) {
 // ══════════ INIT ══════════
 loadPriceDB();loadCostDB();loadCostDefaults();loadRecords();loadTemplates();
 renderCostAll();renderDbAll();renderRecords();updateDbStatusBadge();
-initMaterialSelect();onDateInput();
+initMaterialSelect();setTodayDate();
 renderStats(); // init stats month label
 document.getElementById('spcost-便當')?.addEventListener('input',recalc);
 setTimeout(()=>{
