@@ -2262,9 +2262,25 @@ function openRecEdit(id){
 }
 function showEditBanner(){
   const slot=document.getElementById('editBannerSlot');
-  slot.innerHTML=`<div class="edit-banner"><span class="edit-banner-txt">✏️ 編輯模式 — 修改完請點更新儲存</span><button class="edit-banner-btn" onclick="updateRecord()">✅ 更新儲存</button></div>`;
+  slot.innerHTML=`<div class="edit-banner"><span class="edit-banner-txt">✏️ 編輯模式</span></div>`;
+  // 把更新儲存加到底部按鈕列
+  const bar=document.querySelector('#page-cost .cost-bar');
+  if(bar&&!document.getElementById('updateRecBtn')){
+    const btn=document.createElement('button');
+    btn.id='updateRecBtn';
+    btn.className='cb-btn save-rec';
+    btn.style.background='rgba(124,58,237,.15)';
+    btn.style.borderColor='rgba(124,58,237,.35)';
+    btn.textContent='✅ 更新儲存';
+    btn.onclick=updateRecord;
+    bar.appendChild(btn);
+  }
 }
-function hideEditBanner(){document.getElementById('editBannerSlot').innerHTML='';editingRecId=null;}
+function hideEditBanner(){
+  document.getElementById('editBannerSlot').innerHTML='';
+  document.getElementById('updateRecBtn')?.remove();
+  editingRecId=null;
+}
 function updateRecord(){
   if(editingRecId===null)return;
   const idx=records.findIndex(r=>r.id===editingRecId);if(idx===-1)return;
