@@ -2143,7 +2143,7 @@ function renderRecords(){
         <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
           <div class="rec-info">
             <div class="rec-title">${[rec.派案,rec.工區].filter(Boolean).join(' · ')||'（未填）'}</div>
-            <div class="rec-meta">${meta}${upd}</div>
+            <div class="rec-meta" style="font-size:13px;font-weight:700;color:var(--t2);">${meta}${upd}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
             <div class="rec-total">${fmt(safeGrand(rec))}</div>
@@ -2193,7 +2193,7 @@ function renderRecords(){
                 <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px 10px 18px;">
                   <div class="rec-info">
                     <div class="rec-title" style="font-size:14px;">${rec.工區||'（未填工區）'}</div>
-                    <div class="rec-meta">${meta}${upd}</div>
+                    <div class="rec-meta" style="font-size:13px;font-weight:700;color:var(--t2);">${meta}${upd}</div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:8px;">
                     <div class="rec-total" style="font-size:14px;">${fmt(safeGrand(rec))}</div>
