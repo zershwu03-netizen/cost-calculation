@@ -604,6 +604,21 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     <div class="pk-list" id="pkList"></div>
   </div>
 </div>
+
+<!-- 批次列印選擇面板 -->
+<div class="overlay" id="batchPrintOverlay" onclick="if(event.target===this)closeBatchPrint()">
+  <div class="picker">
+    <div class="pk-hdr">
+      <span class="pk-title" id="batchPrintTitle">選擇列印日期</span>
+      <button class="pk-close" onclick="closeBatchPrint()">✕</button>
+    </div>
+    <div class="pk-list" id="batchPrintList"></div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;">
+      <button onclick="batchSelectAll()" style="flex:1;padding:10px;border-radius:10px;border:1.5px solid var(--border);background:var(--s2);color:var(--t2);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">全選</button>
+      <button onclick="doBatchPrint()" style="flex:2;padding:10px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 確認列印</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2143,7 +2158,7 @@ function renderRecords(){
         <div class="rec-hdr" onclick="toggleRecCard(${rec.id})">
           <div class="rec-info">
             <div class="rec-title">${[rec.派案,rec.工區].filter(Boolean).join(' · ')||'（未填）'}</div>
-            <div class="rec-meta" style="font-size:13px;font-weight:700;color:var(--t2);">${meta}${upd}</div>
+            <div class="rec-meta">${meta}${upd}</div>
           </div>
           <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:10px;">
             <div class="rec-total">${fmt(safeGrand(rec))}</div>
@@ -2181,6 +2196,7 @@ function renderRecords(){
             <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);">${fmt(groupTotal)}</div>
             <div style="font-size:10px;color:var(--t3);">合計</div>
           </div>
+          <button class="rec-btn" style="padding:4px 9px;font-size:13px;margin-left:6px;flex-shrink:0;" onclick="event.stopPropagation();openBatchPrint('${caseName.replace(/'/g,"\\'")}')">🖨️ 批次</button>
           <div class="rec-tog" style="margin-top:2px;">▾</div>
         </div>
         <div class="rec-group-body" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
@@ -2193,7 +2209,7 @@ function renderRecords(){
                 <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px 10px 18px;">
                   <div class="rec-info">
                     <div class="rec-title" style="font-size:14px;">${rec.工區||'（未填工區）'}</div>
-                    <div class="rec-meta" style="font-size:13px;font-weight:700;color:var(--t2);">${meta}${upd}</div>
+                    <div class="rec-meta">${meta}${upd}</div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:8px;">
                     <div class="rec-total" style="font-size:14px;">${fmt(safeGrand(rec))}</div>
@@ -2584,9 +2600,9 @@ function printRecord(id) {
       if(row.overtime>0) extraParts.push(`<span style="color:#d97706;font-size:12px;font-weight:700;">加班${row.overtime}h</span>`);
       const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
-        ?`${row.name} ${row.asphaltGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
+        ?`${row.name} ${row.asphaltGrade||''}`
         :row.type==='coldmix'
-        ?`${row.name} ${row.coldmixGrade||''} ${row.asphaltFreight>0?'運費$'+row.asphaltFreight+'/T':''}`
+        ?`${row.name} ${row.coldmixGrade||''}`
         :row.type==='waste'
         ?`${row.name} $${row.pricePerM3||0}/m³${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}`
         :row.type==='cement'
@@ -2598,7 +2614,7 @@ function printRecord(id) {
         <td>${row.arrivalTime?`<span style="color:#2563eb;font-size:12px;font-weight:700;">[${row.arrivalTime}] </span>`:''}${nameCell}${extraStr}</td>
         <td class="c">${row.unit}</td>
         <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
-        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
+        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW'):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
         <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
       </tr>`;
     });
@@ -2627,6 +2643,149 @@ function printRecord(id) {
 
   const win = window.open('', '_blank', 'width=640,height=860');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>${html}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
+  win.document.close();
+}
+
+let _batchRecs=[];
+
+function openBatchPrint(caseName){
+  _batchRecs=[...records].filter(r=>r.派案===caseName).sort((a,b)=>{const da=rocToDate(a.日期),db=rocToDate(b.日期);if(!da&&!db)return 0;if(!da)return 1;if(!db)return -1;return da-db;});
+  document.getElementById('batchPrintTitle').textContent=caseName+' — 選擇列印日期';
+  const list=document.getElementById('batchPrintList');
+  list.innerHTML='';
+  _batchRecs.forEach((rec,i)=>{
+    const dc='dc'+(i%6);
+    const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join(' / ');
+    const item=document.createElement('div');
+    item.className='pk-item';
+    item.dataset.idx=i;
+    item.dataset.checked='1';
+    item.innerHTML=`
+      <div class="pk-item-l">
+        <div class="p-chk on" id="bpchk-${i}">✓</div>
+        <div>
+          <div class="p-name" style="color:var(--dc${i%6});">${rec.工區||'（未填工區）'}</div>
+          <div class="p-meta">${meta}</div>
+        </div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--t2);">${fmt(safeGrand(rec))}</div>`;
+    item.onclick=()=>{
+      const on=item.dataset.checked==='1';
+      item.dataset.checked=on?'0':'1';
+      const chk=document.getElementById('bpchk-'+i);
+      chk.className='p-chk'+(on?'':' on');
+      chk.textContent=on?'':'✓';
+    };
+    list.appendChild(item);
+  });
+  document.getElementById('batchPrintOverlay').classList.add('show');
+}
+
+function batchSelectAll(){
+  _batchRecs.forEach((_,i)=>{
+    const item=document.querySelector(`[data-idx="${i}"]`);
+    if(!item) return;
+    item.dataset.checked='1';
+    const chk=document.getElementById('bpchk-'+i);
+    chk.className='p-chk on';chk.textContent='✓';
+  });
+}
+
+function closeBatchPrint(){document.getElementById('batchPrintOverlay').classList.remove('show');}
+
+function doBatchPrint(){
+  const selected=_batchRecs.filter((_,i)=>{
+    const item=document.querySelector(`[data-idx="${i}"]`);
+    return item?.dataset.checked==='1';
+  });
+  if(!selected.length){showToast('⚠️ 請至少選擇一筆');return;}
+  closeBatchPrint();
+  printSelectedRecs(selected);
+}
+
+function printSelectedRecs(recs){
+  const SECS_PRINT=['前置','刨除','鋪設','其餘'];
+  const pageStyle=`
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700;900&display=swap');
+      *{box-sizing:border-box;margin:0;padding:0;font-family:'Noto Sans TC',sans-serif;}
+      body{padding:20px;font-size:14px;color:#1a2035;}
+      h1{font-size:22px;font-weight:900;text-align:center;margin-bottom:6px;}
+      .meta{text-align:center;font-size:14px;color:#4a5578;margin-bottom:16px;font-weight:500;}
+      table{width:100%;border-collapse:collapse;margin-bottom:12px;}
+      th{background:#f0f2f7;font-size:14px;font-weight:700;color:#4a5578;padding:8px 10px;text-align:left;border:1px solid #dde2ee;}
+      th.c{text-align:center;}th.r{text-align:right;}
+      td{padding:8px 10px;border:1px solid #dde2ee;font-size:14px;vertical-align:middle;}
+      td.c{text-align:center;}
+      .sec-title{background:#f0f2f7;font-weight:900;font-size:15px;padding:8px 10px;border:1px solid #dde2ee;color:#1a2035;}
+      .num{font-family:monospace;text-align:right;}
+      .chk{text-align:center;color:#059669;font-weight:900;font-size:16px;width:36px;}
+      .note-red{color:#dc2626;font-size:12px;font-weight:700;}
+      .total-row td{font-weight:700;font-size:14px;}
+      .grand-row td{background:#fff8ee;font-weight:900;font-size:16px;color:#e07b00;}
+      .page-break{page-break-after:always;}
+      @media print{body{padding:10px;}button{display:none;} @page{margin:10mm;}}
+    </style>`;
+  let body='';
+  recs.forEach((rec,ri)=>{
+    const meta=[rec.日期,rec.星期,rec.日夜?rec.日夜+'班':'',rec.料別].filter(Boolean).join('　');
+    let html=`<h1>${rec.派案||'施工'} · ${rec.工區||''} 機具成本表</h1><div class="meta">${meta}</div>
+    <table><thead><tr>
+      <th style="width:36px;text-align:center;">✓</th>
+      <th style="min-width:140px;">項目</th>
+      <th style="width:54px" class="c">單位</th>
+      <th style="width:60px" class="c">數量</th>
+      <th style="width:90px" class="r">單價</th>
+      <th style="width:90px" class="r">小計</th>
+    </tr></thead><tbody>`;
+    SECS_PRINT.forEach(sec=>{
+      const items=rec.rows[sec]||[];
+      if(!items.length && sec!=='其餘') return;
+      html+=`<tr><td colspan="6" class="sec-title">${sec}</td></tr>`;
+      items.forEach((row,idx)=>{
+        const extraParts=[];
+        if(row.note) extraParts.push(`<span class="note-red">${row.note}</span>`);
+        if(row.overtime>0) extraParts.push(`<span style="color:#d97706;font-size:12px;font-weight:700;">加班${row.overtime}h</span>`);
+        const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
+        const nameCell=row.type==='asphalt'
+          ?`${row.name} ${row.asphaltGrade||''}`
+          :row.type==='coldmix'
+          ?`${row.name} ${row.coldmixGrade||''}`
+          :row.type==='waste'
+          ?`${row.name} $${row.pricePerM3||0}/m³${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}`
+          :row.type==='cement'
+          ?`${row.name} ${row.cementGrade||''}${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}${row.overtimeFixed>0?' 加班$'+row.overtimeFixed:''}`
+          :`${row.name}${row.arrivalTime?` <span style="color:#4a5578;font-size:13px;">(${row.arrivalTime})</span>`:''}`;
+        const rowSub=calcStoredSub(row);
+        html+=`<tr>
+          <td class="chk">${rec.recChecked?.[sec+idx]?'✓':''}</td>
+          <td>${row.arrivalTime?`<span style="color:#2563eb;font-size:12px;font-weight:700;">[${row.arrivalTime}] </span>`:''}${nameCell}${extraStr}</td>
+          <td class="c">${row.unit}</td>
+          <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
+          <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW'):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
+          <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
+        </tr>`;
+      });
+      if(sec==='其餘'){
+        if(rec.sp?.便當?.cost) html+=`<tr><td class="chk">${rec.spChecked?.便當?'✓':''}</td><td>便當${rec.sp.便當.note?' '+rec.sp.便當.note:''}</td><td></td><td></td><td></td><td class="num">$${rec.sp.便當.cost.toLocaleString('zh-TW')}</td></tr>`;
+        ['錄影'].forEach(k=>{ html+=`<tr><td class="chk">${rec.spChecked?.[k]?'✓':''}</td><td>${k}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`; });
+        html+=`<tr><td class="chk">${rec.spChecked?.里長?'✓':''}</td><td>里長${rec.sp?.里長?.note?' '+rec.sp.里長.note:''}</td><td></td><td></td><td></td><td class="num" style="color:#aaa">—</td></tr>`;
+      }
+    });
+    const benDang=parseFloat(rec.sp?.便當?.cost)||0;
+    const mach=['前置','刨除','鋪設'].reduce((t,sec)=>t+(rec.rows?.[sec]||[]).reduce((s,r)=>s+calcStoredSub(r),0),0)+benDang;
+    const other=(rec.rows?.['其餘']||[]).reduce((s,r)=>s+calcStoredSub(r),0);
+    const machTax=mach*1.05;
+    const grand=machTax+other;
+    html+=`</tbody></table><table>
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(mach).toLocaleString('zh-TW')}</td></tr>
+      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
+      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>
+    </table>`;
+    body+=`<div${ri<recs.length-1?' class="page-break"':''}`+'>'+ html +'</div>';
+  });
+  const win=window.open('','_blank','width=640,height=900');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body>${body}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
   win.document.close();
 }
 
