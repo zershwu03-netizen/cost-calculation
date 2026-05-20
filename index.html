@@ -2629,21 +2629,19 @@ function printRecord(id) {
     }
   });
 
-  html+=`</tbody></table>
-    <table class="summary-table">
-      ${(()=>{
-        const benDang=parseFloat(rec.sp?.便當?.cost)||0;
-        const mach=['前置','刨除','鋪設'].reduce((t,sec)=>
-          t+(rec.rows?.[sec]||[]).reduce((s,r)=>s+calcStoredSub(r),0),0)+benDang;
-        const other=(rec.rows?.['其餘']||[]).reduce((s,r)=>s+calcStoredSub(r),0);
-        const machTax=mach*1.05;
-        const grand=machTax+other;
-        return `
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(mach).toLocaleString('zh-TW')}</td></tr>
-      <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
-      <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>`;
-      })()}
-    </table>`;
+  const benDang=parseFloat(rec.sp?.便當?.cost)||0;
+  const mach=['前置','刨除','鋪設'].reduce((t,sec)=>
+    t+(rec.rows?.[sec]||[]).reduce((s,r)=>s+calcStoredSub(r),0),0)+benDang;
+  const other=(rec.rows?.['其餘']||[]).reduce((s,r)=>s+calcStoredSub(r),0);
+  const machTax=mach*1.05;
+  const grand=machTax+other;
+
+  html+=`
+    <tr><td colspan="6" style="padding:4px;border:none;"></td></tr>
+    <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(mach).toLocaleString('zh-TW')}</td></tr>
+    <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
+    <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>
+  </tbody></table>`;
 
   const win = window.open('', '_blank', 'width=794,height=1123');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body style="margin:0;padding:20px;box-sizing:border-box;">
@@ -2810,11 +2808,12 @@ function printSelectedRecs(recs){
     const other=(rec.rows?.['其餘']||[]).reduce((s,r)=>s+calcStoredSub(r),0);
     const machTax=mach*1.05;
     const grand=machTax+other;
-    html+=`</tbody></table><table class="summary-table">
+    html+=`
+      <tr><td colspan="6" style="padding:4px;border:none;"></td></tr>
       <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具小計</td><td class="num" style="border:1px solid #dde2ee;width:90px;">$${Math.round(mach).toLocaleString('zh-TW')}</td></tr>
       <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
       <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>
-    </table>`;
+    </tbody></table>`;
     body+=`<div class="page-wrap${ri<recs.length-1?' page-break':''}">`+ html +'</div>';
   });
   const win=window.open('','_blank','width=640,height=900');
