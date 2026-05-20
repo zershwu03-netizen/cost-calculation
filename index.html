@@ -2645,7 +2645,26 @@ function printRecord(id) {
     </table>`;
 
   const win = window.open('', '_blank', 'width=640,height=860');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>${html}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>
+<div id="content">${html}</div>
+<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
+<script>
+window.addEventListener('load',function(){
+  var content=document.getElementById('content');
+  var A4H=1050;
+  var h=content.offsetHeight;
+  if(h>A4H){
+    var scale=A4H/h;
+    content.style.transformOrigin='top left';
+    content.style.transform='scale('+scale+')';
+    content.style.width=(100/scale)+'%';
+    var style=document.createElement('style');
+    style.textContent='@media print{@page{margin:5mm;}#content{transform-origin:top left;transform:scale('+scale+');width:'+(100/scale)+'%;}}';
+    document.head.appendChild(style);
+  }
+});
+<\/script>
+</body></html>`);
   win.document.close();
 }
 
@@ -2785,10 +2804,28 @@ function printSelectedRecs(recs){
       <tr class="total-row"><td colspan="5" style="text-align:right;padding:7px 10px;border:1px solid #dde2ee;">機具含稅 (+5%)</td><td class="num" style="border:1px solid #dde2ee;">$${Math.round(machTax).toLocaleString('zh-TW')}</td></tr>
       <tr class="grand-row"><td colspan="5" style="text-align:right;padding:8px 10px;border:1px solid #f0c070;">💰 總計</td><td class="num" style="border:1px solid #f0c070;font-family:monospace;">$${Math.round(grand).toLocaleString('zh-TW')}</td></tr>
     </table>`;
-    body+=`<div${ri<recs.length-1?' class="page-break"':''}`+'>'+ html +'</div>';
+    body+=`<div class="page-wrap${ri<recs.length-1?' page-break':''}">`+ html +'</div>';
   });
   const win=window.open('','_blank','width=640,height=900');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body>${body}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></body></html>`);
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body>${body}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
+<script>
+window.addEventListener('load',function(){
+  var A4H=1050;
+  document.querySelectorAll('.page-wrap').forEach(function(el){
+    var h=el.offsetHeight;
+    if(h>A4H){
+      var scale=A4H/h;
+      el.style.transformOrigin='top left';
+      el.style.transform='scale('+scale+')';
+      el.style.width=(100/scale)+'%';
+    }
+  });
+  var style=document.createElement('style');
+  style.textContent='@media print{@page{margin:5mm;}.page-wrap{transform-origin:top left;}}';
+  document.head.appendChild(style);
+});
+<\/script>
+</body></html>`);
   win.document.close();
 }
 
