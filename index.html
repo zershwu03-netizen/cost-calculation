@@ -2646,7 +2646,7 @@ function printRecord(id) {
   const win = window.open('', '_blank', 'width=794,height=1123');
   win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body style="margin:0;padding:15px;box-sizing:border-box;">
 <div id="content">${html}</div>
-<br><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
+<div style="margin-top:12px;"><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></div>
 <script>
 window.addEventListener('load',function(){
   setTimeout(function(){
@@ -2809,23 +2809,26 @@ function printSelectedRecs(recs){
     </tbody></table>`;
     body+=`<div class="page-wrap${ri<recs.length-1?' page-break':''}">`+ html +'</div>';
   });
-  const win=window.open('','_blank','width=640,height=900');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body>${body}<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
+  const win=window.open('','_blank','width=794,height=1123');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body style="margin:0;padding:15px;box-sizing:border-box;">${body}<div style="margin-top:12px;"><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></div>
 <script>
 window.addEventListener('load',function(){
-  var A4H=1050;
-  document.querySelectorAll('.page-wrap').forEach(function(el){
-    var h=el.offsetHeight;
-    if(h>A4H){
-      var scale=A4H/h;
-      el.style.transformOrigin='top left';
-      el.style.transform='scale('+scale+')';
-      el.style.width=(100/scale)+'%';
+  setTimeout(function(){
+    var A4H=980;
+    var scales=[];
+    document.querySelectorAll('.page-wrap').forEach(function(el){
+      var h=el.scrollHeight;
+      scales.push(h>A4H?Math.max(A4H/h,0.5):1);
+    });
+    var minScale=Math.min.apply(null,scales);
+    var style=document.createElement('style');
+    if(minScale<1){
+      style.textContent='@media print{@page{margin:5mm;size:A4 portrait;}body{zoom:'+minScale+';-webkit-print-color-adjust:exact;}#printBtn{display:none;}}';
+    } else {
+      style.textContent='@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}#printBtn{display:none;}}';
     }
-  });
-  var style=document.createElement('style');
-  style.textContent='@media print{@page{margin:5mm;}.page-wrap{transform-origin:top left;}}';
-  document.head.appendChild(style);
+    document.head.appendChild(style);
+  },500);
 });
 <\/script>
 </body></html>`);
