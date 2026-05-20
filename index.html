@@ -2644,26 +2644,10 @@ function printRecord(id) {
   </tbody></table>`;
 
   const win = window.open('', '_blank', 'width=794,height=1123');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body style="margin:0;padding:15px;box-sizing:border-box;">
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body style="margin:0;padding:20px;box-sizing:border-box;">
 <div id="content">${html}</div>
 <div style="margin-top:12px;"><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></div>
-<script>
-window.addEventListener('load',function(){
-  setTimeout(function(){
-    var content=document.getElementById('content');
-    var A4H=980;
-    var h=content.scrollHeight;
-    var style=document.createElement('style');
-    if(h>A4H){
-      var scale=Math.max(A4H/h,0.5);
-      style.textContent='@media print{@page{margin:0;size:'+Math.ceil(794*scale)+'px '+Math.ceil(1123*scale)+'px;}body{margin:0;padding:10px;zoom:'+scale+';-webkit-print-color-adjust:exact;}#printBtn{display:none;}}';
-    } else {
-      style.textContent='@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}#printBtn{display:none;}}';
-    }
-    document.head.appendChild(style);
-  },500);
-});
-<\/script>
+<style>@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}#printBtn{display:none;}}</style>
 </body></html>`);
   win.document.close();
 }
@@ -2810,28 +2794,8 @@ function printSelectedRecs(recs){
     body+=`<div class="page-wrap">`+ html +'</div>';
   });
   const win=window.open('','_blank','width=794,height=1123');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body style="margin:0;padding:15px;box-sizing:border-box;">${body}<div style="margin-top:12px;"><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></div>
-<script>
-window.addEventListener('load',function(){
-  setTimeout(function(){
-    var A4H=980;
-    var maxH=0;
-    document.querySelectorAll('.page-wrap').forEach(function(el){
-      if(el.scrollHeight>maxH) maxH=el.scrollHeight;
-    });
-    var style=document.createElement('style');
-    if(maxH>A4H){
-      var scale=Math.max(A4H/maxH,0.5);
-      var pw=Math.ceil(794*scale);
-      var ph=Math.ceil(1123*scale);
-      style.textContent='@media print{@page{margin:0;size:'+pw+'px '+ph+'px;}body{margin:0;padding:10px;zoom:'+scale+';-webkit-print-color-adjust:exact;}.page-wrap{page-break-after:always;page-break-inside:avoid;}#printBtn{display:none;}}';
-    } else {
-      style.textContent='@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}.page-wrap{page-break-after:always;page-break-inside:avoid;}#printBtn{display:none;}}';
-    }
-    document.head.appendChild(style);
-  },500);
-});
-<\/script>
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>批次列印</title>${pageStyle}</head><body style="margin:0;padding:20px;box-sizing:border-box;">${body}<div style="margin-top:12px;"><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button></div>
+<style>@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}.page-wrap{page-break-after:always;page-break-inside:avoid;}#printBtn{display:none;}}</style>
 </body></html>`);
   win.document.close();
 }
