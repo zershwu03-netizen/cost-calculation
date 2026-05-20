@@ -2604,9 +2604,9 @@ function printRecord(id) {
       if(row.overtime>0) extraParts.push(`<span style="color:#d97706;font-size:12px;font-weight:700;">加班${row.overtime}h</span>`);
       const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
       const nameCell=row.type==='asphalt'
-        ?`${row.name} ${row.asphaltGrade||''}`
+        ?`${row.name} ${row.asphaltGrade||''}${row.asphaltFreight>0?' (含運費)':''}`
         :row.type==='coldmix'
-        ?`${row.name} ${row.coldmixGrade||''}`
+        ?`${row.name} ${row.coldmixGrade||''}${row.asphaltFreight>0?' (含運費)':''}`
         :row.type==='waste'
         ?`${row.name} $${row.pricePerM3||0}/m³${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}`
         :row.type==='cement'
@@ -2618,7 +2618,7 @@ function printRecord(id) {
         <td>${row.arrivalTime?`<span style="color:#2563eb;font-size:12px;font-weight:700;">[${row.arrivalTime}] </span>`:''}${nameCell}${extraStr}</td>
         <td class="c">${row.unit}</td>
         <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
-        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW'):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
+        <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):(row.type==='coldmix'?'$'+((row.grades?.[row.coldmixGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW'))))}</td>
         <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
       </tr>`;
     });
@@ -2756,9 +2756,9 @@ function printSelectedRecs(recs){
         if(row.overtime>0) extraParts.push(`<span style="color:#d97706;font-size:12px;font-weight:700;">加班${row.overtime}h</span>`);
         const extraStr=extraParts.length?` &nbsp;${extraParts.join(' ')}`:'';
         const nameCell=row.type==='asphalt'
-          ?`${row.name} ${row.asphaltGrade||''}`
+          ?`${row.name} ${row.asphaltGrade||''}${row.asphaltFreight>0?' (含運費)':''}`
           :row.type==='coldmix'
-          ?`${row.name} ${row.coldmixGrade||''}`
+          ?`${row.name} ${row.coldmixGrade||''}${row.asphaltFreight>0?' (含運費)':''}`
           :row.type==='waste'
           ?`${row.name} $${row.pricePerM3||0}/m³${row.truckCount>0?' '+row.truckCount+'車×運費$'+(row.freightPerTruck||0):''}`
           :row.type==='cement'
@@ -2770,7 +2770,7 @@ function printSelectedRecs(recs){
           <td>${row.arrivalTime?`<span style="color:#2563eb;font-size:12px;font-weight:700;">[${row.arrivalTime}] </span>`:''}${nameCell}${extraStr}</td>
           <td class="c">${row.unit}</td>
           <td class="c">${(row.qty||0).toLocaleString('zh-TW')}</td>
-          <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW'):('$'+(row.priceDay||0).toLocaleString('zh-TW')))}</td>
+          <td class="num">${row.fixed?'固定':(row.type==='asphalt'?'$'+((row.grades?.[row.asphaltGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):(row.type==='coldmix'?'$'+((row.grades?.[row.coldmixGrade]?.price)||0).toLocaleString('zh-TW')+(row.asphaltFreight>0?'+$'+row.asphaltFreight:''):('$'+(row.priceDay||0).toLocaleString('zh-TW'))))}</td>
           <td class="num">$${Math.round(rowSub).toLocaleString('zh-TW')}</td>
         </tr>`;
       });
