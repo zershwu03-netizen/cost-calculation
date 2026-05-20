@@ -1956,6 +1956,9 @@ function saveRecord(){
 }
 
 function deleteRecord(id){
+  const rec=records.find(r=>r.id===id);
+  const label=rec?(rec.工區||rec.派案||'此紀錄'):'此紀錄';
+  if(!confirm(`確定要刪除「${label}」嗎？\n此操作無法復原。`)) return;
   records=records.filter(r=>r.id!==id);
   localStorage.setItem(REC_KEY,JSON.stringify(records));
   fbDeleteRecord(id);renderRecords();showToast('已刪除');
