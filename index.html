@@ -2645,24 +2645,32 @@ function printRecord(id) {
       })()}
     </table>`;
 
-  const win = window.open('', '_blank', 'width=640,height=860');
-  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body>
+  const win = window.open('', '_blank', 'width=794,height=1123');
+  win.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${rec.派案} 機具成本表</title></head><body style="margin:0;padding:20px;box-sizing:border-box;">
 <div id="content">${html}</div>
-<br><button onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
+<br><button id="printBtn" onclick="window.print()" style="padding:10px 28px;background:#e07b00;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">🖨️ 列印</button>
 <script>
 window.addEventListener('load',function(){
-  var content=document.getElementById('content');
-  var A4H=1050;
-  var h=content.offsetHeight;
-  if(h>A4H){
-    var scale=A4H/h;
-    content.style.transformOrigin='top left';
-    content.style.transform='scale('+scale+')';
-    content.style.width=(100/scale)+'%';
-    var style=document.createElement('style');
-    style.textContent='@media print{@page{margin:5mm;}#content{transform-origin:top left;transform:scale('+scale+');width:'+(100/scale)+'%;}}';
-    document.head.appendChild(style);
-  }
+  setTimeout(function(){
+    var content=document.getElementById('content');
+    var A4H=1050;
+    var h=content.scrollHeight;
+    if(h>A4H){
+      var scale=A4H/h;
+      scale=Math.max(scale,0.5);
+      content.style.transformOrigin='top left';
+      content.style.transform='scale('+scale+')';
+      content.style.width=(100/scale)+'%';
+      content.style.marginBottom=((h*scale)-h)+'px';
+      var style=document.createElement('style');
+      style.textContent='@media print{@page{margin:5mm;size:A4;}#content{transform-origin:top left;transform:scale('+scale+');width:'+(100/scale)+'%;page-break-inside:avoid;}#printBtn{display:none;}}';
+      document.head.appendChild(style);
+    } else {
+      var style=document.createElement('style');
+      style.textContent='@media print{@page{margin:10mm;}#printBtn{display:none;}}';
+      document.head.appendChild(style);
+    }
+  },300);
 });
 <\/script>
 </body></html>`);
