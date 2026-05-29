@@ -34,12 +34,12 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
 :root{
-  --bg:#f0f2f7;--surface:#ffffff;--s2:#f5f7fb;--s3:#e8ecf4;
-  --border:#dde2ee;--border2:#c8cfe0;
+  --bg:#d8e0ea;--surface:#ffffff;--s2:#f5f7fb;--s3:#e8ecf4;
+  --border:#c8d0de;--border2:#b0bccf;
   --accent:#e07b00;--blue:#2563eb;--green:#059669;--red:#dc2626;--purple:#7c3aed;
-  --text:#1a2035;--t2:#4a5578;--t3:#8491b0;
-  --hbg:#ffffff;--shadow:0 1px 4px rgba(0,0,0,.08);
-  --shadow2:0 2px 12px rgba(0,0,0,.10);
+  --text:#1a2035;--t2:#475569;--t3:#64748b;
+  --hbg:#ffffff;--shadow:0 2px 6px rgba(0,0,0,.10);
+  --shadow2:0 3px 14px rgba(0,0,0,.13);
   --c前置:#4f46e5;--c刨除:#ea580c;--c鋪設:#059669;--c其餘:#7c3aed;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
@@ -234,8 +234,8 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .rec-card:active{box-shadow:var(--shadow2);}
 .rec-hdr{display:flex;align-items:flex-start;padding:13px 14px;cursor:pointer;user-select:none;gap:8px;}
 .rec-info{flex:1;min-width:0;}
-.rec-title{font-size:15px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.rec-meta{font-size:12px;color:var(--t3);margin-top:3px;line-height:1.5;}
+.rec-title{font-size:16px;font-weight:900;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.rec-meta{font-size:13px;color:var(--t2);margin-top:3px;line-height:1.5;font-weight:600;}
 .rec-total{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--purple);white-space:nowrap;text-align:right;}
 .rec-tog{font-size:13px;color:var(--t3);transition:transform .2s;flex-shrink:0;margin-top:2px;}
 .rec-tog.open{transform:rotate(180deg);}
@@ -265,11 +265,11 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .rec-act-btn{flex:1;padding:11px;border-radius:11px;border:1.5px solid rgba(220,38,38,.15);background:rgba(220,38,38,.06);color:var(--red);font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
 
 /* GROUP CARD */
-.rec-group{margin:8px 10px;border-radius:14px;overflow:hidden;border:2px solid var(--purple);background:var(--surface);box-shadow:var(--shadow2);}
+.rec-group{margin:8px 10px;border-radius:14px;overflow:hidden;border:1.5px solid var(--purple);background:var(--surface);box-shadow:var(--shadow2);}
 .rec-group-hdr{display:flex;align-items:flex-start;padding:13px 14px;cursor:pointer;user-select:none;gap:8px;background:rgba(124,58,237,.04);}
 .rec-group-info{flex:1;min-width:0;}
-.rec-group-title{font-size:16px;font-weight:900;color:var(--purple);}
-.rec-group-meta{font-size:12px;color:var(--t3);margin-top:2px;}
+.rec-group-title{font-size:17px;font-weight:900;color:var(--purple);}
+.rec-group-meta{font-size:13px;color:var(--t2);margin-top:2px;}
 .rec-sub-card{border-top:1px solid var(--border);background:var(--surface);position:relative;}
 .rec-sub-card:first-child{border-top:none;}
 
@@ -358,15 +358,15 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
 .toast.err{background:var(--red);}
 
 /* SEARCH BAR */
-.search-bar{display:flex;align-items:center;gap:8px;margin:10px;padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);}
+.search-bar{display:flex;align-items:center;gap:8px;margin:10px;padding:8px 12px;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;box-shadow:var(--shadow);}
 .search-icon{font-size:16px;flex-shrink:0;color:var(--t3);}
-.search-inp{flex:1;border:none;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:500;color:var(--text);background:transparent;}
+.search-inp{flex:1;border:none;outline:none;font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:500;color:var(--text);background:transparent;}
 .search-inp::placeholder{color:var(--t3);}
 .search-clear{font-size:16px;color:var(--t3);cursor:pointer;padding:2px 4px;display:none;}
 .search-clear.show{display:block;}
 .filter-row{display:flex;gap:6px;padding:0 10px 8px;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .filter-row::-webkit-scrollbar{display:none;}
-.filter-chip{font-size:12px;font-weight:700;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--t2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.filter-chip{font-size:13px;font-weight:700;padding:5px 12px;border-radius:20px;border:1.5px solid var(--border);background:var(--surface);color:var(--t2);white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;}
 .filter-chip.active{background:rgba(37,99,235,.1);border-color:var(--blue);color:var(--blue);}
 
 /* MONTHLY STATS PAGE */
@@ -2211,11 +2211,11 @@ function renderRecords(){
               <div class="rec-sub-card ${dc}">
                 <div class="rec-hdr" onclick="toggleRecCard(${rec.id})" style="padding:10px 14px 10px 18px;">
                   <div class="rec-info">
-                    <div class="rec-title" style="font-size:14px;">${rec.工區||'（未填工區）'}</div>
+                    <div class="rec-title" style="font-size:15px;">${rec.工區||'（未填工區）'}</div>
                     <div class="rec-meta">${meta}${upd}</div>
                   </div>
                   <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;margin-left:8px;">
-                    <div class="rec-total" style="font-size:14px;">${fmt(safeGrand(rec))}</div>
+                    <div class="rec-total" style="font-size:15px;">${fmt(safeGrand(rec))}</div>
                     <div style="display:flex;gap:4px;">
                       <button class="rec-btn" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();printRecord(${rec.id})">🖨️</button>
                       <button class="rec-btn del" style="padding:3px 7px;font-size:13px;" onclick="event.stopPropagation();deleteRecord(${rec.id})">🗑️</button>
