@@ -619,6 +619,39 @@ select.info-field{appearance:none;-webkit-appearance:none;background-image:url("
     </div>
   </div>
 </div>
+
+<!-- 編輯派案標題面板 -->
+<div class="overlay" id="editCaseOverlay" onclick="if(event.target===this)closeEditCase()">
+  <div class="picker">
+    <div class="pk-hdr">
+      <span class="pk-title">編輯派案標題</span>
+      <button class="pk-close" onclick="closeEditCase()">✕</button>
+    </div>
+    <div style="padding:16px 14px;">
+      <div style="font-size:13px;color:var(--t2);margin-bottom:8px;">新派案名稱</div>
+      <input id="editCaseInput" style="width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:700;color:var(--text);background:var(--s2);outline:none;" placeholder="輸入派案名稱" />
+      <div style="font-size:12px;color:var(--t3);margin-top:8px;">此派案底下所有成本表將同步更新</div>
+    </div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border);">
+      <button onclick="doEditCase()" style="width:100%;padding:12px;border-radius:10px;border:none;background:var(--purple);color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:15px;font-weight:700;cursor:pointer;">✅ 確認修改</button>
+    </div>
+  </div>
+</div>
+
+<!-- 移動到指定派案面板 -->
+<div class="overlay" id="moveCaseOverlay" onclick="if(event.target===this)closeMoveCasePanel()">
+  <div class="picker">
+    <div class="pk-hdr">
+      <span class="pk-title">移動到指定派案</span>
+      <button class="pk-close" onclick="closeMoveCasePanel()">✕</button>
+    </div>
+    <div style="padding:12px 14px;border-bottom:1px solid var(--border);">
+      <input id="moveCaseNewInput" style="width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-family:'Noto Sans TC',sans-serif;font-size:14px;color:var(--text);background:var(--s2);outline:none;" placeholder="或輸入新派案名稱…" />
+      <button onclick="doMoveToNewCase()" style="width:100%;margin-top:8px;padding:10px;border-radius:10px;border:none;background:var(--blue);color:#fff;font-family:'Noto Sans TC',sans-serif;font-size:14px;font-weight:700;cursor:pointer;">➕ 移動到新派案</button>
+    </div>
+    <div class="pk-list" id="moveCaseList"></div>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <script>
@@ -2199,7 +2232,8 @@ function renderRecords(){
             <div style="font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--accent);">${fmt(groupTotal)}</div>
             <div style="font-size:10px;color:var(--t3);">合計</div>
           </div>
-          <button class="rec-btn" style="padding:4px 9px;font-size:13px;margin-left:6px;flex-shrink:0;" onclick="event.stopPropagation();openBatchPrint('${caseName.replace(/'/g,"\\'")}')">🖨️ 批次</button>
+          <button class="rec-btn" style="padding:4px 9px;font-size:13px;margin-left:6px;flex-shrink:0;" onclick="event.stopPropagation();openEditCase('${caseName.replace(/'/g,"\\'")}')">✏️</button>
+          <button class="rec-btn" style="padding:4px 9px;font-size:13px;margin-left:2px;flex-shrink:0;" onclick="event.stopPropagation();openBatchPrint('${caseName.replace(/'/g,"\\'")}')">🖨️ 批次</button>
           <div class="rec-tog" style="margin-top:2px;">▾</div>
         </div>
         <div class="rec-group-body" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
@@ -2230,6 +2264,7 @@ function renderRecords(){
                     <div class="rec-btns">
                       <button class="rec-btn edit" onclick="openRecEdit(${rec.id})">✏️ 編輯</button>
                       <button class="rec-btn" style="background:rgba(37,99,235,.08);border-color:rgba(37,99,235,.2);color:var(--blue);" onclick="copyRecord(${rec.id})">📋 複製</button>
+                      <button class="rec-btn" style="background:rgba(124,58,237,.08);border-color:rgba(124,58,237,.2);color:var(--purple);" onclick="openMoveCasePanel(${rec.id})">📁 移動</button>
                       <button class="rec-btn exp" onclick="exportRecordExcel(${rec.id})">📊</button>
                       <button class="rec-btn del" onclick="deleteRecord(${rec.id})">🗑️</button>
                     </div>
@@ -2798,6 +2833,84 @@ function printSelectedRecs(recs){
 <style>@media print{@page{margin:10mm;size:A4 portrait;}body{-webkit-print-color-adjust:exact;}.page-wrap{page-break-after:always;page-break-inside:avoid;}#printBtn{display:none;}}</style>
 </body></html>`);
   win.document.close();
+}
+
+// ══════════ EDIT CASE NAME ══════════
+let _editCaseName='';
+function openEditCase(caseName){
+  _editCaseName=caseName;
+  const inp=document.getElementById('editCaseInput');
+  inp.value=caseName;
+  document.getElementById('editCaseOverlay').classList.add('show');
+  setTimeout(()=>inp.focus(),300);
+}
+function closeEditCase(){document.getElementById('editCaseOverlay').classList.remove('show');}
+function doEditCase(){
+  const newName=document.getElementById('editCaseInput').value.trim();
+  if(!newName){showToast('⚠️ 請輸入派案名稱');return;}
+  if(newName===_editCaseName){closeEditCase();return;}
+  const affected=records.filter(r=>r.派案===_editCaseName);
+  if(!affected.length){closeEditCase();return;}
+  affected.forEach(r=>{
+    r.派案=newName;
+    r.updatedAt=new Date().toLocaleString('zh-TW',{hour12:false}).replace(/\//g,'/');
+    localStorage.setItem(REC_KEY,JSON.stringify(records));
+    fbSaveRecord(r);
+  });
+  closeEditCase();
+  renderRecords();
+  showToast(`✅ 已更新 ${affected.length} 筆派案名稱`,'ok');
+}
+
+// ══════════ MOVE TO CASE ══════════
+let _moveRecId=null;
+function openMoveCasePanel(id){
+  _moveRecId=id;
+  const rec=records.find(r=>r.id===id);
+  const currentCase=rec?.派案||'';
+  // 取得所有現有派案（排除自己）
+  const cases=[...new Set(records.map(r=>r.派案||'').filter(n=>n&&n!==currentCase))].sort();
+  const list=document.getElementById('moveCaseList');
+  document.getElementById('moveCaseNewInput').value='';
+  list.innerHTML='';
+  if(!cases.length){
+    list.innerHTML=`<div style="padding:20px;text-align:center;color:var(--t3);font-size:14px;">目前沒有其他派案</div>`;
+  } else {
+    cases.forEach(cn=>{
+      const item=document.createElement('div');
+      item.className='pk-item';
+      item.innerHTML=`
+        <div class="pk-item-l">
+          <div>
+            <div class="p-name">${cn}</div>
+            <div class="p-meta">${records.filter(r=>r.派案===cn).length} 筆</div>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--purple);font-weight:700;">移動 →</div>`;
+      item.onclick=()=>doMoveCase(cn);
+      list.appendChild(item);
+    });
+  }
+  document.getElementById('moveCaseOverlay').classList.add('show');
+}
+function closeMoveCasePanel(){document.getElementById('moveCaseOverlay').classList.remove('show');}
+function doMoveToNewCase(){
+  const newName=document.getElementById('moveCaseNewInput').value.trim();
+  if(!newName){showToast('⚠️ 請輸入派案名稱');return;}
+  doMoveCase(newName);
+}
+function doMoveCase(targetCase){
+  const rec=records.find(r=>r.id===_moveRecId);
+  if(!rec){closeMoveCasePanel();return;}
+  const oldCase=rec.派案||'';
+  if(oldCase===targetCase){closeMoveCasePanel();return;}
+  rec.派案=targetCase;
+  rec.updatedAt=new Date().toLocaleString('zh-TW',{hour12:false}).replace(/\//g,'/');
+  localStorage.setItem(REC_KEY,JSON.stringify(records));
+  fbSaveRecord(rec);
+  closeMoveCasePanel();
+  renderRecords();
+  showToast(`✅ 已移動到「${targetCase}」`,'ok');
 }
 
 // ══════════ INIT ══════════
